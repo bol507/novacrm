@@ -32,31 +32,31 @@ const menuItems = [
     title: "Principal",
     items: [
       { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-      { name: "Calendario", icon: Calendar, path: "/calendar" },
+      { name: "Calendario", icon: Calendar, path: "/dashboard/calendar" },
     ],
   },
   {
     title: "Ventas",
     items: [
-      { name: "Clientes", icon: Users, path: "/clients" },
-      { name: "Oportunidades", icon: Target, path: "/opportunities" },
-      { name: "Cotizaciones", icon: FileText, path: "/quotes" },
-      { name: "Pedidos", icon: ShoppingCart, path: "/orders" },
-      { name: "Facturas", icon: DollarSign, path: "/invoices" },
+      { name: "Clientes", icon: Users, path: "/dashboard/clients" },
+      { name: "Oportunidades", icon: Target, path: "/dashboard/opportunities" },
+      { name: "Cotizaciones", icon: FileText, path: "/dashboard/quotes" },
+      { name: "Pedidos", icon: ShoppingCart, path: "/dashboard/orders" },
+      { name: "Facturas", icon: DollarSign, path: "/dashboard/invoices" },
     ],
   },
   {
     title: "Marketing",
     items: [
-      { name: "Campañas", icon: Mail, path: "/campaigns" },
-      { name: "Leads", icon: Briefcase, path: "/leads" },
+      { name: "Campañas", icon: Mail, path: "/dashboard/campaigns" },
+      { name: "Leads", icon: Briefcase, path: "/dashboard/leads" },
     ],
   },
   {
     title: "Inventario",
     items: [
-      { name: "Productos", icon: Package, path: "/products" },
-      { name: "Reportes", icon: BarChart3, path: "/reports" },
+      { name: "Productos", icon: Package, path: "/dashboard/products" },
+      { name: "Reportes", icon: BarChart3, path: "/dashboard/reports" },
     ],
   },
 ];

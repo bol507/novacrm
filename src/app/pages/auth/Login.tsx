@@ -7,37 +7,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    email: "",
+    username: "",
     password: "",
     rememberMe: false,
   });
   const [errors, setErrors] = useState({
-    email: "",
+    username: "",
     password: "",
   });
-
-  const validateEmail = (email: string) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
-  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     
-    // Real-time validation
-    if (field === "email") {
-      if (!value) {
-        setErrors((prev) => ({ ...prev, email: "El email es requerido" }));
-      } else if (!validateEmail(value)) {
-        setErrors((prev) => ({ ...prev, email: "Email inválido" }));
+    // Validación en tiempo real
+    if (field === "username") {
+      if (!value.trim()) {
+        setErrors((prev) => ({ ...prev, username: "El usuario es requerido" }));
       } else {
-        setErrors((prev) => ({ ...prev, email: "" }));
+        setErrors((prev) => ({ ...prev, username: "" }));
       }
     }
     
@@ -55,9 +50,9 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Final validation
-    if (!formData.email || !validateEmail(formData.email)) {
-      setErrors((prev) => ({ ...prev, email: "Email inválido" }));
+    // Validación final
+    if (!formData.username.trim()) {
+      setErrors((prev) => ({ ...prev, username: "El usuario es requerido" }));
       return;
     }
     if (!formData.password || formData.password.length < 6) {
@@ -67,14 +62,24 @@ const Login = () => {
 
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    toast("¡Bienvenido!", {description: "Inicio de sesión exitoso"});
- 
-    
-    setIsLoading(false);
-    navigate("/dashboard");
+    try {
+       await login({
+        user_name: formData.username.trim(),
+        password: formData.password,
+      });
+
+      toast.success("¡Bienvenido!", {
+        description: "Inicio de sesión exitoso",
+      });
+
+      navigate("/dashboard");
+    } catch (error: any) {
+      const message = error.response?.data?.error || "Credenciales inválidas";
+      toast.error("Error de autenticación", { description: message });
+      setErrors((prev) => ({ ...prev, username: "", password: "" }));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -84,7 +89,7 @@ const Login = () => {
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6 }}
-        className="hidden lg:flex lg:w-1/2 bg-sidebar-background text-sidebar-foreground flex-col justify-between p-12 relative overflow-hidden"
+        className="hidden lg:flex lg:w-1/2 bg-sidebar text-sidebar-foreground flex-col justify-between p-12 relative overflow-hidden"
       >
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
@@ -169,33 +174,33 @@ const Login = () => {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email Field */}
+            {/* Username Field */}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium">
-                Email
+              <Label htmlFor="username" className="text-sm font-medium">
+                Usuario
               </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="correo@empresa.com"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
+                  id="username"
+                  type="text"
+                  placeholder="tu.usuario"
+                  value={formData.username}
+                  onChange={(e) => handleInputChange("username", e.target.value)}
                   className={`pl-11 h-12 transition-all ${
-                    errors.email
+                    errors.username
                       ? "border-destructive focus-visible:ring-destructive"
                       : "focus-visible:ring-primary"
                   }`}
                 />
               </div>
-              {errors.email && (
+              {errors.username && (
                 <motion.p
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="text-sm text-destructive"
                 >
-                  {errors.email}
+                  {errors.username}
                 </motion.p>
               )}
             </div>
@@ -271,7 +276,7 @@ const Login = () => {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full h-12 bg-primary border text-base font-semibold group"
+              className="w-full h-12 bg-primary text-primary-foreground border text-base font-semibold group"
             >
               {isLoading ? (
                 <motion.div

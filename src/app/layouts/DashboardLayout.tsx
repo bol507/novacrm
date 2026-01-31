@@ -1,24 +1,22 @@
+// src/app/layouts/DashboardLayout.tsx
+import { Outlet } from "react-router-dom"; // 👈 Importa Outlet
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Sidebar from "./Sidebar";
-import TopBar from "./TopBar";
+import Sidebar from "@/components/layout/Sidebar";
+import TopBar from "@/components/layout/TopBar";
 
-interface DashboardLayoutProps {
-  children: React.ReactNode;
-}
-
-const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false); 
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Desktop Sidebar */}
+      {/* Sidebar */}
       <div className="hidden lg:block">
         <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
       </div>
 
-      {/* Mobile Sidebar Overlay */}
+      {/* Mobile Sidebar */}
       <AnimatePresence>
         {mobileSidebarOpen && (
           <>
@@ -58,7 +56,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
         />
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
-          {children}
+          <Outlet /> 
         </main>
       </div>
     </div>

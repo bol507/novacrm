@@ -5,8 +5,6 @@ import {
   Menu,
   Search,
   Bell,
-  Sun,
-  Moon,
   User,
   LogOut,
   Settings,
@@ -25,6 +23,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ModeToggle } from "../mode-toggle";
+import { useAuth } from "@/hooks/use-auth"; // 👈 Importa useAuth
 
 interface TopBarProps {
   onMenuClick: () => void;
@@ -35,8 +34,26 @@ interface TopBarProps {
 const TopBar = ({ onMenuClick, sidebarOpen, onSidebarToggle }: TopBarProps) => {
   const navigate = useNavigate();
   const [searchFocused, setSearchFocused] = useState(false);
+  const { user, loading } = useAuth(); // 👈 Ahora sí está definido
 
-  
+  // Manejo de estado de carga o ausencia de usuario
+  if (loading) {
+    return (
+      <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30">
+        <div className="flex items-center gap-4">
+          <div className="w-8 h-8 rounded-md bg-muted animate-pulse" />
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
+        </div>
+      </header>
+    );
+  }
+
+  // Si no hay usuario (aunque no debería pasar en un layout protegido)
+  if (!user) {
+    return null;
+  }
 
   const notifications = [
     { id: 1, title: "Nueva oportunidad", message: "Cliente ABC solicitó cotización", time: "5 min" },
@@ -63,8 +80,7 @@ const TopBar = ({ onMenuClick, sidebarOpen, onSidebarToggle }: TopBarProps) => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Buscar..."
-            className={`pl-9 w-64 transition-all ${searchFocused ? "w-80 ring-2 ring-primary" : ""
-              }`}
+            className={`pl-9 w-64 transition-all ${searchFocused ? "w-80 ring-2 ring-primary" : ""}`}
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setSearchFocused(false)}
           />
@@ -118,12 +134,17 @@ const TopBar = ({ onMenuClick, sidebarOpen, onSidebarToggle }: TopBarProps) => {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 px-2">
               <Avatar className="w-8 h-8">
-                <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=admin" />
-                <AvatarFallback>AD</AvatarFallback>
+                <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.user_name}`} />
+                <AvatarFallback>
+                  {user.first_name?.charAt(0) || "?"}
+                  {user.last_name?.charAt(0) || "?"}
+                </AvatarFallback>
               </Avatar>
               <div className="hidden md:flex flex-col items-start">
-                <span className="text-sm font-medium">Admin User</span>
-                <span className="text-xs text-muted-foreground">Administrador</span>
+                <span className="text-sm font-medium">
+                  {user.first_name} {user.last_name}
+                </span>
+                <span className="text-xs text-muted-foreground">{user.user_name}</span>
               </div>
               <ChevronDown className="w-4 h-4 text-muted-foreground hidden md:block" />
             </Button>
@@ -141,7 +162,11 @@ const TopBar = ({ onMenuClick, sidebarOpen, onSidebarToggle }: TopBarProps) => {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => navigate("/")}
+              onClick={() => {
+                // Aquí deberías llamar a logout del hook
+                // Ej: const { logout } = useAuth(); logout();
+                navigate("/login");
+              }}
               className="text-destructive focus:text-destructive"
             >
               <LogOut className="w-4 h-4 mr-2" />

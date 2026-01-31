@@ -2,9 +2,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import NotFound from "./pages/NotFound";
+import Login from "./app/pages/auth/Login";
+import Dashboard from "./app/pages/dashboard/Dashboard";
+import NotFound from "./app/pages/NotFound";
 
 const queryClient = new QueryClient();
 
