@@ -1,5 +1,5 @@
-import { useAuth } from "@/hooks/use-auth";
-import type { User } from "@/types/auth";
+import { useAuth } from "@/features/auth/hooks/use-auth";
+import type { User } from "@/features/auth/types/auth";
 import { createContext, useContext } from "react";
 
 interface AuthContextType {

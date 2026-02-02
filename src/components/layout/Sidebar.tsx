@@ -18,8 +18,9 @@ import {
   Target,
   Mail,
   Package,
+  UserCogIcon,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/utils";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -57,6 +58,17 @@ const menuItems = [
     items: [
       { name: "Productos", icon: Package, path: "/dashboard/products" },
       { name: "Reportes", icon: BarChart3, path: "/dashboard/reports" },
+    ],
+  },
+  {
+    title: "Configuración",
+    items: [
+      {
+        name: "Usuarios",
+        icon: UserCogIcon,
+        path: "/dashboard/users",
+      },
+      
     ],
   },
 ];

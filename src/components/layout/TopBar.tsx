@@ -23,7 +23,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ModeToggle } from "../mode-toggle";
-import { useAuth } from "@/hooks/use-auth"; // 👈 Importa useAuth
+import { useAuth } from "@/features/auth/hooks/use-auth"; // 👈 Importa useAuth
 
 interface TopBarProps {
   onMenuClick: () => void;
