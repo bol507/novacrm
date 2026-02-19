@@ -1,4 +1,3 @@
-// src/app/pages/dashboard/Dashboard.tsx
 import { motion } from "framer-motion";
 import {
   Users,
@@ -105,12 +104,16 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Activity Chart - Takes 2 columns on large screens */}
         <motion.div variants={itemVariants} className="lg:col-span-2">
-          <ActivityChart />
+          <div className="bg-card rounded-lg border p-4 sm:p-6 h-full">
+            <ActivityChart />
+          </div>
         </motion.div>
 
         {/* Tasks Widget */}
         <motion.div variants={itemVariants}>
-          <TasksWidget />
+          <div className="bg-card rounded-lg border p-4 sm:p-6 h-full">
+            <TasksWidget />
+          </div>
         </motion.div>
       </div>
 
@@ -118,17 +121,23 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Recent Activity */}
         <motion.div variants={itemVariants}>
-          <RecentActivityWidget />
+          <div className="bg-card rounded-lg border p-4 sm:p-6 h-full">
+            <RecentActivityWidget />
+          </div>
         </motion.div>
 
         {/* Calendar Widget */}
         <motion.div variants={itemVariants}>
-          <CalendarWidget />
+          <div className="bg-card rounded-lg border p-4 sm:p-6 h-full">
+            <CalendarWidget />
+          </div>
         </motion.div>
 
         {/* Quick Actions */}
         <motion.div variants={itemVariants}>
-          <QuickActionsWidget />
+          <div className="bg-card rounded-lg border p-4 sm:p-6 h-full">
+            <QuickActionsWidget />
+          </div>
         </motion.div>
       </div>
     </motion.div>

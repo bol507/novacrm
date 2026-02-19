@@ -1,5 +1,4 @@
-// src/app/layouts/DashboardLayout.tsx
-import { Outlet } from "react-router-dom"; // 👈 Importa Outlet
+import { Outlet } from "react-router-dom";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Sidebar from "@/components/layout/Sidebar";
@@ -7,16 +6,19 @@ import TopBar from "@/components/layout/TopBar";
 
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false); 
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background text-foreground flex">
       {/* Sidebar */}
       <div className="hidden lg:block">
-        <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+        <Sidebar 
+          isOpen={sidebarOpen} 
+          onToggle={() => setSidebarOpen(!sidebarOpen)} 
+        />
       </div>
 
-      {/* Mobile Sidebar */}
+      {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {mobileSidebarOpen && (
           <>
@@ -25,7 +27,7 @@ const DashboardLayout = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileSidebarOpen(false)}
-              className="lg:hidden fixed inset-0 bg-foreground/50 backdrop-blur-sm z-40"
+              className="lg:hidden fixed inset-0 bg-muted/50 backdrop-blur-sm z-40"
             />
             <motion.div
               initial={{ x: "-100%" }}

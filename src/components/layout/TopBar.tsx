@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   Menu,
   Search,
   Bell,
-  User,
-  LogOut,
-  Settings,
   ChevronDown,
+  UserIcon,
+  SettingsIcon,
+  LogOutIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +22,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ModeToggle } from "../mode-toggle";
-import { useAuth } from "@/features/auth/hooks/use-auth"; // 👈 Importa useAuth
+import { useAuth } from "@/features/auth/hooks/use-auth";
+import MyProfileDialog from "@/features/users/components/MyProfileDialog";
 
 interface TopBarProps {
   onMenuClick: () => void;
@@ -34,9 +34,9 @@ interface TopBarProps {
 const TopBar = ({ onMenuClick, sidebarOpen, onSidebarToggle }: TopBarProps) => {
   const navigate = useNavigate();
   const [searchFocused, setSearchFocused] = useState(false);
-  const { user, loading } = useAuth(); // 👈 Ahora sí está definido
+  const { user, loading, logout } = useAuth();
+  const [isMyProfileOpen, setIsMyProfileOpen] = useState(false);
 
-  // Manejo de estado de carga o ausencia de usuario
   if (loading) {
     return (
       <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30">
@@ -61,121 +61,133 @@ const TopBar = ({ onMenuClick, sidebarOpen, onSidebarToggle }: TopBarProps) => {
     { id: 3, title: "Reunión próxima", message: "Presentación en 30 minutos", time: "30 min" },
   ];
 
+  const handleMyProfileClick = () => {
+    setIsMyProfileOpen(true);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
   return (
-    <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30">
-      {/* Left Section */}
-      <div className="flex items-center gap-4">
-        {/* Mobile Menu Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onMenuClick}
-          className="lg:hidden"
-        >
-          <Menu className="w-5 h-5" />
-        </Button>
+    <>
+      <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30">
+        {/* Left Section */}
+        <div className="flex items-center gap-4">
+          {/* Mobile Menu Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onMenuClick}
+            className="lg:hidden"
+          >
+            <Menu className="w-5 h-5" />
+          </Button>
 
-        {/* Search */}
-        <div className="relative hidden sm:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar..."
-            className={`pl-9 w-64 transition-all ${searchFocused ? "w-80 ring-2 ring-primary" : ""}`}
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setSearchFocused(false)}
-          />
+          {/* Search */}
+          <div className="relative hidden sm:block">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar..."
+              className={`pl-9 w-64 transition-all ${searchFocused ? "w-80 ring-2 ring-primary" : ""}`}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Right Section */}
-      <div className="flex items-center gap-2 sm:gap-4">
-        {/* Mobile Search Button */}
-        <Button variant="ghost" size="icon" className="sm:hidden">
-          <Search className="w-5 h-5" />
-        </Button>
+        {/* Right Section */}
+        <div className="flex items-center gap-2 sm:gap-4">
+          {/* Mobile Search Button */}
+          <Button variant="ghost" size="icon" className="sm:hidden">
+            <Search className="w-5 h-5" />
+          </Button>
 
-        {/* Theme Toggle */}
-        <ModeToggle />
+          {/* Theme Toggle */}
+          <ModeToggle />
 
-        {/* Notifications */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full text-xs flex items-center justify-center">
-                3
-              </span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
-            <DropdownMenuLabel className="flex items-center justify-between">
-              Notificaciones
-              <Badge variant="secondary">3 nuevas</Badge>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {notifications.map((notif) => (
-              <DropdownMenuItem key={notif.id} className="flex flex-col items-start p-3 cursor-pointer">
-                <div className="flex items-center justify-between w-full">
-                  <span className="font-medium text-sm">{notif.title}</span>
-                  <span className="text-xs text-muted-foreground">{notif.time}</span>
-                </div>
-                <span className="text-sm text-muted-foreground mt-1">{notif.message}</span>
-              </DropdownMenuItem>
-            ))}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="justify-center text-primary font-medium">
-              Ver todas las notificaciones
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {/* User Menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2 px-2">
-              <Avatar className="w-8 h-8">
-                <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.user_name}`} />
-                <AvatarFallback>
-                  {user.first_name?.charAt(0) || "?"}
-                  {user.last_name?.charAt(0) || "?"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="hidden md:flex flex-col items-start">
-                <span className="text-sm font-medium">
-                  {user.first_name} {user.last_name}
+          {/* Notifications */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="w-5 h-5" />
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full text-xs flex items-center justify-center">
+                  3
                 </span>
-                <span className="text-xs text-muted-foreground">{user.user_name}</span>
-              </div>
-              <ChevronDown className="w-4 h-4 text-muted-foreground hidden md:block" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <User className="w-4 h-4 mr-2" />
-              Perfil
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Settings className="w-4 h-4 mr-2" />
-              Configuración
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => {
-                // Aquí deberías llamar a logout del hook
-                // Ej: const { logout } = useAuth(); logout();
-                navigate("/login");
-              }}
-              className="text-destructive focus:text-destructive"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Cerrar Sesión
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </header>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80">
+              <DropdownMenuLabel className="flex items-center justify-between">
+                Notificaciones
+                <Badge variant="secondary">3 nuevas</Badge>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {notifications.map((notif) => (
+                <DropdownMenuItem key={notif.id} className="flex flex-col items-start p-3 cursor-pointer">
+                  <div className="flex items-center justify-between w-full">
+                    <span className="font-medium text-sm">{notif.title}</span>
+                    <span className="text-xs text-muted-foreground">{notif.time}</span>
+                  </div>
+                  <span className="text-sm text-muted-foreground mt-1">{notif.message}</span>
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="justify-center text-primary font-medium">
+                Ver todas las notificaciones
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* User Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="flex items-center gap-2 px-2">
+                <Avatar className="w-8 h-8">
+                  <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.user_name}`} />
+                  <AvatarFallback>
+                    {user.first_name?.charAt(0) || "?"}
+                    {user.last_name?.charAt(0) || "?"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="hidden md:flex flex-col items-start">
+                  <span className="text-sm font-medium">
+                    {user.first_name} {user.last_name}
+                  </span>
+                  <span className="text-xs text-muted-foreground">{user.user_name}</span>
+                </div>
+                <ChevronDown className="w-4 h-4 text-muted-foreground hidden md:block" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleMyProfileClick}>
+                <UserIcon className="w-4 h-4 mr-2" />
+                Perfil
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <SettingsIcon className="w-4 h-4 mr-2" />
+                Configuración
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="text-destructive focus:text-destructive"
+              >
+                <LogOutIcon className="w-4 h-4 mr-2" />
+                Cerrar Sesión
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </header>
+
+      <MyProfileDialog
+        open={isMyProfileOpen}
+        onOpenChange={setIsMyProfileOpen}
+      />
+    </>
   );
 };
 

@@ -41,5 +41,19 @@ export const clientService = {
 
   async deleteClient(id: number): Promise<void> {
     await apiClient.delete(`/clients/${id}`);
+  },
+
+  async searchClients(searchTerm: string) {
+    const response = await apiClient.get('/clients/search', {
+      params: { q: searchTerm }
+    });
+    return response.data.data;
+  },
+
+  async findClientByAccountName(accountName: string) {
+    const response = await apiClient.get('/clients/find-by-name', {
+      params: { accountname: accountName }
+    });
+    return response.data.data;
   }
 };

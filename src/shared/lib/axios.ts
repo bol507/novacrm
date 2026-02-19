@@ -1,4 +1,7 @@
+import { router } from '@/app/routes';
+import { removeAuth } from '@/features/auth/utils/auth-storage';
 import axios from 'axios';
+import { toast } from 'sonner';
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api',
@@ -21,7 +24,17 @@ apiClient.interceptors.request.use(config => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('API Error:', error);
+    if (error.response?.status === 401) {
+      // Limpiar autenticación
+      removeAuth();
+      
+      // Mostrar mensaje
+      toast.error("Tu sesión ha expirado. Por favor inicia sesión nuevamente.");
+      
+      // Redirigir al login
+      router.navigate('/login');
+    }
+    
     return Promise.reject(error);
   }
 );

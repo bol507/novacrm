@@ -24,5 +24,19 @@ export const userService = {
 
   async deleteUser(id: number): Promise<void> {
     await apiClient.delete(`/users/${id}`);
+  },
+
+  async searchUsers(searchTerm: string) {
+    const response = await apiClient.get('/users/search', {
+      params: { q: searchTerm }
+    });
+    return response.data.data;
+  },
+
+  async findUserByFullName(fullName: string) {
+    const response = await apiClient.get('/users/find-by-full-name', {
+      params: { full_name: fullName }
+    });
+    return response.data.data;
   }
 };

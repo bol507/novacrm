@@ -9,8 +9,11 @@ import DashboardLayout from "@/shared/layouts/DashboardLayout";
 
 const Dashboard = lazy(() => import("@/features/dashboard/pages/Dashboard"));
 const ClientDetailPage = lazy(() => import("@/features/clients/pages/ClientDetailPage"));
-const ClientPage = lazy(() => import("@/features/clients/pages/ClientsPage"));
+const ClientsPage = lazy(() => import("@/features/clients/pages/ClientsPage")); 
 const UsersPage = lazy(() => import("@/features/users/pages/UsersPage"));
+const OpportunitiesPage = lazy(() => import("@/features/opportunity/pages/OpportunitiesPage"));
+const QuotesPage = lazy(() => import("@/features/quotes/pages/QuotesPage"));
+const QuoteDetailPage = lazy(() => import("@/features/quotes/pages/QuoteDetailPage"));
 
 export const router = createBrowserRouter([
   // Rutas públicas
@@ -40,11 +43,14 @@ export const router = createBrowserRouter([
       
       {
         path: "clients",
-        element: <ClientPage />,
+         element: <ClientsPage />,
          
       },
       { path: "clients/:id", element: <ClientDetailPage /> },
       { path: "users", element: <UsersPage /> },
+      { path: "opportunities", element: <OpportunitiesPage />}, 
+      { path: "quotes", element: <QuotesPage />},
+      { path: "quotes/:quoteId", element: <QuoteDetailPage  />},
       
     ],
   },
