@@ -7,30 +7,64 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/lib/utils";
+import { useActivityData, type TimePeriod } from "../hooks/useActivityData";
+import { Loader2 } from "lucide-react";
 
-const data = [
-  { name: "Ene", ventas: 4000, leads: 2400, oportunidades: 1800 },
-  { name: "Feb", ventas: 3000, leads: 1398, oportunidades: 2200 },
-  { name: "Mar", ventas: 2000, leads: 9800, oportunidades: 2900 },
-  { name: "Abr", ventas: 2780, leads: 3908, oportunidades: 2500 },
-  { name: "May", ventas: 1890, leads: 4800, oportunidades: 2100 },
-  { name: "Jun", ventas: 2390, leads: 3800, oportunidades: 2800 },
-  { name: "Jul", ventas: 3490, leads: 4300, oportunidades: 3200 },
-  { name: "Ago", ventas: 4200, leads: 5100, oportunidades: 3800 },
-  { name: "Sep", ventas: 5100, leads: 4800, oportunidades: 4100 },
-  { name: "Oct", ventas: 4800, leads: 5200, oportunidades: 4500 },
-  { name: "Nov", ventas: 5500, leads: 5800, oportunidades: 4800 },
-  { name: "Dic", ventas: 6200, leads: 6100, oportunidades: 5200 },
+const periods: { label: string; value: TimePeriod }[] = [
+  { label: "7 días", value: "7days" },
+  { label: "30 días", value: "30days" },
+  { label: "90 días", value: "90days" },
+  { label: "12 meses", value: "12months" },
 ];
 
-const periods = ["7 días", "30 días", "90 días", "12 meses"];
-
 const ActivityChart = () => {
-  const [activePeriod, setActivePeriod] = useState("12 meses");
+  const [activePeriod, setActivePeriod] = useState<TimePeriod>("12months");
+  const { data, isLoading, error, isFetching } = useActivityData(activePeriod);
+
+  if (isLoading) {
+    return (
+      <Card className="h-full">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Resumen de Actividad</CardTitle>
+          <div className="flex gap-1 bg-muted p-1 rounded-lg">
+            {periods.map((p) => (
+              <Button key={p.value} variant="ghost" size="sm" disabled className="text-xs px-3 h-7">
+                {p.label}
+              </Button>
+            ))}
+          </div>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[350px]">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="h-full">
+        <CardHeader>
+          <CardTitle>Resumen de Actividad</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[350px]">
+          <p className="text-muted-foreground text-center">
+            Error al cargar datos del gráfico<br />
+            <Button variant="link" className="p-0 h-auto" onClick={() => window.location.reload()}>
+              Reintentar
+            </Button>
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const chartData = data?.data || [];
 
   return (
     <Card className="h-full">
@@ -41,17 +75,18 @@ const ActivityChart = () => {
         <div className="flex gap-1 bg-muted p-1 rounded-lg">
           {periods.map((period) => (
             <Button
-              key={period}
+              key={period.value}
               variant="ghost"
               size="sm"
-              onClick={() => setActivePeriod(period)}
+              onClick={() => setActivePeriod(period.value)}
               className={cn(
                 "text-xs px-3 h-7",
-                activePeriod === period &&
+                activePeriod === period.value &&
                   "bg-background shadow-sm text-foreground"
               )}
+              disabled={isFetching}
             >
-              {period}
+              {period.label}
             </Button>
           ))}
         </div>
@@ -59,7 +94,7 @@ const ActivityChart = () => {
       <CardContent>
         <div className="h-[300px] sm:h-[350px]">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data}>
+            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="hsl(217, 91%, 60%)" stopOpacity={0.3} />
@@ -81,6 +116,9 @@ const ActivityChart = () => {
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 12, fill: "hsl(215, 16%, 47%)" }}
+                tickFormatter={(value) => 
+                  value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value
+                }
               />
               <Tooltip
                 contentStyle={{
@@ -89,6 +127,19 @@ const ActivityChart = () => {
                   borderRadius: "8px",
                   boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
                 }}
+                formatter={(value: number, name: string) => [
+                  name === 'ventas' 
+                    ? `$${value.toLocaleString('es-PA')}` 
+                    : value.toLocaleString('es-PA'),
+                  name === 'ventas' ? 'Ventas' : 'Leads'
+                ]}
+              />
+              <Legend 
+                verticalAlign="top" 
+                height={36}
+                formatter={(value) => (
+                  <span className="text-sm text-muted-foreground ml-4">{value}</span>
+                )}
               />
               <Area
                 type="monotone"
@@ -98,6 +149,7 @@ const ActivityChart = () => {
                 fillOpacity={1}
                 fill="url(#colorVentas)"
                 name="Ventas"
+                activeDot={{ r: 6, strokeWidth: 2, stroke: '#fff' }}
               />
               <Area
                 type="monotone"
@@ -107,22 +159,29 @@ const ActivityChart = () => {
                 fillOpacity={1}
                 fill="url(#colorLeads)"
                 name="Leads"
+                activeDot={{ r: 6, strokeWidth: 2, stroke: '#fff' }}
               />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Legend */}
-        <div className="flex items-center justify-center gap-6 mt-4">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-primary" />
-            <span className="text-sm text-muted-foreground">Ventas</span>
+        {/* Summary totals */}
+        {data?.summary && (
+          <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t">
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">Total Ventas</p>
+              <p className="text-2xl font-bold text-primary">
+                ${data.summary.totalSales.toLocaleString('es-PA')}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">Total Leads</p>
+              <p className="text-2xl font-bold text-accent">
+                {data.summary.totalLeads.toLocaleString('es-PA')}
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-accent" />
-            <span className="text-sm text-muted-foreground">Leads</span>
-          </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

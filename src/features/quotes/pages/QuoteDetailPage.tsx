@@ -13,7 +13,8 @@ import {
     Package,
     Percent,
     DownloadIcon,
-    FileTextIcon
+    FileTextIcon,
+    Folder
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -21,7 +22,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { QuoteStatusBadge } from "../components/QuoteStatusBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuoteDetail } from "../hooks/useQuoteDetail";
-import { ExpandableText } from "../components/ExpandableText";
+import { ExpandableText } from "../../../components/ExpandableText";
 import QuoteFormDialog from "../components/QuoteFormDialog";
 import type { Quote } from "../types/quote";
 import { useUpdateQuote } from "../hooks/useUpdateQuote";
@@ -30,6 +31,7 @@ import { useConfirm } from "@/components/confirm-dialog";
 import { useDeleteQuote } from "../hooks/useDeleteQuote";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useDownloadPDF, usePreviewPDF } from "../hooks/useDownloadPDF";
+import { ProjectFormDialog } from "@/features/projects/components/ProjectFormDialog";
 
 
 const QuoteDetailPage = () => {
@@ -37,6 +39,7 @@ const QuoteDetailPage = () => {
     const navigate = useNavigate();
     const { data: quote, isLoading, error, refetch } = useQuoteDetail(quoteId || '');
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [isCreateProjectDialogOpen, setIsCreateProjectDialogOpen] = useState(false);
     const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
     const updateQuoteMutation = useUpdateQuote();
     const deleteQuoteMutation = useDeleteQuote();
@@ -290,6 +293,7 @@ const QuoteDetailPage = () => {
                             <div className="flex flex-col sm:items-end gap-4">
                                 <div className="flex items-center gap-3">
                                     <QuoteStatusBadge stage={quote.quote_stage} />
+
                                     <Button
                                         variant="outline"
                                         size="sm"
@@ -519,6 +523,14 @@ const QuoteDetailPage = () => {
                     {/* Acciones */}
                     <div className="flex flex-col sm:flex-row gap-4 mt-8">
                         <Button
+                            variant="outline"
+                            className="flex-1 gap-2 text-lg py-6"
+                            onClick={() => setIsCreateProjectDialogOpen(true)}
+                        >
+                            <Folder className="h-6 w-6" />
+                            Crear Proyecto
+                        </Button>
+                        <Button
                             className="flex-1 gap-2 text-lg py-6"
                             onClick={handleEditQuote}
                         >
@@ -567,6 +579,17 @@ const QuoteDetailPage = () => {
                         initialData={editingQuote}
                     />
                 )}
+
+                {/* Diálogo para crear proyecto */}
+                <ProjectFormDialog
+                    open={isCreateProjectDialogOpen}
+                    onOpenChange={setIsCreateProjectDialogOpen}
+                    quoteId={quote?.quoteid} // 
+                    onSuccess={() => {
+                       
+                        toast.success("Proyecto creado exitosamente");
+                    }}
+                />
             </div>
         </ErrorBoundary>
     );

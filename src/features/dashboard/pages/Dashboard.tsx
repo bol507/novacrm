@@ -13,6 +13,7 @@ import TasksWidget from "../components/TasksWidget";
 import RecentActivityWidget from "../components/RecentActivityWidget";
 import CalendarWidget from "../components/CalendarWidget";
 import QuickActionsWidget from "../components/QuickActionsWidget";
+import DashboardMetrics from "../components/DashboardMetrics";
 
 const Dashboard = () => {
   const stats = [
@@ -90,24 +91,22 @@ const Dashboard = () => {
         </div>
       </motion.div>
 
-      {/* Stats Grid */}
+      {/* Metrics Grid */}
       <motion.div
         variants={itemVariants}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
       >
-        {stats.map((stat, index) => (
-          <StatsCard key={stat.title} {...stat} delay={index * 0.1} />
-        ))}
+         <DashboardMetrics />
       </motion.div>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Activity Chart - Takes 2 columns on large screens */}
+        {/* Activity Chart - Takes 2 columns on large screens */} {/*
         <motion.div variants={itemVariants} className="lg:col-span-2">
           <div className="bg-card rounded-lg border p-4 sm:p-6 h-full">
             <ActivityChart />
           </div>
-        </motion.div>
+        </motion.div> 
+        */}
 
         {/* Tasks Widget */}
         <motion.div variants={itemVariants}>

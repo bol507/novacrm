@@ -19,6 +19,10 @@ import {
   Mail,
   Package,
   UserCogIcon,
+  Folder,
+  List,
+  CheckCircleIcon,
+  CheckSquare,
 } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 
@@ -59,6 +63,14 @@ const menuItems = [
       { name: "Productos", icon: Package, path: "/dashboard/products" },
       { name: "Reportes", icon: BarChart3, path: "/dashboard/reports" },
     ],
+  },
+  {
+    title: "Proyectos",
+    items: [
+    { name: "Todos los proyectos", icon: Folder, path: "/dashboard/projects" },
+    { name: "Proyectos activos", icon: CheckCircleIcon, path: "/dashboard/projects/active" },
+    { name: "Tareas", icon: CheckSquare, path: "/dashboard/tasks" },
+  ],
   },
   {
     title: "Configuración",

@@ -1,63 +1,11 @@
-import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, Clock, User } from "lucide-react";
+import { Plus, Clock, MapPin, Loader2 } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
-
-interface Task {
-  id: string;
-  title: string;
-  priority: "high" | "medium" | "low";
-  dueTime: string;
-  assignee: string;
-  completed: boolean;
-}
-
-const initialTasks: Task[] = [
-  {
-    id: "1",
-    title: "Llamar a cliente ABC Corp",
-    priority: "high",
-    dueTime: "10:00 AM",
-    assignee: "Tú",
-    completed: false,
-  },
-  {
-    id: "2",
-    title: "Preparar propuesta comercial",
-    priority: "high",
-    dueTime: "11:30 AM",
-    assignee: "Tú",
-    completed: false,
-  },
-  {
-    id: "3",
-    title: "Revisar cotización pendiente",
-    priority: "medium",
-    dueTime: "2:00 PM",
-    assignee: "Tú",
-    completed: false,
-  },
-  {
-    id: "4",
-    title: "Actualizar información de leads",
-    priority: "low",
-    dueTime: "4:00 PM",
-    assignee: "Tú",
-    completed: true,
-  },
-  {
-    id: "5",
-    title: "Enviar reporte semanal",
-    priority: "medium",
-    dueTime: "5:00 PM",
-    assignee: "Tú",
-    completed: false,
-  },
-];
+import { useDashboardTasks, useToggleDashboardTask } from "../hooks/useDashboardTasks";
 
 const priorityColors = {
   high: "bg-destructive/10 text-destructive border-destructive/20",
@@ -72,17 +20,106 @@ const priorityLabels = {
 };
 
 const TasksWidget = () => {
-  const [tasks, setTasks] = useState(initialTasks);
+  const { data, isLoading, error } = useDashboardTasks(10); // ✅ Aumentar limit para mostrar más tareas
+  const toggleTaskMutation = useToggleDashboardTask();
 
-  const toggleTask = (id: string) => {
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === id ? { ...task, completed: !task.completed } : task
-      )
-    );
+  const handleToggleTask = async (task: { id: number; completed: boolean }) => {
+    try {
+      await toggleTaskMutation.mutateAsync({
+        taskId: task.id,
+        completed: !task.completed,
+      });
+    } catch (error) {
+      console.error('Error updating task:', error);
+    }
   };
 
-  const completedCount = tasks.filter((t) => t.completed).length;
+  // ✅ Formatear fecha correctamente
+  const formatDueDate = (dueDate: string, dueTime?: string) => {
+    if (!dueDate) return '';
+    
+    const date = new Date(dueDate);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const tomorrowOnly = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate());
+
+    if (dateOnly.getTime() === todayOnly.getTime()) {
+      return `Hoy${dueTime ? ` ${dueTime}` : ''}`;
+    } else if (dateOnly.getTime() === tomorrowOnly.getTime()) {
+      return `Mañana${dueTime ? ` ${dueTime}` : ''}`;
+    }
+    
+    return date.toLocaleDateString('es-PA', { day: '2-digit', month: 'short' });
+  };
+
+  // ✅ Normalizar prioridad
+  const normalizePriority = (priority?: string): 'high' | 'medium' | 'low' => {
+    if (!priority) return 'medium';
+    const lower = priority.toLowerCase();
+    if (lower === 'high') return 'high';
+    if (lower === 'medium') return 'medium';
+    if (lower === 'low') return 'low';
+    return 'medium';
+  };
+
+  // ✅ Verificar si está vencida
+  const checkIsOverdue = (task: any): boolean => {
+    if (!task.dueDate || task.completed) return false;
+    const due = new Date(task.dueDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return due < today;
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="h-full">
+        <CardHeader>
+          <CardTitle>Tareas Pendientes</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[200px]">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="h-full">
+        <CardHeader>
+          <CardTitle>Tareas Pendientes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground text-center">
+            Error al cargar tareas
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const tasks = data?.data || [];
+  const stats = data?.stats || { completed: 0, total: 0 };
+
+  // ✅ ORDENAR TAREAS:
+  // 1. Primero las pendientes (completed = false), luego las completadas
+  // 2. Dentro de cada grupo, ordenar por fecha (más reciente primero)
+  const sortedTasks = [...tasks].sort((a, b) => {
+    // ✅ Primero: Separar por completadas vs pendientes
+    if (a.completed !== b.completed) {
+      return a.completed ? 1 : -1; // Pendientes primero (false < true)
+    }
+
+    // ✅ Segundo: Ordenar por fecha (más reciente primero)
+    const dateA = new Date(a.dueDate || a.startDate);
+    const dateB = new Date(b.dueDate || b.startDate);
+    return dateB.getTime() - dateA.getTime(); // Descendente (más reciente primero)
+  });
 
   return (
     <Card className="h-full">
@@ -92,7 +129,7 @@ const TasksWidget = () => {
             Tareas Pendientes
           </CardTitle>
           <p className="text-sm text-muted-foreground mt-1">
-            {completedCount}/{tasks.length} completadas
+            {stats.completed}/{stats.total} completadas
           </p>
         </div>
         <Button size="sm" className="gap-1">
@@ -102,49 +139,82 @@ const TasksWidget = () => {
       </CardHeader>
       <CardContent className="space-y-3 max-h-[400px] overflow-y-auto">
         <AnimatePresence>
-          {tasks.map((task) => (
-            <motion.div
-              key={task.id}
-              layout
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className={cn(
-                "flex items-start gap-3 p-3 rounded-lg border transition-all",
-                task.completed
-                  ? "bg-muted/50 opacity-60"
-                  : "bg-card hover:bg-muted/30"
-              )}
-            >
-              <Checkbox
-                checked={task.completed}
-                onCheckedChange={() => toggleTask(task.id)}
-                className="mt-0.5"
-              />
-              <div className="flex-1 min-w-0">
-                <p
+          {sortedTasks.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <p className="text-sm">No hay tareas pendientes</p>
+            </div>
+          ) : (
+            sortedTasks.map((task) => {
+              const normalizedPriority = normalizePriority(task.priority);
+              const taskIsOverdue = checkIsOverdue(task);
+
+              return (
+                <motion.div
+                  key={task.id}
+                  layout
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
                   className={cn(
-                    "text-sm font-medium truncate",
-                    task.completed && "line-through text-muted-foreground"
+                    "flex items-start gap-3 p-3 rounded-lg border transition-all",
+                    task.completed
+                      ? "bg-muted/50 opacity-60"
+                      : "bg-card hover:bg-muted/30",
+                    taskIsOverdue && !task.completed && "border-destructive/50"
                   )}
                 >
-                  {task.title}
-                </p>
-                <div className="flex items-center gap-3 mt-2 flex-wrap">
-                  <Badge
-                    variant="outline"
-                    className={cn("text-xs", priorityColors[task.priority])}
-                  >
-                    {priorityLabels[task.priority]}
-                  </Badge>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="w-3 h-3" />
-                    {task.dueTime}
+                  <Checkbox
+                    checked={task.completed}
+                    onCheckedChange={() => handleToggleTask(task)}
+                    className="mt-0.5"
+                    disabled={toggleTaskMutation.isPending}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className={cn(
+                        "text-sm font-medium truncate",
+                        task.completed && "line-through text-muted-foreground",
+                        taskIsOverdue && !task.completed && "text-destructive"
+                      )}
+                    >
+                      {task.title}
+                    </p>
+                    <div className="flex items-center gap-3 mt-2 flex-wrap">
+                      {/* ✅ Badge de prioridad - SIEMPRE se muestra */}
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "text-xs px-2 py-0.5",
+                          priorityColors[normalizedPriority]
+                        )}
+                      >
+                        {priorityLabels[normalizedPriority]}
+                      </Badge>
+                      
+                      {/* ✅ Fecha */}
+                      {task.dueDate && task.dueDate.trim() !== '' && (
+                        <div className={cn(
+                          "flex items-center gap-1 text-xs",
+                          taskIsOverdue && !task.completed ? "text-destructive" : "text-muted-foreground"
+                        )}>
+                          <Clock className="w-3 h-3" />
+                          {formatDueDate(task.dueDate, task.dueTime)}
+                        </div>
+                      )}
+                      
+                      {/* ✅ Ubicación */}
+                      {task.location && task.location.trim() !== '' && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <MapPin className="w-3 h-3" />
+                          {task.location}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+                </motion.div>
+              );
+            })
+          )}
         </AnimatePresence>
       </CardContent>
     </Card>

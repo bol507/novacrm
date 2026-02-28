@@ -14,6 +14,10 @@ const UsersPage = lazy(() => import("@/features/users/pages/UsersPage"));
 const OpportunitiesPage = lazy(() => import("@/features/opportunity/pages/OpportunitiesPage"));
 const QuotesPage = lazy(() => import("@/features/quotes/pages/QuotesPage"));
 const QuoteDetailPage = lazy(() => import("@/features/quotes/pages/QuoteDetailPage"));
+const ProjectsPage = lazy(() => import("@/features/projects/pages/ProjectsPage"));
+const ActiveProjectsPage = lazy(() => import("@/features/projects/pages/ActiveProjectsPage"));
+const ProjectDetailPage = lazy(() => import("@/features/projects/pages/ProjectDetailPage"));
+const TaskListPage = lazy(() => import("@/features/tasks/pages/TaskListPage"));
 
 export const router = createBrowserRouter([
   // Rutas públicas
@@ -51,6 +55,10 @@ export const router = createBrowserRouter([
       { path: "opportunities", element: <OpportunitiesPage />}, 
       { path: "quotes", element: <QuotesPage />},
       { path: "quotes/:quoteId", element: <QuoteDetailPage  />},
+      { path: "projects", element: <ProjectsPage />},
+      { path: "projects/active", element: <ActiveProjectsPage />},
+      { path: "projects/:projectId", element: <ProjectDetailPage />},
+      { path: "tasks", element: <TaskListPage />},
       
     ],
   },
