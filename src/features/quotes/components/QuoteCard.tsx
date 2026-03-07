@@ -81,21 +81,21 @@ export const QuoteCard = ({
               Cotización #{quote.quoteno}
             </p>
           </div>
-          <span className={`px-2 py-1 text-xs rounded border ${getBadgeColor()}`}>
+          <span className={`px-2 py-1 text-xs rounded border ${getBadgeColor()} flex-shrink-0`}>
             {getStatusLabel()}
           </span>
         </div>
 
-        {/* Panel financiero - corregido */}
+        {/* Panel financiero */}
         <div className="mt-3 border-t border-border pt-3">
           <div className="flex justify-between text-sm mb-1">
             <span className="text-muted-foreground">Subtotal:</span>
-            <span>{formatCurrency(quote.subtotal)}</span>
+            <span className="flex-shrink-0">{formatCurrency(quote.subtotal)}</span>
           </div>
           {quote.discount_percent && quote.discount_percent > 0 && (
             <div className="flex justify-between text-sm mb-1">
               <span className="text-muted-foreground">Descuento:</span>
-              <span className="text-destructive">
+              <span className="text-destructive flex-shrink-0">
                 -{quote.discount_percent}% ({formatCurrency(quote.subtotal * quote.discount_percent / 100)})
               </span>
             </div>
@@ -103,23 +103,23 @@ export const QuoteCard = ({
           {hasTaxes && (
             <div className="flex justify-between text-sm mb-1">
               <span className="text-muted-foreground">ITBMS:</span>
-              <span className="text-blue-600 font-medium">
+              <span className="text-blue-600 font-medium flex-shrink-0">
                 {formatCurrency(taxAmount)}
               </span>
             </div>
           )}
           <div className="flex justify-between font-medium mt-2 pt-2 border-t border-border">
             <span>Total:</span>
-            <span className="text-primary">{formatCurrency(quote.total)}</span>
+            <span className="text-primary flex-shrink-0">{formatCurrency(quote.total)}</span>
           </div>
         </div>
 
-        {/* Descripción general */}
+        {/* Descripción general - CORREGIDO */}
         {quote.description && (
           <div className="mt-4 border-t border-border pt-4">
-            <h4 className="text-lg font-semibold mb-2">Descripción</h4>
+            <h4 className="text-sm font-semibold mb-2">Descripción</h4>
             <p 
-              className="text-muted-foreground line-clamp-2 cursor-pointer"
+              className="text-xs text-muted-foreground line-clamp-3 cursor-pointer break-words"
               onClick={handleViewQuote}
             >
               {quote.description}
@@ -127,32 +127,50 @@ export const QuoteCard = ({
           </div>
         )}
 
-        {/* Ítems de la cotización */}
+        {/* Ítems de la cotización - CORREGIDO */}
         {quote.items.length > 0 && (
           <div className="mt-4 border-t border-border pt-4">
-            <h4 className="text-lg font-semibold mb-2">Ítems</h4>
+            <h4 className="text-sm font-semibold mb-2">Ítems</h4>
             <div className="space-y-2">
               {quote.items.slice(0, 2).map((item, index) => (
                 <div 
                   key={index} 
-                  className="flex justify-between cursor-pointer"
+                  className="flex justify-between items-start gap-2 cursor-pointer"
                   onClick={handleViewQuote}
                 >
-                  <div>
-                    <p className="font-medium truncate">{item.productname}</p>
-                    <p className="text-xs text-muted-foreground">
+                  <div className="flex-1 min-w-0">
+                    {/* ✅ Nombre del producto con truncamiento */}
+                    <p className="font-medium text-sm truncate" title={item.productname}>
+                      {item.productname || 'Sin nombre'}
+                    </p>
+                    
+                    {/* ✅ Descripción del ítem con truncamiento (si existe) */}
+                    {item.description && (
+                      <p 
+                        className="text-xs text-muted-foreground line-clamp-2 break-words mt-0.5"
+                        title={item.description}
+                      >
+                        {item.description}
+                      </p>
+                    )}
+                    
+                    {/* ✅ Cantidad y precio unitario */}
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {item.quantity} × {formatCurrency(item.listprice)}
                     </p>
                   </div>
-                  <span className="font-medium">{formatCurrency(item.total)}</span>
+                  {/* ✅ Precio total alineado a la derecha */}
+                  <span className="font-medium text-sm flex-shrink-0">
+                    {formatCurrency(item.total)}
+                  </span>
                 </div>
               ))}
               {quote.items.length > 2 && (
                 <div 
-                  className="text-xs text-muted-foreground cursor-pointer"
+                  className="text-xs text-muted-foreground cursor-pointer hover:text-primary transition-colors"
                   onClick={handleViewQuote}
                 >
-                  +{quote.items.length - 2} ítems más
+                  +{quote.items.length - 2} ítems más →
                 </div>
               )}
             </div>
@@ -160,7 +178,7 @@ export const QuoteCard = ({
         )}
 
         {/* Botones de acción */}
-        <div className="flex gap-2 mt-4">
+        <div className="flex gap-2 mt-4 pt-4 border-t border-border">
           <Button
             variant="outline"
             size="sm"

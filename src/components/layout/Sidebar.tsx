@@ -67,8 +67,7 @@ const menuItems = [
   {
     title: "Proyectos",
     items: [
-    { name: "Todos los proyectos", icon: Folder, path: "/dashboard/projects" },
-    { name: "Proyectos activos", icon: CheckCircleIcon, path: "/dashboard/projects/active" },
+    { name: "Proyectos", icon: Folder, path: "/dashboard/projects" },
     { name: "Tareas", icon: CheckSquare, path: "/dashboard/tasks" },
   ],
   },

@@ -31,12 +31,22 @@ export const useProjects = (
     'queryKey' | 'queryFn'
   >
 ) => {
-  
-  const validatedPage = useMemo(() => Math.max(1, page), [page]);
-  const validatedLimit = useMemo(() => Math.min(100, Math.max(1, limit)), [limit]);
-  const validatedSearchTerm = useMemo(() => searchTerm.trim(), [searchTerm]);
+  // ✅ Validación segura de parámetros
+  const validatedPage = useMemo(() => {
+    const p = Number(page);
+    return Number.isNaN(p) || p < 1 ? 1 : p;
+  }, [page]);
 
-  
+  const validatedLimit = useMemo(() => {
+    const l = Number(limit);
+    return Number.isNaN(l) || l < 1 ? 10 : Math.min(100, Math.max(1, l));
+  }, [limit]);
+
+  const validatedSearchTerm = useMemo(() => {
+    const term = searchTerm ?? '';
+    return typeof term === 'string' ? term.trim() : '';
+  }, [searchTerm]);
+
   const queryFilters = useMemo<ProjectFilters>(() => ({
     page: validatedPage,
     limit: validatedLimit,
@@ -51,11 +61,9 @@ export const useProjects = (
     sortOrder: filters?.sortOrder || 'DESC',
   }), [validatedPage, validatedLimit, validatedSearchTerm, filters]);
 
-  
   return useQuery<ProjectResponse, AxiosError>({
     queryKey: ['projects', queryFilters],
     queryFn: async ({ signal }) => {
-  
       if (signal?.aborted) {
         throw new Error('Request cancelled');
       }
@@ -64,35 +72,44 @@ export const useProjects = (
         const response = await projectService.getProjects(queryFilters, signal);
         return response;
       } catch (error) {
-       
         if (error instanceof Error && error.name === 'AbortError') {
           throw new Error('Request cancelled by user');
         }
         throw error;
       }
     },
-    
+    // ✅ Configuración de caché optimizada
     staleTime: 5 * 60 * 1000, // 5 minutos
-    gcTime: 10 * 60 * 1000, // 10 minutos
+    gcTime: 10 * 60 * 1000,   // 10 minutos (React Query v4+)
+    
+    // ✅ CORRECCIÓN: Mantener datos previos mientras se cargan nuevos
     placeholderData: (previousData: ProjectResponse | undefined) => previousData,
     
+    // ✅ No mostrar estado de carga inicial si ya hay datos en caché
+    initialData: () => {
+      // Opcional: cargar datos iniciales desde caché si existen
+      return undefined;
+    },
+    
+    // ✅ Retry inteligente
     retry: (failureCount, error) => {
       if (error instanceof AxiosError) {
-    
         if (error.response?.status && error.response.status >= 400) {
           return false;
         }
-    
         return failureCount < 3;
       }
       return failureCount < 3;
     },
     
+    // ✅ Habilitar query solo con parámetros válidos
     enabled: validatedPage > 0 && validatedLimit > 0,
     
+    // ✅ Permitir sobreescribir opciones desde el consumidor
     ...options,
   });
 };
+
 
 /**
  * Hook helper para obtener proyectos activos (en curso)

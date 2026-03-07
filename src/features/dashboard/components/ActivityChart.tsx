@@ -12,8 +12,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/lib/utils";
-import { useActivityData, type TimePeriod } from "../hooks/useActivityData";
 import { Loader2 } from "lucide-react";
+import type { TimePeriod } from "../types/dashboard";
+import { useActivityData } from "../hooks/useActivityData";
 
 const periods: { label: string; value: TimePeriod }[] = [
   { label: "7 días", value: "7days" },

@@ -18,6 +18,8 @@ const ProjectsPage = lazy(() => import("@/features/projects/pages/ProjectsPage")
 const ActiveProjectsPage = lazy(() => import("@/features/projects/pages/ActiveProjectsPage"));
 const ProjectDetailPage = lazy(() => import("@/features/projects/pages/ProjectDetailPage"));
 const TaskListPage = lazy(() => import("@/features/tasks/pages/TaskListPage"));
+const TaskCreatePage = lazy(() => import("@/features/tasks/pages/TaskCreatePage"));
+const TaskDetailPage = lazy(() => import("@/features/tasks/pages/TaskDetailPage"));
 
 export const router = createBrowserRouter([
   // Rutas públicas
@@ -59,6 +61,8 @@ export const router = createBrowserRouter([
       { path: "projects/active", element: <ActiveProjectsPage />},
       { path: "projects/:projectId", element: <ProjectDetailPage />},
       { path: "tasks", element: <TaskListPage />},
+      { path: "tasks/new", element: <TaskCreatePage />},
+      { path: "tasks/:taskId", element: <TaskDetailPage />},
       
     ],
   },

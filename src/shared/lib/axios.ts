@@ -11,12 +11,17 @@ const apiClient = axios.create({
     'Accept': 'application/json',
   },
 });
-
+// Interceptor para agregar token JWT
 apiClient.interceptors.request.use(config => {
   const token = localStorage.getItem('access_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  if (!(config.data instanceof FormData)) {
+    config.headers['Content-Type'] = 'application/json';
+  }
+  
   return config;
 });
 
