@@ -44,9 +44,11 @@ const ClientDetailDialog = ({ client, open, onOpenChange }: ClientDetailDialogPr
 
     const formatCurrency = (value: number | null) => {
         if (!value) return "-";
-        return new Intl.NumberFormat("es-MX", {
+        return new Intl.NumberFormat("es-PA", {
             style: "currency",
-            currency: "MXN",
+            currency: "USD",
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
         }).format(value);
     };
 

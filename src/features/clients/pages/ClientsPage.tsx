@@ -2,25 +2,38 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useClients } from "@/features/clients/hooks/use-clients";
-import { Search, Plus } from "lucide-react";
-import ClientDetailDialog from "../components/ClientDetailDialog";
-import type { Client } from "@/features/clients/types/client";
+import { Search, Plus, LayoutGridIcon, ListIcon } from "lucide-react";
+import type { Client, ClientViewMode } from "@/features/clients/types/client";
 import { toast } from "sonner";
 import { clientService } from "@/features/clients/services/client-service";
-import ClientFormDialog from "../components/ClientFormDialog";
 import { ClientCards } from "@/features/clients/components/ClientCards";
+import { useNavigate } from "react-router-dom";
+import ListFooter from "@/components/ListFooter";
+import ClientTable from "../components/ClientTable";
 
 const ClientsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
-  const { data, isLoading, error, refetch } = useClients(page, 20, searchTerm);
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingClient, setEditingClient] = useState<Client | null>(null);
 
+  const [viewMode, setViewMode] = useState<ClientViewMode>(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("clientsViewMode") as ClientViewMode) || "cards";
+    }
+    return "cards";
+  });
+
+  const { data, isLoading, error, refetch } = useClients(page, 20, searchTerm);
+  const navigate = useNavigate();
   useEffect(() => {
     setPage(1);
   }, [searchTerm]);
+
+  // ✅ Persistir preferencia de vista
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("clientsViewMode", viewMode);
+    }
+  }, [viewMode]);
 
   const filteredClients = data?.data || [];
 
@@ -34,34 +47,38 @@ const ClientsPage = () => {
     );
   }
 
-  const handleClientClick = (client: Client) => {
-    setSelectedClient(client);
+
+
+  const handleCreateClick = () => {
+    navigate('/dashboard/clients/new');
   };
 
-  const handleCreateClient = async (clientData: any) => {
+
+
+  const handleEditClient = (client: Client) => {
+    //setEditingClient(client);
+    navigate(`/dashboard/clients/${client.accountid}/edit`);
+  };
+
+  const handleDeleteClient = async (client: Client) => {
     try {
-      await clientService.createClient(clientData);
-      await refetch();
-      toast
+      await clientService.deleteClient(client.accountid);
+      toast.success("Cliente eliminado exitosamente");
+      refetch();
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || "Error al eliminar el cliente");
     }
   };
 
-  const handleEditClient = (client: Client) => {
-    setEditingClient(client);
+
+  const handleViewClient = (client: Client) => {
+    navigate(`/dashboard/clients/${client.accountid}`);
   };
 
-  const handleUpdateClient = async (data: any) => {
-  try {
-    await clientService.updateClient(editingClient!.accountid, data);
-    setEditingClient(null);
-    toast.success("Cliente actualizado exitosamente");
-    refetch(); // Recargar lista
-  } catch (error) {
-    toast.error("Error al actualizar el cliente");
-  }
-};
+  const handleViewModeChange = (mode: ClientViewMode) => {
+    setViewMode(mode);
+    setPage(1); // Resetear página al cambiar vista
+  };
 
   return (
     <div className="space-y-6">
@@ -73,13 +90,36 @@ const ClientsPage = () => {
             Gestiona tu cartera de clientes
           </p>
         </div>
-        <Button
-          className="gap-2"
-          onClick={() => setIsCreateDialogOpen(true)}
-        >
-          <Plus className="h-4 w-4" />
-          Nuevo Cliente
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* Toggle Cards/Table */}
+          <div className="flex rounded-md border border-border overflow-hidden">
+            <Button
+              variant={viewMode === "cards" ? "default" : "ghost"}
+              size="icon"
+              onClick={() => handleViewModeChange("cards")}
+              className="rounded-none border-r border-border"
+              title="Vista de tarjetas"
+            >
+              <LayoutGridIcon className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === "table" ? "default" : "ghost"}
+              size="icon"
+              onClick={() => handleViewModeChange("table")}
+              className="rounded-none"
+              title="Vista de tabla"
+            >
+              <ListIcon className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          {/* Botón Nuevo Cliente */}
+          <Button className="gap-2"  onClick={handleCreateClick}>
+            <Plus className="h-4 w-4" />
+            Nuevo Cliente
+          </Button>
+        </div>
+      
       </div>
 
       {/* Search */}
@@ -95,46 +135,38 @@ const ClientsPage = () => {
         </div>
       </div>
 
-      {/* Grid*/}
-      <ClientCards
-        clients={filteredClients}
-        isLoading={isLoading}
-        onClientClick={handleClientClick}
-        onEditClient={handleEditClient}
-      />
-
-      {/* Footer info */}
-      {!isLoading && data && (
-        <div className="text-sm text-muted-foreground">
-          Mostrando {filteredClients.length} de {data.meta.total} clientes
-        </div>
-      )}
-
-      {/* Dialog de detalle */}
-      <ClientDetailDialog
-        client={selectedClient}
-        open={!!selectedClient}
-        onOpenChange={(open) => {
-          if (!open) setSelectedClient(null);
-        }}
-      />
-
-      {/*  Diálogo de creación */}
-      <ClientFormDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-        onSubmit={handleCreateClient}
-      />
-
-      {editingClient && (
-        <ClientFormDialog
-          open={true}
-          onOpenChange={() => setEditingClient(null)}
-          onSubmit={handleUpdateClient}
-          mode="edit"
-          initialData={editingClient}
+      {/* ✅ Lista de clientes según viewMode */}
+      {viewMode === "cards" ? (
+        <ClientCards
+          clients={filteredClients}
+          isLoading={isLoading}
+          onView={handleViewClient}
+          onEdit={handleEditClient}
+          onDelete={handleDeleteClient}
+        />
+      ) : (
+        <ClientTable
+          clients={filteredClients}
+          isLoading={isLoading}
+          onView={handleViewClient}
+          onEdit={handleEditClient}
+          onDelete={handleDeleteClient}
         />
       )}
+
+      {/* Footer info */}
+      <ListFooter
+        currentPage={page}
+        totalPages={data?.meta?.last_page || 1}
+        totalItems={data?.meta?.total || 0}
+        displayedItems={filteredClients.length}
+        onPageChange={setPage}
+        isLoading={isLoading}
+        entityLabel="clientes"
+        className="mt-4"
+      />
+
+      
 
     </div>
   );

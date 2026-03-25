@@ -6,15 +6,23 @@ import type { Quote, QuoteFormData } from '../types/quote';
 const QUOTES_API = '/quotes';
 
 export const quoteService = {
-  async getQuotes(page: number, perPage: number, search?: string) {
-    const params = new URLSearchParams();
-    params.append('page', page.toString());
-    params.append('per_page', perPage.toString());
-    if (search) params.append('search', search);
-
-    const response = await apiClient.get(`${QUOTES_API}?${params.toString()}`);
-    return response.data;
-  },
+  async getQuotes(
+  page: number, 
+  perPage: number, 
+  search?: string, 
+  filters?:{ clientId?: number }
+) {
+  const params: Record<string, any> = {
+    page,
+    per_page: perPage,
+  };
+  
+  if (search) params.search = search;
+  if (filters?.clientId) params.account_id = filters.clientId;  
+  
+  const response = await apiClient.get(QUOTES_API, { params });  
+  return response.data;
+},
 
   async getQuote(id: number) {
     const response = await apiClient.get(`${QUOTES_API}/${id}`);
@@ -37,19 +45,19 @@ export const quoteService = {
 
   async downloadPDF(quoteId: number) {
     const response = await apiClient.get(`/quotes/${quoteId}/pdf/download`, {
-      responseType: 'blob' // Importante para PDF
+      responseType: 'blob' 
     });
 
-    // Crear y descargar el archivo
-    const blob = new Blob([response.data], { type: 'application/pdf' });
+    
+   /* const blob = new Blob([response.data], { type: 'application/pdf' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
     link.download = `Cotizacion_${quoteId}.pdf`;
     link.click();
     window.URL.revokeObjectURL(url);
-
-    return response.data;
+*/
+    return response.data as Blob;
   },
 
   async previewPDF(quoteId: number) {

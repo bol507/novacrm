@@ -9,11 +9,11 @@ const TaskCreatePage = () => {
 
   const handleSuccess = (taskId: number) => {
     // Redirect to task detail after successful creation
-    navigate(`/tasks/${taskId}`)
+    navigate(`/dashboard/tasks/${taskId}`)
   }
 
   const handleCancel = () => {
-    navigate('/tasks')
+    navigate('/dashboard/tasks')
   }
 
   return (

@@ -5,7 +5,8 @@ export const useQuoteDetail = (quoteId: string) => {
   return useQuery({
     queryKey: ['quote', quoteId],
     queryFn: () => quoteService.getQuote(parseInt(quoteId)),
-    enabled: !!quoteId,
-    staleTime: 5 * 60 * 1000, 
+    enabled: !!quoteId && quoteId !== 'undefined',
+    staleTime: 0, 
+    retry: 1,
   });
 };

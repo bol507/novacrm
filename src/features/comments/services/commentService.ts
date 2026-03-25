@@ -3,10 +3,16 @@ import apiClient from '@/shared/lib/axios';
 import type { 
   ProjectComment, 
   CommentResponse, 
-  CreateCommentData 
+  CreateCommentData, 
+  CommentDetail
 } from '@/features/comments/types/comment';
 
 export const commentService = {
+  async getCommentById(commentId: number): Promise<CommentDetail> {
+    const response = await apiClient.get<CommentDetail>(`/comments/${commentId}`);
+    return response.data;
+  },
+
   getComments: async (
     module: string, 
     relatedId: number,

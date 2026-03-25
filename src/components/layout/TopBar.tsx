@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Menu,
-  Search,
   Bell,
   ChevronDown,
   UserIcon,
@@ -10,7 +9,6 @@ import {
   LogOutIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,16 +22,48 @@ import { Badge } from "@/components/ui/badge";
 import { ModeToggle } from "../mode-toggle";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import MyProfileDialog from "@/features/users/components/MyProfileDialog";
+import { GlobalSearch } from "@/features/search/components/GlobalSearch";
 
 interface TopBarProps {
+  /** Callback invoked when the mobile menu button is clicked */
   onMenuClick: () => void;
-  sidebarOpen: boolean;
-  onSidebarToggle: () => void;
+  /** Whether the sidebar is currently open (optional, for responsive behavior) */
+  sidebarOpen?: boolean;
+  /** Callback to toggle the sidebar (optional, alternative to onMenuClick) */
+  onSidebarToggle?: () => void;
 }
 
-const TopBar = ({ onMenuClick, sidebarOpen, onSidebarToggle }: TopBarProps) => {
+/**
+ * Top navigation bar component for the main application layout.
+ *
+ * Features:
+ * - Mobile menu toggle button (visible only on small screens)
+ * - Global search component (handles responsive display internally)
+ * - Theme toggle (light/dark mode)
+ * - Notification dropdown with mock data
+ * - User menu with profile and logout actions
+ * - Profile dialog for editing user information
+ *
+ * @component
+ * @param props - Component props
+ * @param props.onMenuClick - Callback invoked when the mobile menu button is clicked
+ * @param props.sidebarOpen - Whether the sidebar is currently open (optional)
+ * @param props.onSidebarToggle - Callback to toggle the sidebar (optional)
+ * @returns The rendered top bar component
+ *
+ * @example
+ * // Basic usage with mobile menu handler
+ * <TopBar onMenuClick={() => setIsMobileMenuOpen(true)} />
+ *
+ * @example
+ * // Usage with sidebar toggle
+ * <TopBar
+ *   sidebarOpen={sidebarOpen}
+ *   onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
+ * />
+ */
+const TopBar = ({ onMenuClick }: TopBarProps) => {
   const navigate = useNavigate();
-  const [searchFocused, setSearchFocused] = useState(false);
   const { user, loading, logout } = useAuth();
   const [isMyProfileOpen, setIsMyProfileOpen] = useState(false);
 
@@ -50,15 +80,14 @@ const TopBar = ({ onMenuClick, sidebarOpen, onSidebarToggle }: TopBarProps) => {
     );
   }
 
-  // Si no hay usuario (aunque no debería pasar en un layout protegido)
   if (!user) {
     return null;
   }
 
   const notifications = [
-    { id: 1, title: "Nueva oportunidad", message: "Cliente ABC solicitó cotización", time: "5 min" },
-    { id: 2, title: "Tarea completada", message: "Seguimiento a lead finalizado", time: "1 hora" },
-    { id: 3, title: "Reunión próxima", message: "Presentación en 30 minutos", time: "30 min" },
+    { id: 1, title: "New opportunity", message: "Client ABC requested a quote", time: "5 min" },
+    { id: 2, title: "Task completed", message: "Lead follow-up completed", time: "1 hr" },
+    { id: 3, title: "Upcoming meeting", message: "Presentation in 30 minutes", time: "30 min" },
   ];
 
   const handleMyProfileClick = () => {
@@ -85,29 +114,18 @@ const TopBar = ({ onMenuClick, sidebarOpen, onSidebarToggle }: TopBarProps) => {
             <Menu className="w-5 h-5" />
           </Button>
 
-          {/* Search */}
-          <div className="relative hidden sm:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar..."
-              className={`pl-9 w-64 transition-all ${searchFocused ? "w-80 ring-2 ring-primary" : ""}`}
-              onFocus={() => setSearchFocused(true)}
-              onBlur={() => setSearchFocused(false)}
-            />
+          {/* Search - GlobalSearch handles responsive behavior internally */}
+          <div className="relative w-full max-w-md">
+            <GlobalSearch />
           </div>
         </div>
 
         {/* Right Section */}
         <div className="flex items-center gap-2 sm:gap-4">
-          {/* Mobile Search Button */}
-          <Button variant="ghost" size="icon" className="sm:hidden">
-            <Search className="w-5 h-5" />
-          </Button>
-
           {/* Theme Toggle */}
           <ModeToggle />
 
-          {/* Notifications */}
+          {/* Notifications Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">
@@ -119,8 +137,8 @@ const TopBar = ({ onMenuClick, sidebarOpen, onSidebarToggle }: TopBarProps) => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80">
               <DropdownMenuLabel className="flex items-center justify-between">
-                Notificaciones
-                <Badge variant="secondary">3 nuevas</Badge>
+                Notifications
+                <Badge variant="secondary">3 new</Badge>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               {notifications.map((notif) => (
@@ -134,7 +152,7 @@ const TopBar = ({ onMenuClick, sidebarOpen, onSidebarToggle }: TopBarProps) => {
               ))}
               <DropdownMenuSeparator />
               <DropdownMenuItem className="justify-center text-primary font-medium">
-                Ver todas las notificaciones
+                View all notifications
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -160,15 +178,15 @@ const TopBar = ({ onMenuClick, sidebarOpen, onSidebarToggle }: TopBarProps) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleMyProfileClick}>
                 <UserIcon className="w-4 h-4 mr-2" />
-                Perfil
+                Profile
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <SettingsIcon className="w-4 h-4 mr-2" />
-                Configuración
+                Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -176,7 +194,7 @@ const TopBar = ({ onMenuClick, sidebarOpen, onSidebarToggle }: TopBarProps) => {
                 className="text-destructive focus:text-destructive"
               >
                 <LogOutIcon className="w-4 h-4 mr-2" />
-                Cerrar Sesión
+                Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

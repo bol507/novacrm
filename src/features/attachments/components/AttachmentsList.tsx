@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { 
@@ -15,7 +14,6 @@ import {
 import { useAttachments } from "../hooks/useAttachments"
 import { useDeleteAttachment } from "../hooks/useDeleteAttachment"
 import { toast } from "sonner"
-import { cn } from "@/shared/lib/utils"
 import { ExpandableText } from "@/components/ExpandableText"
 
 interface AttachmentsListProps {
@@ -122,7 +120,7 @@ export function AttachmentsList({ module, recordId, onFileClick }: AttachmentsLi
                     className="flex items-start gap-3 flex-1 cursor-pointer"
                     onClick={() => onFileClick?.(file.viewUrl)}
                   >
-                    <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center shrink-0">
                       {file.mimeType.startsWith('image/') ? (
                         <img 
                           src={`https://drive.google.com/thumbnail?id=${file.googleDriveId}&sz=w1000`}
@@ -148,7 +146,7 @@ export function AttachmentsList({ module, recordId, onFileClick }: AttachmentsLi
                       </p>
                       {file.description && (
                         <div className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
-                          <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                          <Info className="h-4 w-4 mt-0.5 shrink-0" />
                           <ExpandableText
                             text={file.description}
                             maxLines={2}

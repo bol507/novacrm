@@ -11,19 +11,71 @@ import { useUsers } from "@/features/users/hooks/use-users"
 import { useUser } from "@/features/users/hooks/use-user"
 
 interface UserSearchProps {
+  /** Currently selected user ID or null for none */
   value: number | null | undefined
+  /** Callback invoked when user selection changes */
   onChange: (value: number | null) => void
+  /** Label text for the input field */
   label?: string
+  /** Placeholder text for the search input */
   placeholder?: string
+  /** Whether the field is required (adds asterisk to label) */
   required?: boolean
+  /** Whether to show the "All Users" option (group ID=2) */
   showAllOption?: boolean
 }
 
+/**
+ * User search component with autocomplete dropdown.
+ *
+ * Features:
+ * - Debounced search (300ms) to prevent excessive API calls
+ * - Displays selected user information when a user is chosen
+ * - Optional "All Users" option for team-wide visibility
+ * - Keyboard navigation (Escape to close dropdown)
+ * - Loading states for search and selected user data
+ * - Accessible with ARIA labels and keyboard interactions
+ *
+ * @component
+ * @param props - Component props
+ * @param props.value - Currently selected user ID or null for none
+ * @param props.onChange - Callback invoked when user selection changes
+ * @param props.label - Label text for the input field (optional)
+ * @param props.placeholder - Placeholder text for the search input (default: "Search user...")
+ * @param props.required - Whether the field is required (adds asterisk to label) (default: false)
+ * @param props.showAllOption - Whether to show the "All Users" option (default: true)
+ * @returns The rendered user search component
+ *
+ * @example
+ * // Basic usage
+ * <UserSearch
+ *   value={assignedUserId}
+ *   onChange={setAssignedUserId}
+ *   label="Assign to"
+ * />
+ *
+ * @example
+ * // Without "All Users" option
+ * <UserSearch
+ *   value={userId}
+ *   onChange={handleUserChange}
+ *   showAllOption={false}
+ * />
+ *
+ * @example
+ * // Required field
+ * <UserSearch
+ *   value={ownerId}
+ *   onChange={setOwnerId}
+ *   label="Owner"
+ *   required={true}
+ * />
+ */
 export function UserSearch({ 
   value, 
   onChange, 
   label, 
-  placeholder = "Buscar usuario...",
+  placeholder = "Search user...",
   required = false,
   showAllOption = true
 }: UserSearchProps) {
@@ -32,7 +84,6 @@ export function UserSearch({
   const inputRef = useRef<HTMLInputElement>(null)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
 
-  
   const { data: selectedUser, isLoading: loadingSelectedUser } = useUser(value)
 
   const { data: usersData, isLoading: loadingUsers, error } = useUsers(1, 10, debouncedSearchTerm)
@@ -40,8 +91,7 @@ export function UserSearch({
 
   useEffect(() => {
     if (value === 2 && showAllOption) {
-      // ✅ Grupo "Todos los usuarios" (ID=2)
-      setSearchTerm("Todos los usuarios")
+      setSearchTerm("All Users")
     } else if (selectedUser && selectedUser.first_name && selectedUser.last_name) {
       setSearchTerm(`${selectedUser.first_name} ${selectedUser.last_name}`)
     } else if (!value || value === 0) {
@@ -49,9 +99,8 @@ export function UserSearch({
     }
   }, [selectedUser, value, showAllOption])
 
-  
   useEffect(() => {
-    if (debouncedSearchTerm.length >= 2 || (showAllOption && debouncedSearchTerm.toLowerCase().includes('todos'))) {
+    if (debouncedSearchTerm.length >= 2 || (showAllOption && debouncedSearchTerm.toLowerCase().includes('all'))) {
       setIsOpen(true)
     } else {
       setIsOpen(false)
@@ -66,7 +115,6 @@ export function UserSearch({
     }
   }
 
-
   const handleClear = () => {
     onChange(null)
     setSearchTerm("")
@@ -75,7 +123,6 @@ export function UserSearch({
       inputRef.current.focus()
     }
   }
-
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -130,7 +177,6 @@ export function UserSearch({
         )}
       </div>
 
-      {/* Sugerencias de búsqueda */}
       {isOpen && (
         <div 
           className={cn(
@@ -142,15 +188,14 @@ export function UserSearch({
           {loadingUsers ? (
             <div className="p-4 flex items-center justify-center">
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              <span>Buscando usuarios...</span>
+              <span>Searching users...</span>
             </div>
           ) : error ? (
             <div className="p-4 text-center text-red-500">
-              Error al buscar usuarios: {(error as any).message}
+              Error searching users: {(error as any).message}
             </div>
           ) : (
             <div className="space-y-1">
-              {/* ✅ Opción "Todos los usuarios" (grupo ID=2) */}
               {showAllOption && (
                 <div
                   className={cn(
@@ -161,15 +206,14 @@ export function UserSearch({
                 >
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4" />
-                    <div className="font-medium">Todos los usuarios</div>
+                    <div className="font-medium">All Users</div>
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    El proyecto será visible para todo el equipo
+                    The project will be visible to the entire team
                   </div>
                 </div>
               )}
               
-              {/* ✅ Lista de usuarios */}
               {users.length > 0 ? (
                 users.map((user) => (
                   <div
@@ -182,13 +226,13 @@ export function UserSearch({
                   >
                     <div className="font-medium">{user.first_name} {user.last_name}</div>
                     <div className="text-sm text-muted-foreground">
-                      {user.email || "Sin correo"} • {user.role || "Sin rol"}
+                      {user.email || "No email"} • {user.role || "No role"}
                     </div>
                   </div>
                 ))
               ) : debouncedSearchTerm.length >= 2 ? (
                 <div className="p-4 text-center text-muted-foreground">
-                  No se encontraron usuarios
+                  No users found
                 </div>
               ) : null}
             </div>
@@ -196,15 +240,14 @@ export function UserSearch({
         </div>
       )}
       
-      {/* Usuario/grupo seleccionado (solo para información visual) */}
       {value === 2 && showAllOption ? (
         <div className="mt-2 p-2 bg-muted rounded-md border border-border text-sm">
           <div className="font-medium flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Todos los usuarios 
+            All Users
           </div>
           <div className="text-muted-foreground">
-            El proyecto será visible para todo el equipo
+            The project will be visible to the entire team
           </div>
         </div>
       ) : selectedUser && value && value > 0 ? (

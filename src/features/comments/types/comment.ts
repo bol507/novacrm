@@ -33,3 +33,26 @@ export interface CreateCommentData {
   is_private?: boolean;
   attachment?: File | null;
 }
+
+export interface CommentDetail {
+  id: number;
+  taskId: number;
+  relatedToId: number;  
+  relatedModule: string | null;  
+  relatedEntityType: string;  
+  relatedEntityIcon: string; 
+  content: string;
+  userId: number | null;
+  userName: string | null;
+  userEmail: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+  parentCommentId: number | null;
+  isPrivate: boolean;
+  attachment: string | null;
+  hasAttachment: boolean;
+  isReply: boolean;
+  authorName: string;
+  formattedCreatedAt: string | null;
+  reasonToEdit: string | null;
+}

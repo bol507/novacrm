@@ -28,3 +28,5 @@ export const OPPORTUNITY_STAGES = [
 ] as const;
 
 export type OpportunityStage = typeof OPPORTUNITY_STAGES[number];
+
+export type OpportunityViewMode = "cards" | "table";

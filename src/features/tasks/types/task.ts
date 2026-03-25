@@ -23,6 +23,8 @@ export interface Task {
   updatedAt: string;
 }
 
+export type TaskViewMode = "cards" | "table";
+
 export interface TaskFilters {
   status?: string[];
   priority?: string[];

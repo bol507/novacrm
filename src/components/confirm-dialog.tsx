@@ -14,7 +14,7 @@ interface ConfirmDialogContextProps {
 }
 
 const ConfirmDialogContext = createContext<ConfirmDialogContextProps>({
-  showConfirm: () => {},
+  showConfirm: () => { },
 });
 
 export interface ConfirmDialogProps {
@@ -22,8 +22,9 @@ export interface ConfirmDialogProps {
   description: string;
   confirmLabel?: string;
   cancelLabel?: string;
-  onConfirm: () => void;
+  onConfirm?: () => void;
   onCancel?: () => void;
+  variant?: 'default' | 'destructive';
 }
 
 export const ConfirmDialogProvider = ({
@@ -54,7 +55,7 @@ export const ConfirmDialogProvider = ({
       <ConfirmDialogContext.Provider value={{ showConfirm }}>
         {children}
       </ConfirmDialogContext.Provider>
-      
+
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent>
           <DialogHeader>
@@ -65,7 +66,9 @@ export const ConfirmDialogProvider = ({
             <Button variant="outline" onClick={handleCancel}>
               {props?.cancelLabel || "Cancelar"}
             </Button>
-            <Button variant="destructive" onClick={handleConfirm}>
+            <Button 
+              variant={props?.variant || 'destructive'} 
+              onClick={handleConfirm}>
               {props?.confirmLabel || "Confirmar"}
             </Button>
           </DialogFooter>

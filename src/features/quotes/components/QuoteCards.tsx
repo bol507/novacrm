@@ -1,28 +1,54 @@
-
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-
-import { 
-  FileText, 
-  DollarSign, 
-  Calendar, 
-  Building2, 
-  Users,
-  Pencil,
-  Trash2,
-  Eye
-} from "lucide-react";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import type { Quote } from "../types/quote";
 import { QuoteCard } from "./QuoteCard";
+import { FileText } from "lucide-react";
 
 interface QuoteCardsProps {
+  /** Array of quotes to display */
   quotes: Quote[];
+  /** Whether data is currently loading */
   isLoading: boolean;
-  onEditQuote: (quote: Quote) => void;
-  onDeleteQuote: (quote: Quote) => void;
+  /** Callback for editing a quote */
+  onEditQuote?: (quote: Quote) => void;
+  /** Callback for deleting a quote */
+  onDeleteQuote?: (quote: Quote) => void;
 }
 
-
-
+/**
+ * QuoteCards component for displaying quotes in a responsive card grid.
+ *
+ * Features:
+ * - Skeleton loading state with animated placeholders
+ * - Empty state with helpful message and icon
+ * - Responsive grid layout (1 column on mobile, up to 4 on large screens)
+ * - Delegates individual quote rendering to QuoteCard component
+ *
+ * @component
+ * @param props - Component props
+ * @param props.quotes - Array of quotes to display
+ * @param props.isLoading - Whether data is currently loading
+ * @param props.onEditQuote - Callback for editing a quote
+ * @param props.onDeleteQuote - Callback for deleting a quote
+ * @returns The rendered quote cards grid
+ *
+ * @example
+ * // Basic usage
+ * <QuoteCards
+ *   quotes={quotes}
+ *   isLoading={isLoading}
+ *   onEditQuote={handleEditQuote}
+ *   onDeleteQuote={handleDeleteQuote}
+ * />
+ *
+ * @example
+ * // Empty state
+ * <QuoteCards
+ *   quotes={[]}
+ *   isLoading={false}
+ *   onEditQuote={handleEditQuote}
+ *   onDeleteQuote={handleDeleteQuote}
+ * />
+ */
 export const QuoteCards = ({
   quotes,
   isLoading,
@@ -61,8 +87,8 @@ export const QuoteCards = ({
     return (
       <div className="text-center py-12">
         <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-medium text-foreground mb-2">No hay cotizaciones</h3>
-        <p className="text-muted-foreground">Crea tu primera cotización para comenzar.</p>
+        <h3 className="text-lg font-medium text-foreground mb-2">No quotes found</h3>
+        <p className="text-muted-foreground">Create your first quote to get started.</p>
       </div>
     );
   }

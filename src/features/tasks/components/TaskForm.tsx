@@ -28,18 +28,74 @@ import type { CreateTaskPayload } from "../types/task"
 import { useAuth, useIsAdmin } from "@/features/auth/hooks/use-auth"
 import { useUsers } from "@/features/users/hooks/use-users"
 
+/**
+ * Props for TaskForm component
+ */
 interface TaskFormProps {
+    /** Callback fired when task is successfully created, receives created task ID */
     onSuccess?: (taskId: number) => void
+    /** Callback fired when user cancels the form */
     onCancel?: () => void
+    /** Initial data to populate form (used for edit mode or pre-filled forms) */
     initialData?: Partial<CreateTaskPayload>
 }
 
+/**
+ * TaskForm Component
+ * 
+ * A comprehensive form for creating new tasks in the CRM system.
+ * Supports task assignment, priority levels, status tracking, scheduling, and notifications.
+ * Admin users can assign tasks to other users; regular users can only assign to themselves.
+ * 
+ * @component
+ * @param {TaskFormProps} props - Component props
+ * @param {function} [props.onSuccess] - Callback fired when task is successfully created
+ * @param {function} [props.onCancel] - Callback fired when user cancels the form
+ * @param {Partial<CreateTaskPayload>} [props.initialData] - Initial data to populate form
+ * 
+ * @returns {JSX.Element} Task creation form component
+ * 
+ * @example
+ * // Basic usage
+ * <TaskForm 
+ *   onSuccess={(taskId) => navigate(`/tasks/${taskId}`)}
+ *   onCancel={() => navigate('/tasks')}
+ * />
+ * 
+ * @example
+ * // With initial data (for pre-filled forms)
+ * <TaskForm 
+ *   initialData={{
+ *     subject: 'Follow up with client',
+ *     priority: 'High',
+ *     assigned_user_id: currentUser.id
+ *   }}
+ *   onSuccess={handleSuccess}
+ * />
+ * 
+ * @remarks
+ * - Form validation occurs on submit with real-time error clearing
+ * - Date validation ensures due date is not before start date
+ * - Time validation ensures end time is after start time
+ * - Admin users see additional "Assigned to" dropdown
+ * - Notification checkbox controls email notifications to assignee
+ * - Subject field has 255 character limit
+ * - Location field has 150 character limit
+ * 
+ * @see {@link CreateTaskPayload} for payload structure
+ * @see {@link useCreateTask} for mutation hook
+ * @see {@link useIsAdmin} for admin role checking
+ */
 export default function TaskForm({ onSuccess, onCancel, initialData }: TaskFormProps) {
     const navigate = useNavigate()
-    const { user } = useAuth() //
+    const { user } = useAuth()
     const { data: usersData } = useUsers()
     const createMutation = useCreateTask()
 
+    /**
+     * Form state with all task fields
+     * Initialized with initialData or default values
+     */
     const [formData, setFormData] = useState<CreateTaskPayload>({
         subject: initialData?.subject || '',
         date_start: initialData?.date_start || format(new Date(), 'yyyy-MM-dd'),
@@ -54,22 +110,28 @@ export default function TaskForm({ onSuccess, onCancel, initialData }: TaskFormP
         related_module_type: initialData?.related_module_type || null,
         send_notification: initialData?.send_notification ?? true,
         assigned_user_id: initialData?.assigned_user_id || user?.id,
-    });
+    })
 
+    /**
+     * Form validation errors state
+     * Keys are field names, values are error messages
+     */
     const [errors, setErrors] = useState<Record<string, string>>({})
 
-    // ✅ Verificar si el usuario actual es administrador
-    const isAdmin = useIsAdmin();
+    // Check if current user has admin privileges
+    const isAdmin = useIsAdmin()
 
-    const priorities: Array<'Low' | 'Medium' | 'High'> = ['Low', 'Medium', 'High']
-    const statuses: Array<'Not Started' | 'In Progress' | 'Completed' | 'Pending Input' | 'Planned'> = [
-        'Not Started',
-        'In Progress',
-        'Completed',
-        'Pending Input',
-        'Planned',
-    ]
-
+    /**
+     * Handles form field changes and clears associated errors
+     * 
+     * @param field - Form field name to update
+     * @param value - New value for the field
+     * 
+     * @remarks
+     * - Updates formData state with new field value
+     * - Automatically clears error for changed field
+     * - Supports all CreateTaskPayload field types
+     */
     const handleChange = (field: keyof CreateTaskPayload, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }))
         if (errors[field]) {
@@ -81,84 +143,131 @@ export default function TaskForm({ onSuccess, onCancel, initialData }: TaskFormP
         }
     }
 
+    /**
+     * Validates all form fields before submission
+     * 
+     * @returns True if all validations pass, false otherwise
+     * 
+     * @remarks
+     * Validation rules:
+     * - Subject is required and max 255 characters
+     * - Start date is required
+     * - Due date cannot be before start date
+     * - End time must be after start time
+     * 
+     * @see {@link errors} state for error storage
+     */
     const validate = (): boolean => {
         const newErrors: Record<string, string> = {}
 
+        // Validate subject (required, max length)
         if (!formData.subject.trim()) {
-            newErrors.subject = 'El título es requerido'
+            newErrors.subject = 'Subject is required'
         } else if (formData.subject.length > 255) {
-            newErrors.subject = 'El título no puede superar los 255 caracteres'
+            newErrors.subject = 'Subject cannot exceed 255 characters'
         }
 
+        // Validate start date (required)
         if (!formData.date_start) {
-            newErrors.date_start = 'La fecha de inicio es requerida'
+            newErrors.date_start = 'Start date is required'
         }
 
+        // Validate due date is not before start date
         if (formData.due_date && formData.date_start && formData.due_date < formData.date_start) {
-            newErrors.due_date = 'La fecha de vencimiento no puede ser anterior a la fecha de inicio'
+            newErrors.due_date = 'Due date cannot be before start date'
         }
 
+        // Validate end time is after start time
         if (formData.time_start && formData.time_end && formData.time_end <= formData.time_start) {
-            newErrors.time_end = 'La hora de fin debe ser posterior a la hora de inicio'
+            newErrors.time_end = 'End time must be after start time'
         }
 
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
     }
 
+    /**
+     * Handles form submission with validation and API call
+     * 
+     * @param e - Form submit event
+     * 
+     * @remarks
+     * Submission flow:
+     * 1. Prevent default form submission
+     * 2. Run validation
+     * 3. Prepare payload with assigned_user_id fallback
+     * 4. Call createTask mutation
+     * 5. Show success/error toast
+     * 6. Navigate or call onSuccess callback
+     * 
+     * Error handling:
+     * - 422: Validation errors from backend
+     * - 403: Permission errors (assigning to other users)
+     * - Other: Generic error message
+     */
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+        e.preventDefault()
 
+        // Stop if validation fails
         if (!validate()) {
-            toast.error('Por favor corrige los errores en el formulario');
-            return;
+            toast.error('Please correct the errors in the form')
+            return
         }
 
         try {
-            // ✅ Asegurar que assigned_user_id se envía correctamente
+            // Ensure assigned_user_id is set (fallback to current user)
             const payload = {
                 ...formData,
                 assigned_user_id: formData.assigned_user_id || user?.id,
-            };
+            }
 
-            const response = await createMutation.mutateAsync(payload);
+            const response = await createMutation.mutateAsync(payload)
 
-            toast.success(response.message || 'Tarea creada correctamente');
+            toast.success(response.message || 'Task created successfully')
 
+            // Navigate or call success callback
             if (onSuccess && response.data?.id) {
-                onSuccess(response.data.id);
+                onSuccess(response.data.id)
             } else {
-                navigate('/dashboard/tasks');
+                navigate('/dashboard/tasks')
             }
         } catch (error: any) {
-            console.error('Error creating task:', error);
+            console.error('Error creating task:', error)
 
+            // Handle validation errors from backend (422)
             if (error.response?.status === 422 && error.response?.data?.messages) {
-                const messages = error.response.data.messages;
-                const firstError = Object.values(messages)[0] as string[];
-                toast.error(firstError?.[0] || 'Error de validación');
-                setErrors(messages);
-            } else if (error.response?.status === 403) {
-                // ✅ Manejar error de permisos (usuario normal intenta asignar a otro)
-                toast.error(error.response?.data?.error || 'No tienes permisos para asignar a otros usuarios');
-            } else {
-                toast.error(error.response?.data?.error || 'Error al crear la tarea');
+                const messages = error.response.data.messages
+                const firstError = Object.values(messages)[0] as string[]
+                toast.error(firstError?.[0] || 'Validation error')
+                setErrors(messages)
+            } 
+            // Handle permission errors (403)
+            else if (error.response?.status === 403) {
+                toast.error(
+                    error.response?.data?.error || 
+                    'You do not have permission to assign to other users'
+                )
+            } 
+            // Handle other errors
+            else {
+                toast.error(error.response?.data?.error || 'Error creating task')
             }
         }
-    };
+    }
 
+    // Loading state for submit button
     const isSubmitting = createMutation.isPending
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Subject */}
+            {/* Subject Field */}
             <div className="space-y-2">
-                <Label htmlFor="subject">Título *</Label>
+                <Label htmlFor="subject">Subject *</Label>
                 <Input
                     id="subject"
                     value={formData.subject}
                     onChange={(e) => handleChange('subject', e.target.value)}
-                    placeholder="Ej: Llamar al cliente ABC"
+                    placeholder="E.g., Call client ABC"
                     disabled={isSubmitting}
                     className={cn(errors.subject && "border-destructive")}
                 />
@@ -170,25 +279,25 @@ export default function TaskForm({ onSuccess, onCancel, initialData }: TaskFormP
                 )}
             </div>
 
-            {/* Description */}
+            {/* Description Field */}
             <div className="space-y-2">
-                <Label htmlFor="description">Descripción</Label>
+                <Label htmlFor="description">Description</Label>
                 <Textarea
                     id="description"
                     value={formData.description || ''}
                     onChange={(e) => handleChange('description', e.target.value)}
-                    placeholder="Detalles adicionales de la tarea..."
+                    placeholder="Additional task details..."
                     disabled={isSubmitting}
                     className="min-h-[100px] resize-none"
                 />
             </div>
 
-            {/* ✅ NEW: Assigned User (only for admins) */}
+            {/* Assigned User (Admin Only) */}
             {isAdmin && (
                 <div className="space-y-2">
                     <Label htmlFor="assigned_user_id" className="flex items-center gap-2">
                         <User className="w-4 h-4" />
-                        Asignado a
+                        Assigned to
                     </Label>
                     <Select
                         value={formData.assigned_user_id?.toString() || ''}
@@ -196,48 +305,48 @@ export default function TaskForm({ onSuccess, onCancel, initialData }: TaskFormP
                         disabled={isSubmitting}
                     >
                         <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar usuario" />
+                            <SelectValue placeholder="Select user" />
                         </SelectTrigger>
                         <SelectContent>
-                            {/* Filtrar solo usuarios activos antes de mapear */}
+                            {/* Filter and map active users */}
                             {usersData?.data
-                                ?.filter((u) => u.is_active)  
+                                ?.filter((u) => u.is_active)
                                 .map((userItem) => (
                                     <SelectItem
                                         key={userItem.id}
                                         value={userItem.id.toString()}
                                     >
                                         {userItem.first_name} {userItem.last_name}
-                                        {/* Mostrar "(Tú)" si es el usuario actual */}
+                                        {/* Show "(You)" for current user */}
                                         {userItem.id === user?.id && (
-                                            <span className="ml-1 text-muted-foreground">(Tú)</span>
+                                            <span className="ml-1 text-muted-foreground">(You)</span>
                                         )}
-                                        {/* Mostrar badge de Admin si aplica */}
+                                        {/* Show Admin badge for admin users */}
                                         {userItem.role === 'Admin' && userItem.id !== user?.id && (
                                             <span className="ml-1 text-xs text-muted-foreground">(Admin)</span>
                                         )}
                                     </SelectItem>
                                 ))}
 
-                            {/* Empty state si no hay usuarios */}
+                            {/* Empty state when no active users */}
                             {usersData?.data?.filter((u) => u.is_active).length === 0 && (
                                 <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                                    No hay usuarios activos disponibles
+                                    No active users available
                                 </div>
                             )}
                         </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">
-                        Si no se selecciona, la tarea se asignará automáticamente al usuario actual
+                        If not selected, task will be assigned to you automatically
                     </p>
                 </div>
             )}
 
-            {/* Dates Row */}
+            {/* Date Fields Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Start Date */}
                 <div className="space-y-2">
-                    <Label htmlFor="date_start">Fecha de inicio *</Label>
+                    <Label htmlFor="date_start">Start Date *</Label>
                     <Popover>
                         <PopoverTrigger asChild>
                             <Button
@@ -253,7 +362,7 @@ export default function TaskForm({ onSuccess, onCancel, initialData }: TaskFormP
                                 {formData.date_start ? (
                                     format(new Date(formData.date_start), 'PPP', { locale: es })
                                 ) : (
-                                    <span>Seleccionar fecha</span>
+                                    <span>Select date</span>
                                 )}
                             </Button>
                         </PopoverTrigger>
@@ -281,7 +390,7 @@ export default function TaskForm({ onSuccess, onCancel, initialData }: TaskFormP
 
                 {/* Due Date */}
                 <div className="space-y-2">
-                    <Label htmlFor="due_date">Fecha de vencimiento</Label>
+                    <Label htmlFor="due_date">Due Date</Label>
                     <Popover>
                         <PopoverTrigger asChild>
                             <Button
@@ -296,7 +405,7 @@ export default function TaskForm({ onSuccess, onCancel, initialData }: TaskFormP
                                 {formData.due_date ? (
                                     format(new Date(formData.due_date), 'PPP', { locale: es })
                                 ) : (
-                                    <span>Opcional</span>
+                                    <span>Optional</span>
                                 )}
                             </Button>
                         </PopoverTrigger>
@@ -323,11 +432,11 @@ export default function TaskForm({ onSuccess, onCancel, initialData }: TaskFormP
                 </div>
             </div>
 
-            {/* Times Row */}
+            {/* Time Fields Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Start Time */}
                 <div className="space-y-2">
-                    <Label htmlFor="time_start">Hora de inicio</Label>
+                    <Label htmlFor="time_start">Start Time</Label>
                     <Input
                         id="time_start"
                         type="time"
@@ -339,7 +448,7 @@ export default function TaskForm({ onSuccess, onCancel, initialData }: TaskFormP
 
                 {/* End Time */}
                 <div className="space-y-2">
-                    <Label htmlFor="time_end">Hora de fin</Label>
+                    <Label htmlFor="time_end">End Time</Label>
                     <Input
                         id="time_end"
                         type="time"
@@ -361,62 +470,62 @@ export default function TaskForm({ onSuccess, onCancel, initialData }: TaskFormP
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Priority */}
                 <div className="space-y-2">
-                    <Label htmlFor="priority">Prioridad</Label>
+                    <Label htmlFor="priority">Priority</Label>
                     <Select
                         value={formData.priority}
                         onValueChange={(value: 'Low' | 'Medium' | 'High') => handleChange('priority', value)}
                         disabled={isSubmitting}
                     >
                         <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar prioridad" />
+                            <SelectValue placeholder="Select priority" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="Low">Baja</SelectItem>
-                            <SelectItem value="Medium">Media</SelectItem>
-                            <SelectItem value="High">Alta</SelectItem>
+                            <SelectItem value="Low">Low</SelectItem>
+                            <SelectItem value="Medium">Medium</SelectItem>
+                            <SelectItem value="High">High</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
 
                 {/* Status */}
                 <div className="space-y-2">
-                    <Label htmlFor="status">Estado</Label>
+                    <Label htmlFor="status">Status</Label>
                     <Select
                         value={formData.status}
                         onValueChange={(value: any) => handleChange('status', value)}
                         disabled={isSubmitting}
                     >
                         <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar estado" />
+                            <SelectValue placeholder="Select status" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="Not Started">No Iniciada</SelectItem>
-                            <SelectItem value="In Progress">En Progreso</SelectItem>
-                            <SelectItem value="Completed">Completada</SelectItem>
-                            <SelectItem value="Pending Input">Pendiente</SelectItem>
-                            <SelectItem value="Planned">Planificada</SelectItem>
+                            <SelectItem value="Not Started">Not Started</SelectItem>
+                            <SelectItem value="In Progress">In Progress</SelectItem>
+                            <SelectItem value="Completed">Completed</SelectItem>
+                            <SelectItem value="Pending Input">Pending Input</SelectItem>
+                            <SelectItem value="Planned">Planned</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
             </div>
 
-            {/* Location */}
+            {/* Location Field */}
             <div className="space-y-2">
-                <Label htmlFor="location">Ubicación</Label>
+                <Label htmlFor="location">Location</Label>
                 <Input
                     id="location"
                     value={formData.location || ''}
                     onChange={(e) => handleChange('location', e.target.value)}
-                    placeholder="Ej: Oficina principal, Zoom, Cliente XYZ"
+                    placeholder="E.g., Main Office, Zoom, Client XYZ"
                     disabled={isSubmitting}
                     maxLength={150}
                 />
                 <p className="text-xs text-muted-foreground text-right">
-                    {(formData.location?.length || 0)}/150 caracteres
+                    {(formData.location?.length || 0)}/150 characters
                 </p>
             </div>
 
-            {/* Notification */}
+            {/* Notification Checkbox */}
             <div className="flex items-center space-x-2">
                 <input
                     type="checkbox"
@@ -427,11 +536,11 @@ export default function TaskForm({ onSuccess, onCancel, initialData }: TaskFormP
                     className="rounded border-gray-300"
                 />
                 <Label htmlFor="send_notification" className="text-sm cursor-pointer">
-                    Notificar al asignado sobre esta tarea
+                    Notify assignee about this task
                 </Label>
             </div>
 
-            {/* Actions */}
+            {/* Form Actions */}
             <div className="flex items-center justify-end gap-3 pt-4 border-t">
                 {onCancel && (
                     <Button
@@ -440,17 +549,17 @@ export default function TaskForm({ onSuccess, onCancel, initialData }: TaskFormP
                         onClick={onCancel}
                         disabled={isSubmitting}
                     >
-                        Cancelar
+                        Cancel
                     </Button>
                 )}
                 <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting ? (
                         <>
                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Creando...
+                            Creating...
                         </>
                     ) : (
-                        'Crear Tarea'
+                        'Create Task'
                     )}
                 </Button>
             </div>

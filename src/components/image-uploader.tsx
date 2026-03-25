@@ -1,17 +1,12 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
 import { 
   Image as ImageIcon, 
   Upload, 
   X, 
   Loader2,
-  Trash2,
-  Link,
-  ExternalLink
 } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { toast } from "sonner"

@@ -1,5 +1,5 @@
 import apiClient from '@/shared/lib/axios';
-import type { Client, PaginatedResponse } from '@/features/clients/types/client';
+import type { Client, ClientSummary, PaginatedResponse } from '@/features/clients/types/client';
 
 export const clientService = {
   async getClients(
@@ -55,5 +55,10 @@ export const clientService = {
       params: { accountname: accountName }
     });
     return response.data.data;
-  }
+  },
+
+  async getClientSummary(clientId: number): Promise<ClientSummary> {
+    const response = await apiClient.get(`/clients/${clientId}/summary`);
+    return response.data;
+  },
 };

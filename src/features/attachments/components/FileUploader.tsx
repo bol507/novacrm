@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useCallback, useRef } from "react"
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -11,8 +10,6 @@ import {
   Loader2, 
   Image,
   FileText,
-  Trash2,
-  Eye
 } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { toast } from "sonner"
@@ -187,7 +184,7 @@ export function FileUploader({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Ej: Plano de planta baja, factura de materiales, render 3D..."
-            className="min-h-[80px]"
+            className="min-h-20"
             maxLength={500}
           />
           <p className="text-xs text-muted-foreground text-right">

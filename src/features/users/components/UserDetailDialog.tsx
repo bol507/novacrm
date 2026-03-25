@@ -4,42 +4,82 @@ import {
   Mail, 
   Phone, 
   Building2, 
-  Calendar, 
   User as UserIcon,
   Shield
 } from "lucide-react";
 import type { User } from "../types/user";
 
+/**
+ * Props for UserDetailDialog component
+ */
 interface UserDetailDialogProps {
+  /** User object to display details for */
   user: User | null;
+  /** Controls dialog visibility */
   open: boolean;
+  /** Callback to change dialog visibility */
   onOpenChange: (open: boolean) => void;
 }
 
-const formatDate = (dateString: string | null): string => {
-  if (!dateString) return 'Nunca';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('es-ES', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  });
-};
-
+/**
+ * Gets the CSS classes for status badge styling based on user status
+ * 
+ * @param status - User status string ('Active' or 'Inactive')
+ * @returns CSS class string for badge styling
+ * 
+ * @example
+ * getStatusColor('Active') // returns green styling classes
+ * getStatusColor('Inactive') // returns red styling classes
+ */
 const getStatusColor = (status: string) => {
   return status === "Active"
     ? "bg-green-500/10 text-green-600 border-green-500/20"
     : "bg-red-500/10 text-red-600 border-red-500/20";
 };
 
+/**
+ * UserDetailDialog Component
+ * 
+ * Displays detailed information about a user in a modal dialog.
+ * Shows personal information, contact details, and organization data.
+ * 
+ * @component
+ * @param {UserDetailDialogProps} props - Component props
+ * @param {User | null} props.user - User object to display details for
+ * @param {boolean} props.open - Controls dialog visibility
+ * @param {function} props.onOpenChange - Callback to change dialog visibility
+ * 
+ * @returns {JSX.Element|null} User detail dialog component or null if no user
+ * 
+ * @example
+ * // Basic usage
+ * <UserDetailDialog 
+ *   user={selectedUser} 
+ *   open={isDialogOpen} 
+ *   onOpenChange={setIsDialogOpen} 
+ * />
+ * 
+ * @remarks
+ * - Returns null if user is null or undefined
+ * - Dialog is responsive with max-width of 2xl and max-height of 90vh
+ * - Content is scrollable for long user details
+ * - Status badge color changes based on active/inactive status
+ * - Admin users display a shield icon next to their role
+ * 
+ * @see {@link User} for user object structure
+ * @see {@link Dialog} for underlying dialog component
+ */
 export const UserDetailDialog = ({ user, open, onOpenChange }: UserDetailDialogProps) => {
+  // Return null if no user data to display
   if (!user) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
+          {/* Header with user avatar and status badge */}
           <div className="flex items-start justify-between gap-4">
+            {/* User avatar with initials */}
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                 <span className="text-lg font-semibold text-primary">
@@ -53,34 +93,37 @@ export const UserDetailDialog = ({ user, open, onOpenChange }: UserDetailDialogP
                 <p className="text-sm text-muted-foreground">@{user.user_name}</p>
               </div>
             </div>
+            
+            {/* Status badge */}
             <Badge variant="outline" className={getStatusColor(user.status)}>
-              {user.status === "Active" ? "Activo" : "Inactivo"}
+              {user.status === "Active" ? "Active" : "Inactive"}
             </Badge>
           </div>
         </DialogHeader>
 
+        {/* Main content area */}
         <div className="space-y-6 py-4">
-          {/* Información Personal */}
+          {/* Personal Information Section */}
           <div>
             <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
               <UserIcon className="h-4 w-4" />
-              Información Personal
+              Personal Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">Nombre</p>
+                <p className="text-sm text-muted-foreground">First Name</p>
                 <p className="font-medium">{user.first_name}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Apellido</p>
+                <p className="text-sm text-muted-foreground">Last Name</p>
                 <p className="font-medium">{user.last_name}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Usuario</p>
+                <p className="text-sm text-muted-foreground">Username</p>
                 <p className="font-medium">@{user.user_name}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Rol</p>
+                <p className="text-sm text-muted-foreground">Role</p>
                 <p className="font-medium flex items-center gap-2">
                   {user.role}
                   {user.role === 'Admin' && <Shield className="h-4 w-4 text-amber-500" />}
@@ -89,11 +132,11 @@ export const UserDetailDialog = ({ user, open, onOpenChange }: UserDetailDialogP
             </div>
           </div>
 
-          {/* Contacto */}
+          {/* Contact Information Section */}
           <div>
             <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
               <Mail className="h-4 w-4" />
-              Contacto
+              Contact Information
             </h3>
             <div className="space-y-2">
               {user.email && (
@@ -111,12 +154,12 @@ export const UserDetailDialog = ({ user, open, onOpenChange }: UserDetailDialogP
             </div>
           </div>
 
-          {/* Departamento */}
+          {/* Organization Section (conditional rendering) */}
           {(user.department || user.reports_to_id) && (
             <div>
               <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                 <Building2 className="h-4 w-4" />
-                Organización
+                Organization
               </h3>
               <div className="space-y-2">
                 {user.department && (
@@ -128,18 +171,12 @@ export const UserDetailDialog = ({ user, open, onOpenChange }: UserDetailDialogP
                 {user.reports_to_id && (
                   <div className="flex items-center gap-2">
                     <UserIcon className="h-4 w-4 text-muted-foreground" />
-                    <span>Reporta a: ID {user.reports_to_id}</span>
+                    <span>Reports to: ID {user.reports_to_id}</span>
                   </div>
                 )}
               </div>
             </div>
           )}
-
-          {/* Fecha de creación (si la tienes en tu API) */}
-          {/* <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Calendar className="h-4 w-4" />
-            <span>Creado el: {formatDate(user.created_at)}</span>
-          </div> */}
         </div>
       </DialogContent>
     </Dialog>

@@ -3,10 +3,23 @@ import apiClient from '@/shared/lib/axios';
 import type { Attachment, AttachmentResponse, UploadAttachmentPayload } from '../types/task';
 
 /**
- * Hook para obtener adjuntos de una tarea específica
- * 
- * @param taskId ID de la tarea
- * @returns Query result con lista de adjuntos
+ * Hook for fetching attachments of a specific task.
+ *
+ * Provides automatic caching, stale time management, and retry logic.
+ * The query is only enabled when a valid taskId is provided.
+ *
+ * @param taskId - ID of the task to fetch attachments for
+ * @returns Query result containing attachments data, loading state, and error state
+ *
+ * @example
+ * // Basic usage
+ * const { data, isLoading } = useTaskAttachments(123);
+ *
+ * @example
+ * // With conditional fetching
+ * const { data } = useTaskAttachments(taskId, {
+ *   enabled: !!taskId
+ * });
  */
 export const useTaskAttachments = (taskId: number) => {
   return useQuery<AttachmentResponse>({
@@ -18,16 +31,39 @@ export const useTaskAttachments = (taskId: number) => {
       return response.data;
     },
     enabled: !!taskId && taskId > 0,
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 5 * 60 * 1000,
     retry: 3,
   });
 };
 
 /**
- * Hook para subir un adjunto a una tarea
- * 
- * @param taskId ID de la tarea
- * @returns Mutation para subir archivo
+ * Hook for uploading an attachment to a task.
+ *
+ * Provides optimistic cache invalidation on success to refresh the attachments list.
+ * Uploads files using multipart/form-data format.
+ *
+ * @param taskId - ID of the task to upload the attachment to
+ * @returns Mutation object with mutate function, loading state, and error state
+ *
+ * @example
+ * // Basic usage
+ * const uploadAttachment = useUploadAttachment(123);
+ *
+ * const handleFileUpload = async (file: File) => {
+ *   await uploadAttachment.mutateAsync({
+ *     file,
+ *     description: 'Project screenshot'
+ *   });
+ * };
+ *
+ * @example
+ * // With loading state
+ * <Button
+ *   onClick={() => uploadAttachment.mutate({ file })}
+ *   disabled={uploadAttachment.isPending}
+ * >
+ *   {uploadAttachment.isPending ? 'Uploading...' : 'Upload'}
+ * </Button>
  */
 export const useUploadAttachment = (taskId: number) => {
   const queryClient = useQueryClient();
@@ -46,20 +82,12 @@ export const useUploadAttachment = (taskId: number) => {
         {
           headers: {
             'Content-Type': 'multipart/form-data',
-          },
-          onUploadProgress: (progressEvent) => {
-            // Opcional: manejar progreso de subida
-            const percentCompleted = progressEvent.total 
-              ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
-              : 0;
-            console.log(`Upload progress: ${percentCompleted}%`);
-          },
+          }
         }
       );
       return response.data.data;
     },
     onSuccess: () => {
-      // Invalidar cache para refrescar lista de adjuntos
       queryClient.invalidateQueries({ queryKey: ['tasks', taskId, 'attachments'] });
     },
     onError: (error: any) => {
@@ -69,10 +97,28 @@ export const useUploadAttachment = (taskId: number) => {
 };
 
 /**
- * Hook para eliminar un adjunto
- * 
- * @param taskId ID de la tarea
- * @returns Mutation para eliminar archivo
+ * Hook for deleting an attachment from a task.
+ *
+ * Provides optimistic cache invalidation on success to refresh the attachments list.
+ *
+ * @param taskId - ID of the task containing the attachment to delete
+ * @returns Mutation object with mutate function, loading state, and error state
+ *
+ * @example
+ * // Basic usage
+ * const deleteAttachment = useDeleteAttachment(123);
+ *
+ * const handleDelete = async (attachmentId: number) => {
+ *   await deleteAttachment.mutateAsync(attachmentId);
+ * };
+ *
+ * @example
+ * // With confirmation
+ * const handleDelete = (attachmentId: number) => {
+ *   if (confirm('Are you sure you want to delete this attachment?')) {
+ *     deleteAttachment.mutate(attachmentId);
+ *   }
+ * };
  */
 export const useDeleteAttachment = (taskId: number) => {
   const queryClient = useQueryClient();

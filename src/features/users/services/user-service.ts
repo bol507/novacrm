@@ -13,7 +13,6 @@ export const userService = {
    * 
    * @example
    * const { data } = await userService.getUsers(1, 20, 'john');
-   * console.log(data.data); // Array of User objects
    */
   async getUsers(
     page: number = 1,

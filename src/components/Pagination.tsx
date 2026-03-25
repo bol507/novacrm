@@ -1,18 +1,25 @@
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  ChevronsLeft, 
+  ChevronsRight 
+} from "lucide-react";
 
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
   className?: string;
+  showFirstLast?: boolean;
 }
 
 export const Pagination = ({ 
   currentPage, 
   totalPages, 
   onPageChange,
-  className = ""
+  className = "",
+  showFirstLast = true 
 }: PaginationProps) => {
   if (totalPages <= 1) return null;
 
@@ -37,16 +44,33 @@ export const Pagination = ({
   const pages = getPageNumbers();
 
   return (
-    <div className={`flex items-center justify-center gap-2 ${className}`}>
+    <div className={`flex items-center justify-center gap-1 sm:gap-2 ${className}`}>
+     
+      {showFirstLast && totalPages > 1 && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(1)}
+          disabled={currentPage === 1}
+          title="Ir a la primera página"
+          className="hidden sm:flex"
+        >
+          <ChevronsLeft className="h-4 w-4" />
+        </Button>
+      )}
+      
+      
       <Button
         variant="outline"
         size="sm"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
+        title="Página anterior"
       >
         <ChevronLeft className="h-4 w-4" />
       </Button>
       
+     
       {pages.map((page) => (
         <Button
           key={page}
@@ -59,14 +83,30 @@ export const Pagination = ({
         </Button>
       ))}
       
+  
       <Button
         variant="outline"
         size="sm"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
+        title="Página siguiente"
       >
         <ChevronRight className="h-4 w-4" />
       </Button>
+      
+  
+      {showFirstLast && totalPages > 1 && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(totalPages)}
+          disabled={currentPage === totalPages}
+          title="Ir a la última página"
+          className="hidden sm:flex" 
+        >
+          <ChevronsRight className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 };

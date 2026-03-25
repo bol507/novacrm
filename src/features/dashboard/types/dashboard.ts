@@ -1,4 +1,6 @@
-// Metricas del dashboard
+// For quick reference when building components
+
+// Dashboard metrics (KPIs)
 export interface DashboardMetrics {
   activeClients: number;
   monthlySales: number;
@@ -8,14 +10,14 @@ export interface DashboardMetrics {
   overdueTasks: number;
 }
 
-// Punto de datos para el gráfico de actividad
+// Chart data points
 export interface ActivityDataPoint {
   name: string;
   ventas: number;
   leads: number;
 }
 
-// Respuesta completa del endpoint de actividad
+// Chart response structure
 export interface ActivityDataResponse {
   data: ActivityDataPoint[];
   period: string;
@@ -25,7 +27,7 @@ export interface ActivityDataResponse {
   };
 }
 
-// Tarea para el widget del dashboard
+// Individual task for widget
 export interface DashboardTask {
   id: number;
   title: string;
@@ -49,9 +51,9 @@ export interface DashboardTask {
   updatedAt: string;
 }
 
-// Respuesta del endpoint de tareas del dashboard
+// Tasks API response
 export interface DashboardTasksResponse {
-  data: DashboardTask[];
+  data:DashboardTask[];
   stats: {
     total: number;
     completed: number;
@@ -61,10 +63,8 @@ export interface DashboardTasksResponse {
   };
 }
 
-// Períodos de tiempo para filtros
+// Time period filters
 export type TimePeriod = '7days' | '30days' | '90days' | '12months';
-
-// Opciones para el selector de período
 export interface PeriodOption {
   label: string;
   value: TimePeriod;

@@ -1,18 +1,57 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, DollarSign, Eye, Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import type { Quote } from "../types/quote";
 
-interface QuoteCardProps {
+/**
+ * Props for QuoteCard component
+ */
+export interface QuoteCardProps {
+  /** Quote object to display */
   quote: Quote;
+  /** Optional callback when edit button is clicked */
   onEditQuote?: (quote: Quote) => void;
+  /** Optional callback when delete button is clicked */
   onDeleteQuote?: (quote: Quote) => void;
 }
 
-// ✅ Export con nombre (no default)
+/**
+ * QuoteCard Component
+ * 
+ * Displays a summary card for a quote with:
+ * - Subject, quote number, and status badge
+ * - Financial breakdown (subtotal, discount, tax, total)
+ * - Preview of description and first 2 items
+ * - Action buttons (view, edit, delete)
+ * 
+ * @component
+ * @param {QuoteCardProps} props - Component props
+ * @param {Quote} props.quote - Quote data to display
+ * @param {function} [props.onEditQuote] - Edit callback
+ * @param {function} [props.onDeleteQuote] - Delete callback
+ * 
+ * @returns {JSX.Element} Quote summary card
+ * 
+ * @example
+ * // Basic usage
+ * <QuoteCard quote={quote} />
+ * 
+ * @example
+ * // With action handlers
+ * <QuoteCard 
+ *   quote={quote}
+ *   onEditQuote={handleEdit}
+ *   onDeleteQuote={handleDelete}
+ * />
+ * 
+ * @remarks
+ * - Card is clickable to navigate to quote detail page
+ * - Financial values formatted in USD with Panama locale
+ * - Shows up to 2 items with "+X more" indicator
+ * - Status badge color varies by quote_stage
+ * - Edit/delete buttons require explicit callbacks
+ */
 export const QuoteCard = ({ 
   quote, 
   onEditQuote, 
@@ -20,15 +59,22 @@ export const QuoteCard = ({
 }: QuoteCardProps) => {
   const navigate = useNavigate();
 
+  /**
+   * Navigate to quote detail page
+   */
   const handleViewQuote = () => {
     navigate(`/dashboard/quotes/${quote.quoteid}`);
   };
 
-  const formatDate = (dateString: string | null): string => {
-    if (!dateString) return '-';
-    return format(new Date(dateString), 'dd MMM yyyy', { locale: es });
-  };
-
+  /**
+   * Formats a numeric value as USD currency
+   * 
+   * Uses Panama Spanish locale (es-PA) with no decimal places
+   * for consistent dashboard presentation.
+   * 
+   * @param value - Numeric value to format
+   * @returns Formatted currency string (e.g., "$125,000")
+   */
   const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat('es-PA', {
       style: 'currency',
@@ -38,7 +84,11 @@ export const QuoteCard = ({
     }).format(value);
   };
 
-  // Determinar color del estado
+  /**
+   * Gets CSS classes for status badge based on quote stage
+   * 
+   * @returns Tailwind CSS class string for badge styling
+   */
   const getBadgeColor = () => {
     switch (quote.quote_stage) {
       case 'Draft': return 'bg-gray-100 text-gray-700 border-gray-200';
@@ -49,26 +99,29 @@ export const QuoteCard = ({
     }
   };
 
-  // Mapeo de estados a texto
+  /**
+   * Gets human-readable label for quote stage
+   * 
+   * @returns Display label for the status badge
+   */
   const getStatusLabel = () => {
     switch (quote.quote_stage) {
-      case 'Draft': return 'Creada';
-      case 'Sent': return 'Enviada';
-      case 'Accepted': return 'Aceptada';
-      case 'Rejected': return 'Rechazada';
+      case 'Draft': return 'Draft';
+      case 'Sent': return 'Sent';
+      case 'Accepted': return 'Accepted';
+      case 'Rejected': return 'Rejected';
       default: return quote.quote_stage;
     }
   };
 
-  // Calcular impuestos (ITBMS 7%)
-  const taxes = quote.taxes || [];
+
   const taxAmount = quote.total - quote.subtotal;
-  const hasTaxes = taxes.length > 0 || taxAmount > 0;
+  const hasTaxes = taxAmount > 0;
 
   return (
     <Card className="border border-border hover:shadow-md transition-shadow h-full flex flex-col">
       <CardContent className="p-4 flex-1">
-        {/* Header */}
+        {/* Header: Subject, quote number, status badge */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0">
             <h3 
@@ -78,48 +131,54 @@ export const QuoteCard = ({
               {quote.subject}
             </h3>
             <p className="text-xs text-muted-foreground mt-1">
-              Cotización #{quote.quoteno}
+              Quote #{quote.quoteno}
             </p>
           </div>
-          <span className={`px-2 py-1 text-xs rounded border ${getBadgeColor()} flex-shrink-0`}>
+          <span className={`px-2 py-1 text-xs rounded border ${getBadgeColor()} shrink-0`}>
             {getStatusLabel()}
           </span>
         </div>
 
-        {/* Panel financiero */}
+        {/* Financial Summary Panel */}
         <div className="mt-3 border-t border-border pt-3">
           <div className="flex justify-between text-sm mb-1">
             <span className="text-muted-foreground">Subtotal:</span>
-            <span className="flex-shrink-0">{formatCurrency(quote.subtotal)}</span>
+            <span className="shrink-0">{formatCurrency(quote.subtotal)}</span>
           </div>
-          {quote.discount_percent && quote.discount_percent > 0 && (
+          
+          {/* Discount line (if applicable) */}
+          {quote.discount_total && quote.discount_total > 0 && (
             <div className="flex justify-between text-sm mb-1">
-              <span className="text-muted-foreground">Descuento:</span>
-              <span className="text-destructive flex-shrink-0">
-                -{quote.discount_percent}% ({formatCurrency(quote.subtotal * quote.discount_percent / 100)})
+              <span className="text-muted-foreground">Discount:</span>
+              <span className="text-destructive shrink-0">
+                {formatCurrency(quote.discount_total)}
               </span>
             </div>
           )}
+          
+          {/* Tax line (ITBMS 7%) - calculated from total - subtotal */}
           {hasTaxes && (
             <div className="flex justify-between text-sm mb-1">
               <span className="text-muted-foreground">ITBMS:</span>
-              <span className="text-blue-600 font-medium flex-shrink-0">
+              <span className="text-blue-600 font-medium shrink-0">
                 {formatCurrency(taxAmount)}
               </span>
             </div>
           )}
+          
+          {/* Total line */}
           <div className="flex justify-between font-medium mt-2 pt-2 border-t border-border">
             <span>Total:</span>
-            <span className="text-primary flex-shrink-0">{formatCurrency(quote.total)}</span>
+            <span className="text-primary shrink-0">{formatCurrency(quote.total)}</span>
           </div>
         </div>
 
-        {/* Descripción general - CORREGIDO */}
+        {/* Description Section (conditional) */}
         {quote.description && (
           <div className="mt-4 border-t border-border pt-4">
-            <h4 className="text-sm font-semibold mb-2">Descripción</h4>
+            <h4 className="text-sm font-semibold mb-2">Description</h4>
             <p 
-              className="text-xs text-muted-foreground line-clamp-3 cursor-pointer break-words"
+              className="text-xs text-muted-foreground line-clamp-3 cursor-pointer wrap-break-word"
               onClick={handleViewQuote}
             >
               {quote.description}
@@ -127,57 +186,58 @@ export const QuoteCard = ({
           </div>
         )}
 
-        {/* Ítems de la cotización - CORREGIDO */}
-        {quote.items.length > 0 && (
+        {/* Quote Items Preview (conditional) */}
+        {quote.items && quote.items.length > 0 && (
           <div className="mt-4 border-t border-border pt-4">
-            <h4 className="text-sm font-semibold mb-2">Ítems</h4>
+            <h4 className="text-sm font-semibold mb-2">Items</h4>
             <div className="space-y-2">
               {quote.items.slice(0, 2).map((item, index) => (
                 <div 
-                  key={index} 
+                  key={item.sequence_no || index} 
                   className="flex justify-between items-start gap-2 cursor-pointer"
                   onClick={handleViewQuote}
                 >
                   <div className="flex-1 min-w-0">
-                    {/* ✅ Nombre del producto con truncamiento */}
+                    {/* Product name with truncation */}
                     <p className="font-medium text-sm truncate" title={item.productname}>
-                      {item.productname || 'Sin nombre'}
+                      {item.productname || 'Unnamed item'}
                     </p>
                     
-                    {/* ✅ Descripción del ítem con truncamiento (si existe) */}
+                    {/* Item description with truncation (if exists) */}
                     {item.description && (
                       <p 
-                        className="text-xs text-muted-foreground line-clamp-2 break-words mt-0.5"
+                        className="text-xs text-muted-foreground line-clamp-2 wrap-break-word mt-0.5"
                         title={item.description}
                       >
                         {item.description}
                       </p>
                     )}
                     
-                    {/* ✅ Cantidad y precio unitario */}
+                    {/* Quantity and unit price */}
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {item.quantity} × {formatCurrency(item.listprice)}
                     </p>
                   </div>
-                  {/* ✅ Precio total alineado a la derecha */}
-                  <span className="font-medium text-sm flex-shrink-0">
-                    {formatCurrency(item.total)}
+                  {/* Item total aligned right */}
+                  <span className="font-medium text-sm shrink-0">
+                    {formatCurrency(item.total ?? 0)}
                   </span>
                 </div>
               ))}
+              {/* "+X more items" indicator */}
               {quote.items.length > 2 && (
                 <div 
                   className="text-xs text-muted-foreground cursor-pointer hover:text-primary transition-colors"
                   onClick={handleViewQuote}
                 >
-                  +{quote.items.length - 2} ítems más →
+                  +{quote.items.length - 2} more items →
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* Botones de acción */}
+        {/* Action Buttons */}
         <div className="flex gap-2 mt-4 pt-4 border-t border-border">
           <Button
             variant="outline"
@@ -189,7 +249,7 @@ export const QuoteCard = ({
             }}
           >
             <Eye className="h-3 w-3" />
-            Ver
+            View
           </Button>
           <Button
             variant="outline"

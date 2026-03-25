@@ -1,5 +1,5 @@
 import apiClient from '@/shared/lib/axios';
-import type { CreateProjectData, ProjectFilters, ProjectResponse, UpdateProjectData } from '../types/projects';
+import type { CreateProjectData, Project, ProjectFilters, ProjectResponse, ProjectUpdateData } from '../types/projects';
 
 
 
@@ -22,7 +22,7 @@ export const projectService = {
     if (filters.assignedTo) params.append('assigned_to', filters.assignedTo.toString());
     if (filters.startDate) params.append('start_date', filters.startDate);
     if (filters.endDate) params.append('end_date', filters.endDate);
-    if (filters.clientId) params.append('client_id', filters.clientId.toString());
+    if (filters.clientId) params.append('account_id', filters.clientId.toString());
     if (filters.sortBy) params.append('sort_by', filters.sortBy);
     if (filters.sortOrder) params.append('sort_order', filters.sortOrder);
 
@@ -53,8 +53,12 @@ export const projectService = {
   /**
    * update a project
    */
-  updateProject: async (projectId: number, data: UpdateProjectData) => {
-    const response = await apiClient.put(`/projects/${projectId}`, data);
+  
+  updateProject: async (
+    projectId: number,
+    data: ProjectUpdateData
+  ): Promise<Project> => {
+    const response = await apiClient.put<Project>(`/projects/${projectId}`, data);
     return response.data;
   },
 

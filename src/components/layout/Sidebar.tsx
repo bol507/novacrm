@@ -5,23 +5,13 @@ import {
   LayoutDashboard,
   Users,
   FileText,
-  DollarSign,
-  ShoppingCart,
-  Calendar,
-  BarChart3,
   Settings,
   HelpCircle,
   Building2,
   ChevronLeft,
   ChevronDown,
-  Briefcase,
   Target,
-  Mail,
-  Package,
-  UserCogIcon,
   Folder,
-  List,
-  CheckCircleIcon,
   CheckSquare,
 } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
@@ -37,7 +27,7 @@ const menuItems = [
     title: "Principal",
     items: [
       { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-      { name: "Calendario", icon: Calendar, path: "/dashboard/calendar" },
+     /*  { name: "Calendario", icon: Calendar, path: "/dashboard/calendar" }, */
     ],
   },
   {
@@ -46,11 +36,11 @@ const menuItems = [
       { name: "Clientes", icon: Users, path: "/dashboard/clients" },
       { name: "Oportunidades", icon: Target, path: "/dashboard/opportunities" },
       { name: "Cotizaciones", icon: FileText, path: "/dashboard/quotes" },
-      { name: "Pedidos", icon: ShoppingCart, path: "/dashboard/orders" },
-      { name: "Facturas", icon: DollarSign, path: "/dashboard/invoices" },
+     // { name: "Pedidos", icon: ShoppingCart, path: "/dashboard/orders" },
+     // { name: "Facturas", icon: DollarSign, path: "/dashboard/invoices" },
     ],
   },
-  {
+ /*  {
     title: "Marketing",
     items: [
       { name: "Campañas", icon: Mail, path: "/dashboard/campaigns" },
@@ -63,7 +53,7 @@ const menuItems = [
       { name: "Productos", icon: Package, path: "/dashboard/products" },
       { name: "Reportes", icon: BarChart3, path: "/dashboard/reports" },
     ],
-  },
+  }, */
   {
     title: "Proyectos",
     items: [
@@ -71,7 +61,7 @@ const menuItems = [
     { name: "Tareas", icon: CheckSquare, path: "/dashboard/tasks" },
   ],
   },
-  {
+  /* {
     title: "Configuración",
     items: [
       {
@@ -81,7 +71,7 @@ const menuItems = [
       },
       
     ],
-  },
+  }, */
 ];
 
 const Sidebar = ({ isOpen, onToggle, isMobile = false }: SidebarProps) => {
@@ -111,7 +101,7 @@ const Sidebar = ({ isOpen, onToggle, isMobile = false }: SidebarProps) => {
       {/* Header */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
         <Link to="/dashboard" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
             <Building2 className="w-6 h-6 text-primary-foreground" />
           </div>
           {isOpen && (
@@ -176,7 +166,7 @@ const Sidebar = ({ isOpen, onToggle, isMobile = false }: SidebarProps) => {
                       >
                         <Icon
                           className={cn(
-                            "w-5 h-5 flex-shrink-0",
+                            "w-5 h-5 shrink-0",
                             !active && "group-hover:scale-110 transition-transform"
                           )}
                         />
@@ -210,14 +200,14 @@ const Sidebar = ({ isOpen, onToggle, isMobile = false }: SidebarProps) => {
               : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
           )}
         >
-          <Settings className="w-5 h-5 flex-shrink-0" />
+          <Settings className="w-5 h-5 shrink-0" />
           {isOpen && <span className="text-sm font-medium">Configuración</span>}
         </Link>
         <Link
           to="/help"
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all"
         >
-          <HelpCircle className="w-5 h-5 flex-shrink-0" />
+          <HelpCircle className="w-5 h-5 shrink-0" />
           {isOpen && <span className="text-sm font-medium">Ayuda</span>}
         </Link>
       </div>

@@ -1,113 +1,178 @@
-import { Link } from 'react-router-dom';
-import { type Client } from '@/features/clients/types/client';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Mail, Phone, Building2,  Briefcase } from 'lucide-react';
-
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { MoreVertical, Eye, Pencil, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import type { Client } from "@/features/clients/types/client";
 
 interface ClientTableProps {
   clients: Client[];
   isLoading: boolean;
-  onClientClick: (client: Client) => void;
+  onView?: (client: Client) => void;
+  onEdit?: (client: Client) => void;
+  onDelete?: (client: Client) => void;
 }
 
-// Formateador de moneda
 const formatCurrency = (value: number | null | undefined): string => {
-  if (!value) return '-';
-  return new Intl.NumberFormat('es-PA', {
-    style: 'currency',
-    currency: 'USD',
+  if (!value) return "-";
+  return new Intl.NumberFormat("es-PA", {
+    style: "currency",
+    currency: "USD",
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
   }).format(value);
 };
 
-export const ClientTable = ({ clients, isLoading, onClientClick }: ClientTableProps) => {
+const getStatusColor = (isActive: boolean) => {
+  return isActive
+    ? "bg-green-500/10 text-green-600 border-green-500/20"
+    : "bg-red-500/10 text-red-600 border-red-500/20";
+};
+
+export const ClientTable = ({
+  clients,
+  isLoading,
+  onView,
+  onEdit,
+  onDelete,
+}: ClientTableProps) => {
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        {[...Array(5)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <CardContent className="p-4">
-              <div className="h-4 bg-muted rounded w-1/4 mb-2" />
-              <div className="h-3 bg-muted rounded w-1/2" />
-            </CardContent>
-          </Card>
-        ))}
+      <div className="rounded-lg border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {[...Array(6)].map((_, i) => (
+                <TableHead key={i}>
+                  <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {[...Array(5)].map((_, i) => (
+              <TableRow key={i}>
+                {[...Array(6)].map((_, j) => (
+                  <TableCell key={j}>
+                    <div className="h-4 w-full bg-muted rounded animate-pulse" />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
     );
   }
 
   if (clients.length === 0) {
     return (
-      <div className="text-center py-12">
+      <div className="rounded-lg border p-8 text-center">
         <p className="text-muted-foreground">No se encontraron clientes</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {clients.map((client) => (
-        <Card 
-          key={client.accountid} 
-          className="hover:bg-accent/50 transition-colors"
-          onClick={() => onClientClick(client)}
-        >
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-              {/* Información principal */}
-              <div className="flex-1">
-                <h3 className="font-semibold text-lg">{client.accountname}</h3>
+    <div className="rounded-lg border overflow-hidden">
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead>Cliente</TableHead>
+               <TableHead>Email</TableHead>
+              <TableHead>Teléfono</TableHead>
+              <TableHead className="text-right">Ingresos</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead className="w-12"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {clients.map((client) => (
+              <TableRow
+                key={client.accountid}
+                className="hover:bg-muted/30 transition-colors cursor-pointer"
+                onClick={() => onView?.(client)}
+              >
+                 {/* Cliente: Nombre + Código */}
+                <TableCell>
+                  <div className="font-medium truncate max-w-48" title={client.accountname}>
+                    {client.accountname}
+                  </div>
+                  <div className="text-xs text-muted-foreground">{client.account_no}</div>
+                </TableCell>
                 
-                {/* Tipo de cuenta e industria */}
-                <div className="flex flex-wrap items-center gap-2 mt-2 text-sm">
-                  {client.account_type && (
-                    <span className="inline-flex items-center gap-1 bg-muted px-2 py-1 rounded text-xs">
-                      <Building2 className="w-3 h-3" />
-                      {client.account_type}
-                    </span>
-                  )}
-                  {client.industry && (
-                    <span className="inline-flex items-center gap-1 bg-muted px-2 py-1 rounded text-xs">
-                      <Briefcase className="w-3 h-3" />
-                      {client.industry}
-                    </span>
-                  )}
-                </div>
+                {/* Email (columna separada) */}
+                <TableCell>
+                  <div className="truncate max-w-40" title={client.email1 || undefined}>
+                    {client.email1 || "-"}
+                  </div>
+                </TableCell>
 
-                {/* Contacto */}
-                <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
-                  {client.email1 && (
-                    <span className="flex items-center gap-1">
-                      <Mail className="w-4 h-4" />
-                      {client.email1}
-                    </span>
-                  )}
-                  {client.phone && (
-                    <span className="flex items-center gap-1">
-                      <Phone className="w-4 h-4" />
-                      {client.phone}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Ingresos y estado */}
-              <div className="flex flex-col items-end gap-2 min-w-[120px]">
-                <div className="text-right">
-                  <span className="text-xs text-muted-foreground block">Ingresos anuales</span>
-                  <span className="font-medium text-sm">{formatCurrency(client.annualrevenue)}</span>
-                </div>
-                
-                <Badge variant={client.is_active ? "default" : "secondary"}>
-                  {client.is_active ? "Activo" : "Inactivo"}
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+                {/* Teléfono (columna separada) */}
+                <TableCell>
+                  {client.phone || "-"}
+                </TableCell>
+                {/* Ingresos (se mantiene, aunque esté vacío por ahora) */}
+                <TableCell className="text-right font-medium">
+                  {formatCurrency(client.annualrevenue)}
+                </TableCell>
+                 {/* Estado */}
+                <TableCell>
+                  <Badge variant="outline" className={getStatusColor(client.is_active)}>
+                    {client.is_active ? "Activo" : "Inactivo"}
+                  </Badge>
+                </TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {onView && (
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onView(client); }}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          Ver detalles
+                        </DropdownMenuItem>
+                      )}
+                      {onEdit && (
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(client); }}>
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Editar
+                        </DropdownMenuItem>
+                      )}
+                      {onDelete && (
+                        <DropdownMenuItem 
+                          className="text-destructive"
+                          onClick={(e) => { e.stopPropagation(); onDelete(client); }}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Eliminar
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };
+
+export default ClientTable;

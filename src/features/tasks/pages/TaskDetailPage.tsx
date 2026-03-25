@@ -55,7 +55,7 @@ const TaskDetailPage = () => {
     return (
       <div className="text-center py-12">
         <h2 className="text-lg font-semibold">Tarea no encontrada</h2>
-        <Button variant="link" onClick={() => navigate("/tasks")}>
+        <Button variant="link" onClick={() => navigate("/dashboard/tasks")}>
           Volver a tareas
         </Button>
       </div>
@@ -66,7 +66,7 @@ const TaskDetailPage = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/tasks")}>
+        <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard/tasks")}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <h1 className="text-2xl font-bold">{task.title}</h1>
