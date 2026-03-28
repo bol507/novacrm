@@ -13,6 +13,7 @@ import {
   Target,
   Folder,
   CheckSquare,
+  User,
 } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 
@@ -34,10 +35,9 @@ const menuItems = [
     title: "Ventas",
     items: [
       { name: "Clientes", icon: Users, path: "/dashboard/clients" },
+      { name: "Contactos", icon: User, path: "/dashboard/contacts" },
       { name: "Oportunidades", icon: Target, path: "/dashboard/opportunities" },
       { name: "Cotizaciones", icon: FileText, path: "/dashboard/quotes" },
-     // { name: "Pedidos", icon: ShoppingCart, path: "/dashboard/orders" },
-     // { name: "Facturas", icon: DollarSign, path: "/dashboard/invoices" },
     ],
   },
  /*  {

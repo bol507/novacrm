@@ -52,8 +52,20 @@ export interface CreateTaskRequest {
   sendNotification?: boolean;
 }
 
-export interface UpdateTaskRequest extends Partial<CreateTaskRequest> {
+export interface UpdateTaskRequest {
+  subject?: string;
+  dateStart?: string;        
+  dueDate?: string | null;   
+  timeStart?: string | null;
+  timeEnd?: string | null;
+  priority?: 'Low' | 'Medium' | 'High';
   status?: 'Not Started' | 'In Progress' | 'Completed' | 'Pending Input' | 'Planned';
+  location?: string | null;
+  description?: string | null;
+  assignedUserId?: number;
+  relatedRecordId?: number | null;
+  relatedModuleType?: string | null;
+  sendNotification?: boolean;
 }
 
 // ============================================================================
@@ -80,6 +92,45 @@ export interface CreateTaskResponse {
   message: string;
   data: Task | null;
 }
+
+// ============================================================================
+// TASK UPDATE & DELETE TYPES
+// ============================================================================
+
+export interface UpdateTaskPayload {
+  subject?: string;
+  date_start?: string;              // YYYY-MM-DD
+  due_date?: string | null;         // YYYY-MM-DD, optional
+  time_start?: string | null;       // HH:MM, optional
+  time_end?: string | null;         // HH:MM, optional
+  priority?: 'Low' | 'Medium' | 'High';
+  status?: 'Not Started' | 'In Progress' | 'Completed' | 'Pending Input' | 'Planned';
+  location?: string | null;
+  description?: string | null;
+  assigned_user_id?: number;
+  related_record_id?: number | null;
+  related_module_type?: string | null;
+  send_notification?: boolean;
+}
+
+export interface UpdateTaskResponse {
+  message: string;
+  data: Task | null;
+}
+
+export interface DeleteTaskResponse {
+  message: string;
+}
+
+export interface TaskActionPayload {
+  taskId: number;
+  completed?: boolean;              // For toggle completion
+  status?: string;                  // For status change
+}
+
+
+
+
 // ============================================================================
 // COMMENTTYPES
 // ============================================================================

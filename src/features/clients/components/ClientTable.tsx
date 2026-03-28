@@ -18,13 +18,24 @@ import {
 import type { Client } from "@/features/clients/types/client";
 
 interface ClientTableProps {
+  /** Array of client objects to display */
   clients: Client[];
+  /** Whether data is currently loading */
   isLoading: boolean;
+  /** Callback for viewing client details */
   onView?: (client: Client) => void;
+  /** Callback for editing a client */
   onEdit?: (client: Client) => void;
+  /** Callback for deleting a client */
   onDelete?: (client: Client) => void;
 }
 
+/**
+ * Formats a number as USD currency with Panamanian locale.
+ *
+ * @param value - The number to format
+ * @returns Formatted currency string or '-' if value is falsy
+ */
 const formatCurrency = (value: number | null | undefined): string => {
   if (!value) return "-";
   return new Intl.NumberFormat("es-PA", {
@@ -34,12 +45,57 @@ const formatCurrency = (value: number | null | undefined): string => {
   }).format(value);
 };
 
+/**
+ * Returns status badge color classes based on client active status.
+ *
+ * @param isActive - Whether the client is active
+ * @returns Tailwind CSS classes for the status badge
+ */
 const getStatusColor = (isActive: boolean) => {
   return isActive
     ? "bg-green-500/10 text-green-600 border-green-500/20"
     : "bg-red-500/10 text-red-600 border-red-500/20";
 };
 
+/**
+ * ClientTable component for displaying clients in a responsive table format.
+ *
+ * Features:
+ * - Skeleton loading state with animated placeholders
+ * - Empty state when no clients are found
+ * - Clickable rows for viewing client details
+ * - Dropdown menu with view, edit, and delete actions
+ * - Status badges with appropriate colors
+ * - Currency formatting for annual revenue
+ * - Responsive with horizontal scroll on small screens
+ *
+ * @component
+ * @param props - Component props
+ * @param props.clients - Array of client objects to display
+ * @param props.isLoading - Whether data is currently loading
+ * @param props.onView - Callback for viewing client details
+ * @param props.onEdit - Callback for editing a client
+ * @param props.onDelete - Callback for deleting a client
+ * @returns The rendered client table component
+ *
+ * @example
+ * // Basic usage
+ * <ClientTable
+ *   clients={clients}
+ *   isLoading={isLoading}
+ *   onView={handleViewClient}
+ *   onEdit={handleEditClient}
+ *   onDelete={handleDeleteClient}
+ * />
+ *
+ * @example
+ * // Read-only mode without actions
+ * <ClientTable
+ *   clients={clients}
+ *   isLoading={false}
+ *   onView={handleViewClient}
+ * />
+ */
 export const ClientTable = ({
   clients,
   isLoading,
@@ -79,7 +135,7 @@ export const ClientTable = ({
   if (clients.length === 0) {
     return (
       <div className="rounded-lg border p-8 text-center">
-        <p className="text-muted-foreground">No se encontraron clientes</p>
+        <p className="text-muted-foreground">No clients found</p>
       </div>
     );
   }
@@ -90,11 +146,11 @@ export const ClientTable = ({
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead>Cliente</TableHead>
-               <TableHead>Email</TableHead>
-              <TableHead>Teléfono</TableHead>
-              <TableHead className="text-right">Ingresos</TableHead>
-              <TableHead>Estado</TableHead>
+              <TableHead>Client</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead className="text-right">Revenue</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
@@ -105,35 +161,33 @@ export const ClientTable = ({
                 className="hover:bg-muted/30 transition-colors cursor-pointer"
                 onClick={() => onView?.(client)}
               >
-                 {/* Cliente: Nombre + Código */}
                 <TableCell>
                   <div className="font-medium truncate max-w-48" title={client.accountname}>
                     {client.accountname}
                   </div>
                   <div className="text-xs text-muted-foreground">{client.account_no}</div>
                 </TableCell>
-                
-                {/* Email (columna separada) */}
+
                 <TableCell>
                   <div className="truncate max-w-40" title={client.email1 || undefined}>
                     {client.email1 || "-"}
                   </div>
                 </TableCell>
 
-                {/* Teléfono (columna separada) */}
                 <TableCell>
                   {client.phone || "-"}
                 </TableCell>
-                {/* Ingresos (se mantiene, aunque esté vacío por ahora) */}
+
                 <TableCell className="text-right font-medium">
                   {formatCurrency(client.annualrevenue)}
                 </TableCell>
-                 {/* Estado */}
+
                 <TableCell>
                   <Badge variant="outline" className={getStatusColor(client.is_active)}>
-                    {client.is_active ? "Activo" : "Inactivo"}
+                    {client.is_active ? "Active" : "Inactive"}
                   </Badge>
                 </TableCell>
+
                 <TableCell onClick={(e) => e.stopPropagation()}>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -145,13 +199,13 @@ export const ClientTable = ({
                       {onView && (
                         <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onView(client); }}>
                           <Eye className="h-4 w-4 mr-2" />
-                          Ver detalles
+                          View details
                         </DropdownMenuItem>
                       )}
                       {onEdit && (
                         <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(client); }}>
                           <Pencil className="h-4 w-4 mr-2" />
-                          Editar
+                          Edit
                         </DropdownMenuItem>
                       )}
                       {onDelete && (
@@ -160,7 +214,7 @@ export const ClientTable = ({
                           onClick={(e) => { e.stopPropagation(); onDelete(client); }}
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
-                          Eliminar
+                          Delete
                         </DropdownMenuItem>
                       )}
                     </DropdownMenuContent>

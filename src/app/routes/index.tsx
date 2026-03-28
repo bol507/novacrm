@@ -4,7 +4,8 @@ import Login from "@/features/auth/pages/Login";
 import NotFound from "@/app/routes/NotFound";
 import { RequireAuth } from "@/app/routes/RequireAuth";
 import DashboardLayout from "@/shared/layouts/DashboardLayout";
-
+import { contactsRoutes } from '@/features/contacts/routes';
+import  { tasksRoutes } from '@/features/tasks/routes';
 
 
 const Dashboard = lazy(() => import("@/features/dashboard/pages/Dashboard"));
@@ -31,6 +32,8 @@ const TaskListPage = lazy(() => import("@/features/tasks/pages/TaskListPage"));
 const TaskCreatePage = lazy(() => import("@/features/tasks/pages/TaskCreatePage"));
 const TaskDetailPage = lazy(() => import("@/features/tasks/pages/TaskDetailPage"));
 const CommentDetailPage = lazy(() => import("@/features/comments/pages/ComentDetailPage"));
+// Contacts
+
 
 
 const basePath = import.meta.env.VITE_BASE_PATH || '/';
@@ -86,6 +89,8 @@ export const router = createBrowserRouter([
       { path: "tasks", element: <TaskListPage /> },
       { path: "tasks/new", element: <TaskCreatePage /> },
       { path: "tasks/:taskId", element: <TaskDetailPage /> },
+      ...contactsRoutes,
+      ...tasksRoutes,
 
     ],
 

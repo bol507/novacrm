@@ -5,6 +5,9 @@ import { useToggleDashboardTask } from "@/features/dashboard/hooks/useDashboardT
 import type { TaskFilters, TaskViewMode } from "../types/task";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { TaskView } from "../components/TaskView";
+import { useConfirm } from "@/components/confirm-dialog";
+import { useDeleteTask } from "../hooks/use-delete-task";
+import { toast } from "sonner";
 
 /**
  * TaskListPage component for displaying and managing tasks.
@@ -26,6 +29,12 @@ import { TaskView } from "../components/TaskView";
  */
 const TaskListPage = () => {
   const navigate = useNavigate();
+  const showConfirm = useConfirm();
+  
+  // ✅ CORREGIDO: useDeleteTask NO recibe taskId aquí
+  // Se pasa el taskId cuando se llama a mutateAsync en handleDeleteTask
+  const deleteMutation = useDeleteTask();
+
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [filters] = useState<TaskFilters>({});
@@ -58,8 +67,6 @@ const TaskListPage = () => {
 
   /**
    * Handles task completion toggle.
-   *
-   * @param task - The task to toggle with its ID and current completion status
    */
   const handleToggleTask = async (task: { id: number; completed: boolean }) => {
     await toggleTaskMutation.mutateAsync({
@@ -70,8 +77,6 @@ const TaskListPage = () => {
 
   /**
    * Handles page change for pagination.
-   *
-   * @param newPage - The new page number to navigate to
    */
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
@@ -87,8 +92,6 @@ const TaskListPage = () => {
 
   /**
    * Navigates to the task detail page.
-   *
-   * @param task - The task to view
    */
   const handleViewTask = (task: { id: number }) => {
     navigate(`/dashboard/tasks/${task.id}`);
@@ -96,11 +99,34 @@ const TaskListPage = () => {
 
   /**
    * Handles view mode changes (cards/table).
-   *
-   * @param mode - The new view mode
    */
   const handleViewModeChange = (mode: TaskViewMode) => {
     setViewMode(mode);
+  };
+
+  /**
+   * ✅ CORREGIDO: Mostrar diálogo de confirmación y eliminar tarea
+   */
+  const handleDeleteTask = (task: { id: number; title: string }) => {
+    showConfirm({
+      title: "¿Eliminar tarea?",
+      description: `¿Estás seguro de eliminar "${task.title}"? Esta acción no se puede deshacer.`,
+      confirmLabel: "Eliminar",
+      cancelLabel: "Cancelar",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          // ✅ CORREGIDO: useDeleteTask() sin parámetros → mutateAsync(taskId)
+          await deleteMutation.mutateAsync(task.id);
+          toast.success("Tarea eliminada correctamente");
+          refetch(); // ✅ Refrescar lista después de eliminar
+        } catch (error) {
+          console.error("Error deleting task:", error);
+          // El toast ya se muestra en el hook onError, pero podemos agregar uno adicional
+          toast.error("Error al eliminar la tarea");
+        }
+      },
+    });
   };
 
   return (
@@ -116,6 +142,7 @@ const TaskListPage = () => {
         onRefresh={refetch}
         onView={handleViewTask}
         onToggle={handleToggleTask}
+        onDelete={handleDeleteTask}  
         viewMode={viewMode}
         page={page}
         totalPages={totalPages}

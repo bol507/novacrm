@@ -19,55 +19,63 @@ import { QuoteItemsTable } from "../components/QuoteItemsTable";
 import { QuotePdfActions } from "../components/QuotePdfActions";
 import { QuoteMainActions } from "../components/QuoteMainActions";
 
-// Dialog components (solo para crear proyecto)
+// Dialog components
 import { ProjectFormDialog } from "@/features/projects/components/ProjectFormDialog";
 
-
-
 /**
- * QuoteDetailPage Container Component
- * 
- * Orchestrates data fetching, state management, and composition of presentational components
- * for displaying quote details. Handles loading, error, and empty states.
- * 
+ * QuoteDetailPage component for displaying detailed information about a quote.
+ *
+ * Features:
+ * - Fetches and displays quote details by ID from URL parameters
+ * - Shows loading skeleton while fetching data
+ * - Displays error state with retry option on failure
+ * - Shows empty state when quote not found
+ * - Presents quote information in organized sections: header, info cards, financial summary, description, items table
+ * - Provides PDF download and preview actions
+ * - Allows edit, delete, and create project actions
+ * - Handles navigation back to quotes list
+ *
  * @component
- * @returns {JSX.Element} Complete quote detail page
+ * @returns The rendered quote detail page
+ *
+ * @example
+ * // Route configuration
+ * <Route path="/dashboard/quotes/:quoteId" element={<QuoteDetailPage />} />
+ *
+ * @example
+ * // Navigate to detail page
+ * navigate(`/dashboard/quotes/${quoteId}`);
  */
 const QuoteDetailPage = () => {
   const { quoteId } = useParams<{ quoteId: string }>();
   const navigate = useNavigate();
-  
-  
+
   if (!quoteId) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-foreground mb-2">ID de cotización no válido</h2>
-          <p className="text-muted-foreground mb-4">No se pudo identificar la cotización a mostrar.</p>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Invalid Quote ID</h2>
+          <p className="text-muted-foreground mb-4">Could not identify the quote to display.</p>
           <Button onClick={() => navigate('/dashboard/quotes')}>
-            Volver a cotizaciones
+            Back to quotes
           </Button>
         </div>
       </div>
     );
   }
 
-  // Data fetching
   const { data: quote, isLoading, error } = useQuoteDetail(quoteId);
-  
-  
+
   const [isCreateProjectDialogOpen, setIsCreateProjectDialogOpen] = useState(false);
-  
-  // Custom hooks
+
   const calculations = useQuoteCalculations(quote);
   const actions = useQuoteActions();
 
-  // Error state
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6 text-center max-w-md w-full">
-          <h2 className="text-xl font-bold text-destructive mb-2">Error loading quote</h2>
+          <h2 className="text-xl font-bold text-destructive mb-2">Error Loading Quote</h2>
           <p className="text-muted-foreground mb-4">{error.message}</p>
           <Button onClick={() => navigate('/dashboard/quotes')}>
             Back to quotes
@@ -77,17 +85,15 @@ const QuoteDetailPage = () => {
     );
   }
 
-  // Loading state
   if (isLoading) {
     return <QuoteLoadingSkeleton />;
   }
 
-  // Empty state
   if (!quote) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-foreground mb-2">Quote not found</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Quote Not Found</h2>
           <p className="text-muted-foreground mb-4">The quote you are looking for does not exist or has been deleted.</p>
           <Button onClick={() => navigate('/dashboard/quotes')}>
             Back to quotes
@@ -97,17 +103,20 @@ const QuoteDetailPage = () => {
     );
   }
 
-  // ✅ Action handlers
+  /**
+   * Navigates to the quote edit page.
+   */
   const handleEditQuote = () => {
     navigate(`/dashboard/quotes/${quoteId}/edit`);
   };
 
+  /**
+   * Handles successful project creation and closes the dialog.
+   */
   const handleCreateProjectSuccess = () => {
     toast.success("Project created successfully");
     setIsCreateProjectDialogOpen(false);
   };
-
-
 
   return (
     <ErrorBoundary>
@@ -164,15 +173,13 @@ const QuoteDetailPage = () => {
           {/* Main Actions */}
           <QuoteMainActions
             onCreateProject={() => setIsCreateProjectDialogOpen(true)}
-            onEdit={handleEditQuote} 
+            onEdit={handleEditQuote}
             onDelete={() => actions.handleDeleteClick(quote)}
             isDeleting={actions.isDeleting}
           />
         </div>
 
-        
-
-        {/* Create Project Dialog (se mantiene) */}
+        {/* Create Project Dialog */}
         <ProjectFormDialog
           open={isCreateProjectDialogOpen}
           onOpenChange={setIsCreateProjectDialogOpen}

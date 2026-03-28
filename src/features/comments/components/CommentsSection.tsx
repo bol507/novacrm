@@ -158,11 +158,7 @@ export const CommentsSection = ({
         </div>
       </form>
 
-      <div 
-        className={`space-y-4 transition-all duration-300 ease-in-out ${
-          showAll ? 'max-h-none opacity-100' : 'max-h-[800px] opacity-95'
-        }`}
-      >
+      <div className="space-y-4">
         {isLoading ? (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
