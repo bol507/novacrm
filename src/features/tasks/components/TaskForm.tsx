@@ -109,7 +109,7 @@ export default function TaskForm({ onSuccess, onCancel, initialData }: TaskFormP
         related_record_id: initialData?.related_record_id || null,
         related_module_type: initialData?.related_module_type || null,
         send_notification: initialData?.send_notification ?? true,
-        assigned_user_id: initialData?.assigned_user_id || user?.id,
+        assigned_user_id: initialData?.assigned_user_id || user?.data.id,
     })
 
     /**
@@ -218,7 +218,7 @@ export default function TaskForm({ onSuccess, onCancel, initialData }: TaskFormP
             // Ensure assigned_user_id is set (fallback to current user)
             const payload = {
                 ...formData,
-                assigned_user_id: formData.assigned_user_id || user?.id,
+                assigned_user_id: formData.assigned_user_id || user?.data.id,
             }
 
             const response = await createMutation.mutateAsync(payload)
@@ -318,11 +318,11 @@ export default function TaskForm({ onSuccess, onCancel, initialData }: TaskFormP
                                     >
                                         {userItem.first_name} {userItem.last_name}
                                         {/* Show "(You)" for current user */}
-                                        {userItem.id === user?.id && (
+                                        {userItem.id === user?.data.id && (
                                             <span className="ml-1 text-muted-foreground">(You)</span>
                                         )}
                                         {/* Show Admin badge for admin users */}
-                                        {userItem.role === 'Admin' && userItem.id !== user?.id && (
+                                        {userItem.role === 'Admin' && userItem.id !== user?.data.id && (
                                             <span className="ml-1 text-xs text-muted-foreground">(Admin)</span>
                                         )}
                                     </SelectItem>

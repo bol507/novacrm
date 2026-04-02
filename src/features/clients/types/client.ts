@@ -51,6 +51,9 @@ export interface Client {
   smcreatorid?: number;        // User ID who created the record
   smownerid?: number;          // User ID who owns the record
   modifiedby?: number;         // User ID who last modified the record
+  
+  // Description from vtiger_crmentity
+  description?: string | null;
 }
 
 export interface PaginatedResponse<T> {
@@ -158,6 +161,9 @@ export interface ClientFormData {
   ship_code?: string;
   ship_country?: string;
   ship_pobox?: string;
+  
+  // Description (stored in vtiger_crmentity)
+  description?: string;
 }
 
 /**

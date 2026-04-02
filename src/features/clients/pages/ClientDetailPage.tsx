@@ -37,18 +37,9 @@ import { useConfirm } from "@/components/confirm-dialog";
  * - Shows related entity statistics (opportunities, quotes, projects, contacts)
  * - Provides navigation to related entity lists filtered by this client
  * - Edit and delete actions with confirmation dialog
- * - Comprehensive client information including contact info, company details, addresses, and settings
  *
  * @component
  * @returns The rendered client detail page
- *
- * @example
- * // Route configuration
- * <Route path="/dashboard/clients/:id" element={<ClientDetailPage />} />
- *
- * @example
- * // Navigate to detail page
- * navigate(`/dashboard/clients/${clientId}`);
  */
 const ClientDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -60,12 +51,6 @@ const ClientDetailPage = () => {
   const { data: summary, isLoading: isLoadingSummary } = useClientSummary(client?.accountid);
   const deleteClientMutation = useDeleteClient();
 
-  /**
-   * Formats a number as USD currency with Panamanian locale.
-   *
-   * @param value - The number to format
-   * @returns Formatted currency string or '-' if value is falsy
-   */
   const formatCurrency = (value: number | null | undefined): string => {
     if (!value) return "-";
     return new Intl.NumberFormat("es-PA", {
@@ -76,12 +61,6 @@ const ClientDetailPage = () => {
     }).format(value);
   };
 
-  /**
-   * Returns rating badge color classes based on client rating.
-   *
-   * @param rating - The client rating string
-   * @returns Tailwind CSS classes for the rating badge
-   */
   const getRatingColor = (rating: string | null): string => {
     switch (rating) {
       case "Active":
@@ -95,46 +74,27 @@ const ClientDetailPage = () => {
     }
   };
 
-  /**
-   * Navigates to opportunities list filtered by this client.
-   */
   const handleViewOpportunities = () => {
     navigate(`/dashboard/opportunities?clientId=${clientId}`);
   };
 
-  /**
-   * Navigates to quotes list filtered by this client.
-   */
   const handleViewQuotes = () => {
     navigate(`/dashboard/quotes?clientId=${clientId}`);
   };
 
-  /**
-   * Navigates to projects list filtered by this client.
-   */
   const handleViewProjects = () => {
     navigate(`/dashboard/projects?clientId=${clientId}`);
   };
 
-  /**
-   * Navigates to contacts list filtered by this client.
-   */
   const handleViewContacts = () => {
     navigate(`/dashboard/contacts?clientId=${clientId}`);
   };
 
-  /**
-   * Navigates to the client edit page.
-   */
   const handleEdit = () => {
     if (!client) return;
     navigate(`/dashboard/clients/${client.accountid}/edit`);
   };
 
-  /**
-   * Handles client deletion with confirmation dialog.
-   * Shows success or error toast based on the result.
-   */
   const handleDelete = async () => {
     if (!client) return;
 
@@ -156,7 +116,6 @@ const ClientDetailPage = () => {
     });
   };
 
-  // Reusable component for information items
   const InfoItem = ({
     icon: Icon,
     label,
@@ -190,7 +149,6 @@ const ClientDetailPage = () => {
     </div>
   );
 
-  // Reusable component for address blocks
   const AddressBlock = ({
     title,
     street,
@@ -271,7 +229,6 @@ const ClientDetailPage = () => {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header with actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-4">
           <Button
@@ -310,7 +267,6 @@ const ClientDetailPage = () => {
         </div>
       </div>
 
-      {/* Related entity statistics */}
       <ClientStats
         summary={
           summary || {
@@ -328,9 +284,7 @@ const ClientDetailPage = () => {
         onViewContacts={handleViewContacts}
       />
 
-      {/* Main information grid */}
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Contact Information */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
@@ -348,7 +302,6 @@ const ClientDetailPage = () => {
           </CardContent>
         </Card>
 
-        {/* Company Information */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
@@ -367,7 +320,6 @@ const ClientDetailPage = () => {
         </Card>
       </div>
 
-      {/* Addresses */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
@@ -399,9 +351,7 @@ const ClientDetailPage = () => {
         </CardContent>
       </Card>
 
-      {/* Additional Information and Settings */}
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Additional Details */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
@@ -412,6 +362,10 @@ const ClientDetailPage = () => {
           <CardContent className="space-y-1">
             <InfoItem icon={Tag} label="Ownership" value={client.ownership} />
             <InfoItem icon={Tag} label="Tags" value={client.tags} />
+            <div className="py-2">
+              <p className="text-xs text-muted-foreground mb-1">Description</p>
+              <p className="text-sm whitespace-pre-wrap">{client.description || "-"}</p>
+            </div>
             {client.createdtime && (
               <InfoItem icon={Calendar} label="Created" value={new Date(client.createdtime).toLocaleDateString()} />
             )}
@@ -421,7 +375,6 @@ const ClientDetailPage = () => {
           </CardContent>
         </Card>
 
-        {/* Settings */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">

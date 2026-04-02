@@ -43,7 +43,7 @@ const UsersPage = () => {
     }
   }, [viewMode]);
 
-  const { data, isLoading, error, refetch } = useUsers(page, 20, searchTerm);
+  const { data, isLoading, error, refetch } = useUsers({page, perPage: 20, search: searchTerm});
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [viewingUser, setViewingUser] = useState<User | null>(null);

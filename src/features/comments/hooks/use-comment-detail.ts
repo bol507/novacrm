@@ -1,29 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
-import { commentService} from '../services/commentService';
+import { commentService } from '../services/commentService';
 import type { CommentDetail } from '../types/comment';
 
 interface UseCommentDetailOptions {
-  /** ID del comentario a cargar */
   commentId: number | null;
-  
-  /** Si el hook está habilitado */
   enabled?: boolean;
 }
 
 interface UseCommentDetailResult {
-  /** Datos del comentario */
   comment: CommentDetail | null;
-  
-  /** Si está cargando */
   isLoading: boolean;
-  
-  /** Si hay error */
   isError: boolean;
-  
-  /** Objeto de error */
   error: Error | null;
-  
-  /** Función para refrescar */
   refetch: () => void;
 }
 
@@ -53,11 +41,24 @@ export const useCommentDetail = (
 
   const { data, isLoading, isError, error, refetch } = useQuery<CommentDetail, Error>({
     queryKey: ['comment-detail', commentId],
-    queryFn: () => {
+    queryFn: async ({ signal }) => {
       if (!commentId) {
         throw new Error('Comment ID is required');
       }
-      return commentService.getCommentById(commentId);
+      try {
+        const result = await commentService.getCommentById(commentId);
+        console.log('🔍 CommentDetail hook debug:', {
+          commentIdFromUrl: commentId,
+          comment: result,
+          isLoading,
+          isError,
+          error: error?.message,
+          commentKeys: result ? Object.keys(result) : 'null',
+        });
+        return result;
+      } catch (err) {
+        throw err;
+      }
     },
     enabled: enabled && commentId !== null,
     staleTime: 1000 * 60 * 5, // 5 minutos - datos frescos
@@ -65,6 +66,13 @@ export const useCommentDetail = (
     retry: 1,
     refetchOnWindowFocus: false,
   });
+
+  if (isError && error) {
+    console.error('🔥 useQuery state: isError=true', {
+      message: error.message,
+      name: (error as Error).name,
+    });
+  }
 
   return {
     comment: data ?? null,

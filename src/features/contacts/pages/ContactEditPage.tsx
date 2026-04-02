@@ -28,48 +28,64 @@ import { ContactFormActions } from "../components/ContactFormDialog/ContactFormA
 import type { ContactFormData, ContactFormValues } from "../types/contact";
 
 /**
- * Zod validation schema for the contact form
+ * Account search result type - uses accountid from client service
+ */
+interface AccountSearchResult {
+  accountid: number;
+  accountname: string;
+  [key: string]: any;
+}
+
+/**
+ * Zod validation schema for the contact form.
+ * Defines validation rules for all contact fields.
  */
 const contactFormSchema = z.object({
-  firstname: z.string().max(40).optional(),
-  lastname: z.string().min(1, "Last name is required").max(80),
-  email: z.string().email("Invalid email").max(100).optional().or(z.literal('')),
-  phone: z.string().max(50).optional(),
-  mobile: z.string().max(50).optional(),
-  title: z.string().max(50).optional(),
-  department: z.string().max(30).optional(),
-  
-  // ✅ Nullable para coincidir con BD
-  accountid: z.number().nullable().optional(),
-  assigned_user_id: z.number().nullable().optional(),
-  
+  firstname: z.string().max(100).optional(),
+  lastname: z.string().min(1, "Last name is required").max(100),
+  email: z.string().email("Invalid email").max(255).optional().or(z.literal('')),
+  phone: z.string().optional(),
+  mobile: z.string().optional(),
+  title: z.string().optional(),
+  department: z.string().optional(),
+  accountid: z.number().optional(),
+  assigned_user_id: z.number().optional(),
   description: z.string().optional(),
   account_search: z.string().optional(),
   assigned_user_search: z.string().optional(),
-  
-  // Campos reales de vtiger_contactdetails
-  salutation: z.string().max(200).optional(),
-  fax: z.string().max(50).optional(),
-  reportsto: z.string().max(30).optional(),
-  training: z.string().max(50).optional(),
-  usertype: z.string().max(50).optional(),
-  contacttype: z.string().max(50).optional(),
-  otheremail: z.string().max(100).optional(),
-  secondaryemail: z.string().email().max(100).optional().or(z.literal('')),
-  donotcall: z.string().max(3).optional(),
-  emailoptout: z.string().max(3).optional(),
-  imagename: z.string().max(150).optional(),
-  reference: z.string().max(3).optional(),
-  notify_owner: z.string().max(3).optional(),
-  isconvertedfromlead: z.string().max(3).optional(),
-  tags: z.string().max(1).optional(),
+  mailingstreet: z.string().optional(),
+  mailingcity: z.string().optional(),
+  mailingstate: z.string().optional(),
+  mailingcountry: z.string().optional(),
+  mailingzip: z.string().optional(),
+  otherphone: z.string().optional(),
+  fax: z.string().optional(),
+  secondaryemail: z.string().email().optional().or(z.literal('')),
+  assistant: z.string().optional(),
+  birthdate: z.string().optional(),
+  reports_to_id: z.number().optional(),
+  leadsource: z.string().optional(),
+  contact_status: z.enum(['Active', 'Inactive']).optional(),
+  salutation: z.string().optional(),
+  reportsto: z.string().optional(),
+  training: z.string().optional(),
+  usertype: z.string().optional(),
+  contacttype: z.string().optional(),
+  otheremail: z.string().optional(),
+  donotcall: z.string().optional(),
+  emailoptout: z.string().optional(),
+  imagename: z.string().optional(),
+  reference: z.string().optional(),
+  notify_owner: z.string().optional(),
+  isconvertedfromlead: z.string().optional(),
+  tags: z.string().optional(),
 });
 
 const ContactEditPage = () => {
   const { contactId } = useParams<{ contactId: string }>();
   const navigate = useNavigate();
 
-  // ✅ Validación temprana
+  // Validación temprana
   if (!contactId) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
@@ -212,6 +228,11 @@ const ContactEditPage = () => {
    */
   const handleSubmit = async ( data :ContactFormValues) => {
     try {
+      // Use state values directly (these are updated by handleSelectAccount)
+      // Fallback to form values or original values if state is not set
+      const accountId = selectedAccountId ?? data.accountid ?? originalAccountId ?? null;
+      const userId = selectedUserId ?? data.assigned_user_id ?? originalUserId ?? null;
+      
       // ✅ Construir payload con TODOS los campos que pueden cambiar
       const payload: ContactFormData = {
         // Required
@@ -243,15 +264,11 @@ const ContactEditPage = () => {
         // crmentity fields
         description: data.description || undefined,
         
-        // ✅ Account: enviar solo si cambió o si es requerido
-        ...(selectedAccountId !== originalAccountId || selectedAccountId !== null
-          ? { accountid: selectedAccountId }
-          : {}),
+        // ✅ Account: send if exists (including 0 which means no account)
+        ...(accountId !== null && accountId !== undefined ? { accountid: accountId } : {}),
         
-        // ✅ Assigned user: enviar solo si cambió explícitamente
-        ...(selectedUserId !== originalUserId
-          ? { assigned_user_id: selectedUserId ?? undefined }
-          : {}),
+        // ✅ Assigned user: send if exists
+        ...(userId ? { assigned_user_id: userId } : {}),
       };
 
       // ✅ Ejecutar actualización
@@ -270,9 +287,11 @@ const ContactEditPage = () => {
   };
 
   const handleSelectAccount = (account: AccountSearchResult) => {
+    // The search result uses 'accountid' not 'id'
+    const accountId = account.accountid ?? account.id;
     form.setValue('account_search', account.accountname);
-    form.setValue('accountid', account.id);
-    setSelectedAccountId(account.id);
+    form.setValue('accountid', accountId);
+    setSelectedAccountId(accountId);
     setIsAccountValid(true);
     setAccountSearchTerm('');
   };

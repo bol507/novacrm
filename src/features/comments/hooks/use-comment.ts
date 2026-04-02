@@ -1,53 +1,36 @@
-import { commentService } from '@/features/comments/services/commentService';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import { toast } from 'sonner';
-import type { 
-  ProjectComment, 
-  CommentResponse, 
-  CreateCommentData
-} from '@/features/comments/types/comment';
-
-import type { UseQueryOptions } from '@tanstack/react-query';
+import { commentService } from '@/features/comments/services/commentService';
+import type { ApiErrorResponse } from '@/shared/types/api-error';
+import type { ProjectComment } from '../types/comment';
 
 /**
- * Hook for fetching comments for a specific module and record.
- *
- * Provides automatic caching, stale time management, and pagination support.
- * The query is only enabled when both module and relatedId are valid.
- *
- * @param module - Module name (e.g., 'project', 'task')
- * @param relatedId - ID of the record to fetch comments for
- * @param options - Optional React Query configuration overrides
- * @returns Query result containing comments data, loading state, and error state
- *
- * @example
- * // Basic usage
- * const { data, isLoading } = useComments('project', 123);
- *
- * @example
- * // With custom options
- * const { data, refetch } = useComments('project', 123, {
- *   enabled: isProjectLoaded,
- *   staleTime: 5000
- * });
+ * Hook para obtener un solo comentario por su ID
+ * 
+ * @param commentId - ID único del comentario a recuperar
+ * @param options - Opciones adicionales de React Query
+ * @returns Query result con el comentario o undefined si no existe
  */
-export const useComments = (
-  module: string,
-  relatedId: number,
-  options?: Omit<UseQueryOptions<CommentResponse, AxiosError>, 'queryKey' | 'queryFn'>
+export const useComment = (
+  commentId: number,
+  options?: Omit<
+    UseQueryOptions<Comment, AxiosError<ApiErrorResponse>>,
+    'queryKey' | 'queryFn'
+  >
 ) => {
-  return useQuery<CommentResponse, AxiosError>({
-    queryKey: ['comments', module, relatedId],
+  return useQuery<Comment, AxiosError<ApiErrorResponse>>({
+    queryKey: ['comment', commentId],  
     queryFn: async ({ signal }) => {
       if (signal?.aborted) throw new Error('Request cancelled');
-      return await commentService.getComments(module, relatedId, signal);
+      return await commentService.getCommentById(commentId, signal);
     },
-    staleTime: 2 * 60 * 1000,
-    gcTime: 5 * 60 * 1000,
-    placeholderData: (prev) => prev,
-    enabled: !!module && relatedId > 0,
+    staleTime: 5 * 60 * 1000,  
+    gcTime: 10 * 60 * 1000,
+    enabled: commentId > 0,   
     retry: (failureCount, error) => {
+      if (error instanceof AxiosError && error.response?.status === 404) {
+        return false;  
+      }
       if (error instanceof AxiosError && error.response?.status && error.response.status >= 400) {
         return false;
       }
@@ -58,164 +41,83 @@ export const useComments = (
 };
 
 /**
- * Hook for creating a new comment.
- *
- * Provides optimistic update functionality by immediately adding the new comment
- * to the cache on success. Displays toast notifications for success and error states.
- *
- * @param module - Module name (e.g., 'project', 'task')
- * @param relatedId - ID of the record to attach the comment to
- * @returns Mutation object with mutate function, loading state, and error state
- *
- * @example
- * // Basic usage
- * const createComment = useCreateComment('project', 123);
- *
- * const handleSubmit = (content: string) => {
- *   createComment.mutate({ content });
- * };
- *
- * @example
- * // With loading state
- * <Button onClick={() => createComment.mutate({ content })}
- *         disabled={createComment.isPending}>
- *   {createComment.isPending ? 'Posting...' : 'Post Comment'}
- * </Button>
+ * Extract comments array - versión infalible para cualquier estructura
  */
-export const useCreateComment = (module: string, relatedId: number) => {
-  const queryClient = useQueryClient();
-
-  return useMutation<ProjectComment, AxiosError, CreateCommentData>({
-    mutationFn: (data: CreateCommentData) => 
-      commentService.createComment(module, relatedId, data),
-    
-    onSuccess: (newComment) => {
-      queryClient.setQueryData<CommentResponse>(
-        ['comments', module, relatedId],
-        (old) => {
-          if (!old) return undefined;
-          return {
-            ...old,
-            data: [newComment, ...old.data],
-            meta: { 
-              ...old.meta, 
-              total: old.meta.total + 1 
-            },
-          };
-        }
-      );
-      toast.success('Comment added successfully');
-    },
-    
-    onError: (error: AxiosError) => {
-      const errorMessage = 
-        error.response?.data && 
-        typeof error.response.data === 'object' && 
-        'error' in error.response.data 
-          ? (error.response.data as { error?: string }).error 
-          : undefined;
-      
-      toast.error(errorMessage || 'Error adding comment');
-    },
+export const selectComments = (response: any): ProjectComment[] => {
+  // Debug temporal para ver qué estamos recibiendo
+  console.log('🔍 selectComments input:', {
+    type: typeof response,
+    isArray: Array.isArray(response),
+    hasData: response?.data !== undefined,
+    responseData: response?.data,
   });
+
+  // Caso 1: null/undefined
+  if (!response) {
+    console.log('→ Response is null/undefined, returning []');
+    return [];
+  }
+  
+  // Caso 2: YA ES array directo ← ESTE ES TU CASO
+  if (Array.isArray(response)) {
+    console.log('→ Response is direct array, returning it');
+    return response as ProjectComment[];
+  }
+  
+  // Caso 3: {  [...] }
+  if (Array.isArray(response.data)) {
+    console.log('→ Response.data is array, returning it');
+    return response.data;
+  }
+  
+  // Caso 4: {  {  [...] } } (ApiResponse wrapper)
+  if (response.data?.data && Array.isArray(response.data.data)) {
+    console.log('→ Response.data.data is array, returning it');
+    return response.data.data;
+  }
+  
+  // Caso 5: { comments: [...] }
+  if (response?.comments && Array.isArray(response.comments)) {
+    console.log('→ Response.comments is array, returning it');
+    return response.comments;
+  }
+  
+  // Fallback
+  console.log('→ Fallback: returning []');
+  return [];
 };
 
 /**
- * Selector function to extract comments array from the response.
- *
- * @param response - The full comment response object
- * @returns Array of project comments
- *
- * @example
- * const { data } = useComments('project', 123);
- * const comments = selectComments(data);
+ * Extract pagination metadata from query response
+ * 
+ * @param response - The query response (any structure)
+ * @returns Pagination metadata or default values
  */
-export const selectComments = (response?: CommentResponse): ProjectComment[] => {
-  return response?.data ?? [];
-};
-
-/**
- * Selector function to extract pagination metadata from the response.
- *
- * @param response - The full comment response object
- * @returns Pagination metadata including current page, total items, etc.
- *
- * @example
- * const { data } = useComments('project', 123);
- * const meta = selectCommentsMeta(data);
- */
-export const selectCommentsMeta = (response?: CommentResponse) => {
-  return response?.meta ?? {
-    current_page: 1,
-    per_page: 50,
-    total: 0,
-    last_page: 1,
-    has_more: false,
+export const selectCommentsMeta = (response?: any) => {
+  const defaults = { 
+    current_page: 1, 
+    per_page: 50, 
+    total: 0, 
+    last_page: 1, 
+    has_more: false 
   };
-};
-
-/**
- * Hook for deleting a comment.
- *
- * Provides optimistic update functionality by removing the deleted comment
- * from all cached comment queries. Displays toast notifications for success
- * and error states.
- *
- * @returns Mutation object with mutate function, loading state, and error state
- *
- * @example
- * // Basic usage
- * const deleteComment = useDeleteComment();
- *
- * const handleDelete = (commentId: number) => {
- *   deleteComment.mutate(commentId);
- * };
- *
- * @example
- * // With loading state
- * <Button
- *   onClick={() => deleteComment.mutate(commentId)}
- *   disabled={deleteComment.isPending}
- * >
- *   {deleteComment.isPending ? 'Deleting...' : 'Delete'}
- * </Button>
- */
-export const useDeleteComment = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<void, AxiosError, number>({
-    mutationFn: async (commentId: number) => {
-      return await commentService.deleteComment(commentId);
-    },
-    
-    onSuccess: (_, deletedCommentId) => {
-      queryClient.setQueriesData<CommentResponse>(
-        { queryKey: ['comments'] },
-        (oldData) => {
-          if (!oldData) return undefined;
-          return {
-            ...oldData,
-            data: oldData.data.filter(comment => comment.id !== deletedCommentId),
-            meta: {
-              ...oldData.meta,
-              total: oldData.meta.total - 1
-            }
-          };
-        }
-      );
-      
-      toast.success('Comment deleted successfully');
-    },
-    
-    onError: (error: AxiosError) => {
-      const errorMessage = 
-        error.response?.data && 
-        typeof error.response.data === 'object' && 
-        'error' in error.response.data 
-          ? (error.response.data as { error?: string }).error 
-          : undefined;
-      
-      toast.error(errorMessage || 'Error deleting comment');
-    },
-  });
+  
+  if (!response) return defaults;
+  
+  // Si response es array directo, construir meta básico
+  if (Array.isArray(response)) {
+    return { 
+      ...defaults, 
+      per_page: response.length, 
+      total: response.length 
+    };
+  }
+  
+  // Estructura {  [...], meta: {...} }
+  if (response?.meta) return response.meta;
+  
+  // ApiResponse wrapper: {  {  [...] }, meta: {...} }
+  if (response?.data?.meta) return response.data.meta;
+  
+  return defaults;
 };

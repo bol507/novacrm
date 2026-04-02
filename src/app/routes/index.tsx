@@ -5,7 +5,8 @@ import NotFound from "@/app/routes/NotFound";
 import { RequireAuth } from "@/app/routes/RequireAuth";
 import DashboardLayout from "@/shared/layouts/DashboardLayout";
 import { contactsRoutes } from '@/features/contacts/routes';
-import  { tasksRoutes } from '@/features/tasks/routes';
+import { tasksRoutes } from '@/features/tasks/routes';
+import { projectsRoutes } from "@/features/projects/routes";
 
 
 const Dashboard = lazy(() => import("@/features/dashboard/pages/Dashboard"));
@@ -20,10 +21,7 @@ const QuotesPage = lazy(() => import("@/features/quotes/pages/QuotesPage"));
 const QuoteDetailPage = lazy(() => import("@/features/quotes/pages/QuoteDetailPage"));
 const QuoteCreatePage = lazy(() => import("@/features/quotes/pages/QuoteCreatePage"));
 const QuoteEditPage = lazy(() => import("@/features/quotes/pages/QuoteEditPage"));
-//Projects
-const ProjectsPage = lazy(() => import("@/features/projects/pages/ProjectsPage"));
-const ProjectDetailPage = lazy(() => import("@/features/projects/pages/ProjectDetailPage"));
-const ProjectEditPage = lazy(() => import("@/features/projects/pages/ProjectEditPage"));
+
 // Opportunities
 const OpportunityDetailPage = lazy(() => import("@/features/opportunity/pages/OpportunityDetailPage"));
 const OpportunityCreatePage = lazy(() => import("@/features/opportunity/pages/OpportunityCreatePage"));
@@ -83,9 +81,7 @@ export const router = createBrowserRouter([
       { path: "quotes/:quoteId", element: <QuoteDetailPage /> },
       { path: "quotes/new", element: <QuoteCreatePage /> },
       { path: "quotes/:quoteId/edit", element: <QuoteEditPage /> },
-      { path: "projects", element: <ProjectsPage /> },
-      { path: "projects/:projectId", element: <ProjectDetailPage /> },
-      { path: "projects/:projectId/edit", element: <ProjectEditPage /> },
+      ...projectsRoutes,
       { path: "tasks", element: <TaskListPage /> },
       { path: "tasks/new", element: <TaskCreatePage /> },
       { path: "tasks/:taskId", element: <TaskDetailPage /> },

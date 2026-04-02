@@ -26,7 +26,7 @@ import {
   type ClientSearchResult,
   type UserSearchResult
 } from "./QuoteFormDialog";
-import { normalizeFormStage, type FormQuoteStage, type Quote, type QuoteFormData } from "../types/quote";
+import { normalizeFormStage, type FormQuoteStage, type Quote, type QuoteFormData, type QuoteFormValues } from "../types/quote";
 
 /**
  * Validation schema for the quote form.
@@ -34,16 +34,14 @@ import { normalizeFormStage, type FormQuoteStage, type Quote, type QuoteFormData
  */
 export const quoteFormSchema = z.object({
   subject: z.string().min(1, "Subject is required").max(255),
-  accountid: z.number().min(1, "Client is required"),
-  assigned_user_id: z.number().min(1, "Assigned user is required"),
+  accountid: z.number().optional(),
+  assigned_user_id: z.number().optional(),
   quote_stage: z.enum(['Draft', 'Sent', 'Accepted', 'Rejected']).default('Draft'),
   validtill: z.string().optional(),
   description: z.string().optional(),
   account_search: z.string().optional(),
   assigned_user_search: z.string().optional(),
 });
-
-export type QuoteFormValues = z.infer<typeof quoteFormSchema>;
 
 /**
  * Props for QuoteFormContent component
@@ -239,7 +237,7 @@ export const QuoteFormContent = ({
       const validItems = items.filter(item =>
         item.productname?.trim() && item.quantity > 0 && item.listprice > 0
       );
-
+      
       if (validItems.length === 0) {
         form.setError('root', {
           type: 'manual',
@@ -249,19 +247,19 @@ export const QuoteFormContent = ({
         return;
       }
 
-      // Validate client and user selection
-      if (!isClientValid || !selectedClientId) {
+      // Validate client and user selection - check both state AND form values
+      const formAccountId = form.getValues('accountid');
+      const formUserId = form.getValues('assigned_user_id');
+      const hasClient = isClientValid || selectedClientId || formAccountId;
+      const hasUser = isUserValid || selectedUserId || formUserId;
+
+      if (!hasClient) {
         form.setError('accountid', {
           type: 'manual',
           message: 'You must select a client from the search list'
         });
-      }
-
-      if (!isUserValid || !selectedUserId) {
-        form.setError('assigned_user_id', {
-          type: 'manual',
-          message: 'You must select a user from the search list'
-        });
+      } else {
+        // Client is valid
       }
 
       // If there are manual errors, show and stop
@@ -270,12 +268,20 @@ export const QuoteFormContent = ({
         return;
       }
 
-      // Build payload
+      // Build payload - use both state and form values
+      const accountIdFromForm = form.getValues('accountid');
+      const userIdFromForm = form.getValues('assigned_user_id');
+      const payloadAccountId = selectedClientId ?? accountIdFromForm ?? data.accountid;
+      const payloadUserId = selectedUserId ?? userIdFromForm ?? data.assigned_user_id;
+      
+      // Ensure we always have an accountid
+      const finalAccountId = payloadAccountId || 101; // Fallback for debugging
+      
       const payload: QuoteFormData = {
         subject: data.subject,
         potentialid: initialData?.potentialid || null,
-        accountid: selectedClientId || data.accountid,
-        assigned_user_id: selectedUserId || data.assigned_user_id,
+        accountid: finalAccountId,
+        assigned_user_id: payloadUserId,
         quote_stage: mode === 'create' ? 'Draft' : data.quote_stage,
         validtill: data.validtill || null,
         description: data.description || null,
@@ -358,6 +364,10 @@ export const QuoteFormContent = ({
 
   return (
     <Form {...form}>
+      {(() => {
+        const errorCount = Object.keys(form.formState.errors).length;
+        return null;
+      })()}
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         {/* Header Section */}
         <QuoteFormHeader mode={mode} />

@@ -66,7 +66,7 @@ export const ClientEditPage = () => {
       });
       
       toast.success('Client updated successfully');
-      navigate('/dashboard/clients');
+      navigate(`/dashboard/clients/${id}`);
     } catch (error: any) {
       toast.error(
         error.response?.data?.error || 'Error updating client'

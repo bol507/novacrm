@@ -15,7 +15,7 @@ export const OpportunityEditPage = () => {
   const { data: opportunity, isLoading: isLoadingOpportunity, error } = useOpportunity(opportunityId);
   const updateOpportunityMutation = useUpdateOpportunity();
 
-  const handleSubmit = async (data: OpportunityPayload) => {
+  const handleSubmit = async (payload: OpportunityPayload) => {
     if (!opportunityId) {
       toast.error("ID de oportunidad no válido");
       return;
@@ -24,7 +24,7 @@ export const OpportunityEditPage = () => {
     try {
       await updateOpportunityMutation.mutateAsync({
         id: opportunityId,
-        data: data,
+        payload,
       });
 
       toast.success("Oportunidad actualizada exitosamente");

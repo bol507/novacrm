@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import {
   ACCOUNT_TYPES,
   INDUSTRIES,
@@ -65,6 +66,7 @@ const clientFormSchema = z.object({
   ship_code: z.string().max(30).optional(),
   ship_country: z.string().max(30).optional(),
   ship_pobox: z.string().max(30).optional(),
+  description: z.string().optional(),
 });
 
 interface ClientFormProps {
@@ -180,6 +182,7 @@ export const ClientForm = ({
           ship_code: initialData.ship_code || '',
           ship_country: initialData.ship_country || '',
           ship_pobox: initialData.ship_pobox || '',
+          description: initialData.description || '',
         };
       }
       return {
@@ -213,6 +216,7 @@ export const ClientForm = ({
         ship_code: "",
         ship_country: "",
         ship_pobox: "",
+        description: "",
       };
     }, [mode, initialData]),
   });
@@ -762,6 +766,29 @@ export const ClientForm = ({
                 <FormLabel>P.O. Box</FormLabel>
                 <FormControl>
                   <Input placeholder="PO456" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Description */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold text-foreground">Description</h3>
+          <Separator />
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Notes</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Additional notes about this client..."
+                    className="min-h-24"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

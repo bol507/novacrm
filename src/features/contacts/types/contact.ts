@@ -1,5 +1,8 @@
 import { z } from "zod";
-
+/**
+ * View mode for displaying contacts (cards, table, list)
+ */
+export type ContactViewMode = 'cards' | 'table' | 'list';
 /**
  * Contact entity - Individual person associated with an Account.
  * Based on REAL structure of vtiger_contactdetails + vtiger_crmentity
@@ -41,6 +44,8 @@ export interface Contact {
   
   // Calculated for display
   full_name?: string;
+
+  contact_status?: 'Active' | 'Inactive' | 'Other'; 
 }
 
 /**

@@ -7,10 +7,10 @@ import type { ContactFormValues } from "../../types/contact";
 import { cn } from "@/shared/lib/utils";
 
 /**
- * Account search result type
+ * Account search result type - uses accountid from client service
  */
 export interface AccountSearchResult {
-  id: number;
+  accountid: number;
   accountname: string;
   [key: string]: any;
 }
@@ -85,13 +85,6 @@ export const ContactFormAccountSearch = ({
   const form = useFormContext<ContactFormValues>();
   const hasAccountError = !isValid && form?.formState.isSubmitted;
   const showError = hasAccountError && (originalAccountId === undefined || originalAccountId === null);
-  
-  console.log('=== AccountSearch DEBUG ===');
-  console.log('isValid:', isValid);
-  console.log('form.formState.isSubmitted:', form?.formState.isSubmitted);
-  console.log('hasAccountError:', hasAccountError);
-  console.log('originalAccountId:', originalAccountId);
-  console.log('showError:', showError);
 
   return (
     <FormField

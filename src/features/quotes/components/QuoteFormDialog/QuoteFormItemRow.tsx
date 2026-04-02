@@ -114,8 +114,12 @@ export const QuoteFormItemRow = ({
               hasQuantityError && "border-destructive focus-visible:ring-destructive"
             )}
             onChange={(e) => {
-              const value = parseFloat(e.target.value) || 0;
-              onUpdate(index, 'quantity', value);
+              let value = e.target.value;
+              if (value.length > 1 && value.startsWith('0') && !value.startsWith('0.')) {
+                value = value.replace(/^0+/, '');
+              }
+              const parsedValue = parseFloat(value) || 0;
+              onUpdate(index, 'quantity', parsedValue);
               if (hasQuantityError && form) {
                 form.clearErrors('root');
               }
@@ -138,8 +142,12 @@ export const QuoteFormItemRow = ({
               hasPriceError && "border-destructive focus-visible:ring-destructive"
             )}
             onChange={(e) => {
-              const value = parseFloat(e.target.value) || 0;
-              onUpdate(index, 'listprice', value);
+              let value = e.target.value;
+              if (value.length > 1 && value.startsWith('0') && !value.startsWith('0.')) {
+                value = value.replace(/^0+/, '');
+              }
+              const parsedValue = parseFloat(value) || 0;
+              onUpdate(index, 'listprice', parsedValue);
               if (hasPriceError && form) {
                 form.clearErrors('root');
               }

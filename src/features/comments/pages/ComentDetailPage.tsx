@@ -30,7 +30,13 @@ const CommentDetailPage = () => {
     commentId: commentId,
     enabled: commentId !== null,
   });
-
+  console.log('🔍 CommentDetail page debug:', {
+  commentIdFromUrl: 10082,  // o useParams().id
+  comment,                  // ¿Qué retorna el hook?
+  isLoading,
+  isError,
+  commentKeys: comment ? Object.keys(comment) : 'null',
+});
   // Loading state
   if (isLoading) {
     return (

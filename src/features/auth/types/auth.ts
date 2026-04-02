@@ -60,7 +60,22 @@ export interface AuthResponse {
   expires_in?: number;
   
   /** Authenticated user information */
-  user: User;
+   user: {
+    data: {
+      id: number;              
+      user_name: string;
+      first_name: string;
+      last_name: string;
+      email: string;
+      role: 'Admin' | 'Usuario' | 'Cliente';
+      status: string;
+      department: string | null;
+      phone: string | null;
+      is_admin: boolean;
+      is_active: boolean;
+      [key: string]: unknown;  // Permitir propiedades adicionales
+    };
+  };
 }
 
 /**

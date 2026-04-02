@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import {
   Percent,
   Scale,
   Activity,
+  ExternalLinkIcon,
 } from "lucide-react";
 import { useOpportunity } from "@/features/opportunity/hooks/useOpportunity";
 import { opportunityService } from "../services/opportunityService";
@@ -399,28 +400,25 @@ const OpportunityDetailPage = () => {
                 <p className="text-sm text-muted-foreground mb-1">Closing Date</p>
                 <p className="text-lg font-bold">{formatDateShort(opportunity.closingdate)}</p>
                 {daysUntilClose !== null && (
-                  <p className={`text-xs mt-1 ${
-                    daysUntilClose < 0 ? "text-red-600" :
-                    daysUntilClose === 0 ? "text-amber-600" :
-                    daysUntilClose <= 30 ? "text-yellow-600" :
-                    "text-green-600"
-                  }`}>
+                  <p className={`text-xs mt-1 ${daysUntilClose < 0 ? "text-red-600" :
+                      daysUntilClose === 0 ? "text-amber-600" :
+                        daysUntilClose <= 30 ? "text-yellow-600" :
+                          "text-green-600"
+                    }`}>
                     {daysUntilClose < 0 ? `Expired ${Math.abs(daysUntilClose)} days ago` :
-                     daysUntilClose === 0 ? "Expires today" :
-                     `${daysUntilClose} days remaining`}
+                      daysUntilClose === 0 ? "Expires today" :
+                        `${daysUntilClose} days remaining`}
                   </p>
                 )}
               </div>
-              <div className={`p-3 rounded-full ${
-                daysUntilClose !== null && daysUntilClose < 0 ? "bg-red-100" :
-                daysUntilClose !== null && daysUntilClose <= 7 ? "bg-amber-100" :
-                "bg-blue-100"
-              }`}>
-                <Clock className={`h-6 w-6 ${
-                  daysUntilClose !== null && daysUntilClose < 0 ? "text-red-600" :
-                  daysUntilClose !== null && daysUntilClose <= 7 ? "text-amber-600" :
-                  "text-blue-600"
-                }`} />
+              <div className={`p-3 rounded-full ${daysUntilClose !== null && daysUntilClose < 0 ? "bg-red-100" :
+                  daysUntilClose !== null && daysUntilClose <= 7 ? "bg-amber-100" :
+                    "bg-blue-100"
+                }`}>
+                <Clock className={`h-6 w-6 ${daysUntilClose !== null && daysUntilClose < 0 ? "text-red-600" :
+                    daysUntilClose !== null && daysUntilClose <= 7 ? "text-amber-600" :
+                      "text-blue-600"
+                  }`} />
               </div>
             </div>
           </CardContent>
@@ -438,41 +436,50 @@ const OpportunityDetailPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Related Client - Con link en el nombre */}
             <div className="flex items-start gap-3">
               <div className="p-2 bg-blue-100 rounded-lg shrink-0">
                 <Building2 className="h-5 w-5 text-blue-600" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-muted-foreground">Client</p>
-                <p className="font-medium truncate">
-                  {opportunity.related_to_name || "No client"}
-                </p>
+                {opportunity.related_to ? (
+                  <Link
+                    to={`/dashboard/clients/${opportunity.related_to}`}
+                    className="font-medium text-primary hover:underline flex items-center gap-1 truncate"
+                  >
+                    {opportunity.related_to_name || 'View Client'}
+                    <ExternalLinkIcon className="w-3 h-3 opacity-0 hover:opacity-100 transition-opacity" />
+                  </Link>
+                ) : (
+                  <p className="font-medium text-muted-foreground">No client</p>
+                )}
                 {opportunity.related_to && (
                   <p className="text-xs text-muted-foreground">
                     ID: {opportunity.related_to}
                   </p>
                 )}
               </div>
-              {opportunity.related_to && (
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => navigate(`/dashboard/clients/${opportunity.related_to}`)}
-                >
-                  View
-                </Button>
-              )}
             </div>
 
+            {/* Assigned To - También con link opcional */}
             <div className="flex items-start gap-3">
               <div className="p-2 bg-purple-100 rounded-lg shrink-0">
                 <Users className="h-5 w-5 text-purple-600" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-muted-foreground">Assigned To</p>
-                <p className="font-medium">
-                  {opportunity.assigned_user_name || "Unassigned"}
-                </p>
+                {opportunity.assigned_user_id ? (
+                  <Link
+                    to={`/dashboard/users/${opportunity.assigned_user_id}`}
+                    className="font-medium text-primary hover:underline flex items-center gap-1"
+                  >
+                    {opportunity.assigned_user_name || 'View User'}
+                    <ExternalLinkIcon className="w-3 h-3 opacity-0 hover:opacity-100 transition-opacity" />
+                  </Link>
+                ) : (
+                  <p className="font-medium text-muted-foreground">Unassigned</p>
+                )}
                 {opportunity.assigned_user_id && (
                   <p className="text-xs text-muted-foreground">
                     ID: {opportunity.assigned_user_id}

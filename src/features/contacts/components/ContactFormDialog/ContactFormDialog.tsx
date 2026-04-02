@@ -107,26 +107,26 @@ export const ContactFormDialog = ({
   const [accountSearchTerm, setAccountSearchTerm] = useState("");
   const [userSearchTerm, setUserSearchTerm] = useState("");
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(
-    mode === 'edit' && initialData?.accountid 
+    mode === 'edit' && initialData?.accountid != null 
       ? initialData.accountid 
-      : defaultAccountId || null
+      : defaultAccountId ?? null
   );
   const [selectedUserId, setSelectedUserId] = useState<number | null>(
-    mode === 'edit' && initialData?.assigned_user_id 
+    mode === 'edit' && initialData?.assigned_user_id != null 
       ? initialData.assigned_user_id 
       : null
   );
   const [originalAccountId, setOriginalAccountId] = useState<number | null>(
-    mode === 'edit' && initialData?.accountid ? initialData.accountid : null
+    mode === 'edit' && initialData?.accountid != null ? initialData.accountid : null
   );
   const [originalUserId, setOriginalUserId] = useState<number | null>(
-    mode === 'edit' && initialData?.assigned_user_id ? initialData.assigned_user_id : null
+    mode === 'edit' && initialData?.assigned_user_id != null ? initialData.assigned_user_id : null
   );
   const [isAccountValid, setIsAccountValid] = useState(
-    mode === 'edit' && initialData?.accountid !== null
+    mode === 'edit' && initialData?.accountid != null
   );
   const [isUserValid, setIsUserValid] = useState(
-    mode === 'edit' && initialData?.assigned_user_id !== null
+    mode === 'edit' && initialData?.assigned_user_id != null
   );
 
   // Custom hooks
@@ -196,6 +196,20 @@ export const ContactFormDialog = ({
     }, [mode, initialData, defaultAccountId]),
   });
 
+  // Sync selected IDs when initialData changes (handles async data loading)
+  useMemo(() => {
+    if (mode === 'edit' && initialData) {
+      if (initialData.accountid != null && selectedAccountId !== initialData.accountid) {
+        setSelectedAccountId(initialData.accountid);
+        setIsAccountValid(true);
+      }
+      if (initialData.assigned_user_id != null && selectedUserId !== initialData.assigned_user_id) {
+        setSelectedUserId(initialData.assigned_user_id);
+        setIsUserValid(true);
+      }
+    }
+  }, [mode, initialData, selectedAccountId, selectedUserId]);
+
   /**
    * Handles form submission with payload transformation.
    *
@@ -203,6 +217,10 @@ export const ContactFormDialog = ({
    */
   const handleSubmit = async (data: ContactFormValues) => {
     try {
+      // Use selected ID if available, otherwise fall back to initialData
+      const accountId = selectedAccountId !== undefined ? selectedAccountId : (initialData?.accountid ?? null);
+      const userId = selectedUserId !== undefined ? selectedUserId : (initialData?.assigned_user_id ?? null);
+      
       const payload: ContactFormData = {
         firstname: data.firstname,
         lastname: data.lastname,
@@ -211,12 +229,8 @@ export const ContactFormDialog = ({
         mobile: data.mobile || undefined,
         title: data.title || undefined,
         department: data.department || undefined,
-        ...(selectedAccountId 
-          ? { accountid: selectedAccountId } 
-          : (originalAccountId ? { accountid: originalAccountId } : {})),
-        ...(selectedUserId 
-          ? { assigned_user_id: selectedUserId } 
-          : (originalUserId ? { assigned_user_id: originalUserId } : {})),
+        ...(accountId ? { accountid: accountId } : {}),
+        ...(userId ? { assigned_user_id: userId } : {}),
         description: data.description || undefined,
         mailingstreet: data.mailingstreet || undefined,
         mailingcity: data.mailingcity || undefined,
@@ -245,12 +259,14 @@ export const ContactFormDialog = ({
   /**
    * Handles account selection from search results.
    *
-   * @param account - Selected account result
+   * @param account - Selected account result (uses accountid from client service)
    */
   const handleSelectAccount = (account: any) => {
+    // The search result uses 'accountid' not 'id'
+    const accountId = account.accountid ?? account.id;
     form.setValue('account_search', account.accountname);
-    form.setValue('accountid', account.id);
-    setSelectedAccountId(account.id);
+    form.setValue('accountid', accountId);
+    setSelectedAccountId(accountId);
     setIsAccountValid(true);
     setAccountSearchTerm('');
   };

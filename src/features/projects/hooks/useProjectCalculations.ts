@@ -56,8 +56,8 @@ export const useProjectCalculations = (project: Project | null | undefined): Pro
       return new Intl.NumberFormat('es-PA', {
         style: 'currency',
         currency: 'USD',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
       }).format(value);
     };
 

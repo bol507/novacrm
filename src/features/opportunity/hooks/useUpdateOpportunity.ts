@@ -1,21 +1,24 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { opportunityService } from '../services/opportunityService';
-import { toast } from 'sonner';
 
 export const useUpdateOpportunity = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => 
-      opportunityService.updateOpportunity(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['opportunities'] });
-      toast.success("Oportunidad actualizada exitosamente");
+    mutationFn: ({ id, payload }: { id: number; payload: any }) => 
+      opportunityService.updateOpportunity(id, payload),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['opportunity', variables.id],
+        exact: false,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['opportunities'],
+        exact: false,
+      });
     },
     onError: (error: any) => {
-      toast.error(
-        error.response?.data?.error || "Error al actualizar la oportunidad"
-      );
+       console.error('Error updating opportunity:', error);
     },
   });
 };

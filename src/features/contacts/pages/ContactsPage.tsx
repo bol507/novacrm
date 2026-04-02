@@ -30,14 +30,6 @@ import ListFooter from '@/components/ListFooter';
  *
  * @component
  * @returns The rendered contacts management page
- *
- * @example
- * // Route configuration
- * <Route path="/dashboard/contacts" element={<ContactsPage />} />
- *
- * @example
- * // Navigate with account filter
- * navigate('/dashboard/contacts?accountId=123');
  */
 const ContactsPage = () => {
   const [searchParams] = useSearchParams();
@@ -51,7 +43,7 @@ const ContactsPage = () => {
     return 'cards';
   });
 
-  const accountId = searchParams.get('accountId');
+  const accountId = searchParams.get('clientId');
   const accountIdNumber = accountId ? parseInt(accountId, 10) : null;
 
   const { data, isLoading, error } = useContacts(
@@ -64,12 +56,10 @@ const ContactsPage = () => {
   const deleteContactMutation = useDeleteContact();
   const showConfirm = useConfirm();
 
-  // Reset to first page when search term or account filter changes
   useEffect(() => {
     setPage(1);
-  }, [searchTerm, accountId]);
+  }, [searchTerm, accountIdNumber]);
 
-  // Persist view mode preference to localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('contactsViewMode', viewMode);
@@ -90,46 +80,23 @@ const ContactsPage = () => {
     );
   }
 
-  /**
-   * Handles view mode changes (cards/table) and resets pagination.
-   *
-   * @param mode - The new view mode
-   */
   const handleViewModeChange = (mode: ContactViewMode) => {
     setViewMode(mode);
     setPage(1);
   };
 
-  /**
-   * Navigates to the contact creation page.
-   */
   const handleCreateClick = () => {
     navigate('/dashboard/contacts/create');
   };
 
-  /**
-   * Navigates to the contact detail page.
-   *
-   * @param contact - The contact to view
-   */
   const handleViewContact = (contact: Contact) => {
     navigate(`/dashboard/contacts/${contact.contactid}`);
   };
 
-  /**
-   * Navigates to the contact edit page.
-   *
-   * @param contact - The contact to edit
-   */
   const handleEditContact = (contact: Contact) => {
     navigate(`/dashboard/contacts/${contact.contactid}/edit`);
   };
 
-  /**
-   * Handles contact deletion.
-   *
-   * @param contact - The contact to delete
-   */
   const handleDeleteContact = async (contact: Contact) => {
     try {
       await deleteContactMutation.mutateAsync(contact.contactid);
@@ -139,12 +106,9 @@ const ContactsPage = () => {
     }
   };
 
-  /**
-   * Clears the account filter from the URL query parameters.
-   */
   const handleClearAccountFilter = () => {
     const newParams = new URLSearchParams(searchParams);
-    newParams.delete('accountId');
+    newParams.delete('clientId');
     navigate(`?${newParams.toString()}`, { replace: true });
     setPage(1);
   };
@@ -152,7 +116,6 @@ const ContactsPage = () => {
   return (
     <ErrorBoundary>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Contacts</h1>
@@ -178,7 +141,6 @@ const ContactsPage = () => {
             )}
           </div>
           <div className="flex items-center gap-2">
-            {/* Toggle Cards/Table */}
             <div className="flex rounded-md border border-border overflow-hidden">
               <Button
                 variant={viewMode === 'cards' ? 'default' : 'ghost'}
@@ -200,17 +162,13 @@ const ContactsPage = () => {
               </Button>
             </div>
             
-            <Button
-              className="gap-2"
-              onClick={handleCreateClick}
-            >
+            <Button className="gap-2" onClick={handleCreateClick}>
               <Plus className="h-4 w-4" />
               New Contact
             </Button>
           </div>
         </div>
 
-        {/* Search */}
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -223,7 +181,6 @@ const ContactsPage = () => {
           </div>
         </div>
 
-        {/* Contacts list based on view mode */}
         {viewMode === 'cards' ? (
           <ContactCards
             contacts={contacts}
@@ -259,7 +216,6 @@ const ContactsPage = () => {
           />
         )}
 
-        {/* Footer */}
         <ListFooter
           currentPage={page}
           totalPages={totalPages}

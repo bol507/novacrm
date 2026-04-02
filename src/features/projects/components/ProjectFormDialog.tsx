@@ -13,65 +13,26 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { ClientSearch } from "@/components/client-search";
 import { UserSearch } from "@/components/user-search";
 
-/**
- * Props for ProjectFormDialog component
- */
 export interface ProjectFormDialogProps {
-  /** Controls dialog visibility */
   open: boolean;
-  /** Callback to change dialog visibility */
   onOpenChange: (open: boolean) => void;
-  /** Optional quote ID to pre-fill project data from an existing quote */
   quoteId?: number;
-  /** Optional callback fired when project is successfully created */
   onSuccess?: () => void;
 }
 
 /**
  * ProjectFormDialog Component
- * 
+ *
  * A dialog form for creating new projects, with optional pre-filling from an existing quote.
- * Supports client search, user assignment, date pickers, budget input, and rich text description.
- * 
+ * Supports client search, user assignment, date pickers, budget input, and description.
+ *
  * @component
- * @param {ProjectFormDialogProps} props - Component props
- * @param {boolean} props.open - Dialog visibility state
- * @param {function} props.onOpenChange - Callback to toggle dialog visibility
- * @param {number} [props.quoteId] - Optional quote ID to pre-fill form data
- * @param {function} [props.onSuccess] - Optional callback on successful project creation
- * 
- * @returns {JSX.Element} Project creation form dialog
- * 
- * @example
- * // Basic usage - create new project
- * <ProjectFormDialog 
- *   open={isDialogOpen} 
- *   onOpenChange={setIsDialogOpen} 
- * />
- * 
- * @example
- * // Create project from existing quote
- * <ProjectFormDialog 
- *   open={isDialogOpen} 
- *   onOpenChange={setIsDialogOpen} 
- *   quoteId={123}
- *   onSuccess={() => refetchProjects()}
- * />
- * 
- * @remarks
- * - Form validates required fields: project name and client
- * - When quoteId is provided, fetches quote data to pre-fill form fields
- * - Client and user search components support autocomplete with API results
- * - Budget field accepts numeric input with USD currency formatting
- * - Date pickers use consistent locale formatting throughout the app
- * - On successful submission, calls onSuccess callback and resets form state
- * - Error handling displays user-friendly toast notifications
- * - Dialog closes on cancel, submit success, or external close action
- * 
- * @see {@link useCreateProject} for project creation mutation hook
- * @see {@link ClientSearch} for client autocomplete component
- * @see {@link UserSearch} for user assignment autocomplete component
- * @see {@link DatePicker} for consistent date input component
+ * @param props - Component props
+ * @param props.open - Dialog visibility state
+ * @param props.onOpenChange - Callback to toggle dialog visibility
+ * @param props.quoteId - Optional quote ID to pre-fill form data
+ * @param props.onSuccess - Optional callback on successful project creation
+ * @returns The rendered project creation form dialog
  */
 export const ProjectFormDialog = ({ 
   open, 
@@ -79,12 +40,6 @@ export const ProjectFormDialog = ({
   quoteId, 
   onSuccess 
 }: ProjectFormDialogProps) => {
-  /**
-   * Form state containing all project field values
-   * 
-   * Initialized with empty/default values, updated via user input
-   * or pre-filled from quote data when quoteId is provided
-   */
   const [formData, setFormData] = useState({
     projectname: "",
     accountid: 0,
@@ -101,69 +56,22 @@ export const ProjectFormDialog = ({
     quoteid: quoteId || null,
   });
 
-  /**
-   * Mutation hook for creating new project via API
-   */
   const createProjectMutation = useCreateProject();
-  
-  /**
-   * Loading state for quote data fetching
-   */
   const [loadingQuote, setLoadingQuote] = useState(false);
-  
-  /**
-   * Cached quote data for display in dialog
-   */
   const [quoteData, setQuoteData] = useState<any>(null);
-  
-  /**
-   * Flag to track if initial client data has been loaded from quote
-   * Prevents overwriting user selections after initial pre-fill
-   */
   const [initialClientLoaded, setInitialClientLoaded] = useState(false);
-  
-  /**
-   * Flag to track if initial user data has been loaded from quote
-   * Prevents overwriting user selections after initial pre-fill
-   */
   const [initialUserLoaded, setInitialUserLoaded] = useState(false);
 
-  /**
-   * Effect to load quote data when dialog opens with quoteId
-   * 
-   * Fetches quote details and pre-fills form fields with relevant data.
-   * Resets loading states when dialog closes or quoteId changes.
-   * 
-   * @remarks
-   * - Only runs when quoteId is provided AND dialog is open
-   * - Resets form-related flags when dialog closes to prevent stale data
-   * - Handles errors gracefully with user feedback via toast
-   */
   useEffect(() => {
     if (quoteId && open) {
       loadQuoteData();
     } else {
-      // Reset states when dialog closes or quoteId is removed
       setInitialClientLoaded(false);
       setInitialUserLoaded(false);
       setQuoteData(null);
     }
   }, [quoteId, open]);
 
-  /**
-   * Fetches quote data from API and pre-fills form fields
-   * 
-   * Maps quote fields to corresponding project form fields:
-   * - subject → projectname
-   * - accountid → accountid (client)
-   * - assigned_user_id → assigned_user_id
-   * - total → targetbudget
-   * - description → description
-   * - potentialid → potentialid
-   * 
-   * @async
-   * @throws Displays error toast if API call fails
-   */
   const loadQuoteData = async () => {
     try {
       setLoadingQuote(true);
@@ -171,7 +79,6 @@ export const ProjectFormDialog = ({
       const quote = response.data;
       setQuoteData(quote);
 
-      // Pre-select client and assigned user from quote
       setFormData(prev => ({
         ...prev,
         projectname: quote.subject || quote.quotename || "",
@@ -189,7 +96,6 @@ export const ProjectFormDialog = ({
         quoteid: quoteId || null,
       }));
 
-      // Mark initial data as loaded to prevent overwriting user edits
       setInitialClientLoaded(true);
       setInitialUserLoaded(true);
     } catch (error) {
@@ -200,28 +106,9 @@ export const ProjectFormDialog = ({
     }
   };
 
-  /**
-   * Handles form submission with validation and API call
-   * 
-   * @param e - Form submit event
-   * 
-   * @remarks
-   * Validation rules:
-   * - projectname is required and must not be empty
-   * - accountid (client) is required and must be a valid ID
-   * 
-   * Submission flow:
-   * 1. Prevent default form submission
-   * 2. Validate required fields
-   * 3. Transform null values to undefined for API compatibility
-   * 4. Call createProject mutation
-   * 5. Show success toast, close dialog, call onSuccess callback
-   * 6. Handle errors with user-friendly messages
-   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate required fields
     if (!formData.projectname.trim()) {
       toast.error("Project name is required");
       return;
@@ -233,10 +120,9 @@ export const ProjectFormDialog = ({
     }
 
     try {
-      // Transform null to undefined for API type compatibility
       const payload = {
         ...formData,
-        assigned_user_id: formData.assigned_user_id || 2, // Default to "All users" if not set
+        assigned_user_id: formData.assigned_user_id || 2,
         potentialid: formData.potentialid ?? undefined,
         quoteid: formData.quoteid ?? undefined,
       };
@@ -251,12 +137,6 @@ export const ProjectFormDialog = ({
     }
   };
 
-  /**
-   * Handles dialog close with form reset
-   * 
-   * Resets all form state to initial values and calls parent onOpenChange.
-   * Ensures clean state for next dialog open.
-   */
   const handleClose = () => {
     setFormData({
       projectname: "",
@@ -288,7 +168,6 @@ export const ProjectFormDialog = ({
           </DialogTitle>
         </DialogHeader>
 
-        {/* Loading state for quote data fetch */}
         {loadingQuote ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin mr-2" />
@@ -296,7 +175,6 @@ export const ProjectFormDialog = ({
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Project Name Field */}
             <div className="space-y-2">
               <Label htmlFor="projectname">Project Name *</Label>
               <Input
@@ -308,7 +186,6 @@ export const ProjectFormDialog = ({
               />
             </div>
 
-            {/* Client Search Field */}
             <div className="space-y-2">
               <ClientSearch
                 value={initialClientLoaded ? formData.accountid || null : null}
@@ -321,7 +198,6 @@ export const ProjectFormDialog = ({
               />
             </div>
 
-            {/* Assigned User Search Field */}
             <div className="space-y-2">
               <UserSearch
                 value={initialUserLoaded ? formData.assigned_user_id || null : null}
@@ -334,7 +210,6 @@ export const ProjectFormDialog = ({
               />
             </div>
 
-            {/* Project Status Field */}
             <div className="space-y-2">
               <Label htmlFor="projectstatus">Status</Label>
               <Select
@@ -354,7 +229,6 @@ export const ProjectFormDialog = ({
               </Select>
             </div>
 
-            {/* Project Priority Field */}
             <div className="space-y-2">
               <Label htmlFor="projectpriority">Priority</Label>
               <Select
@@ -372,7 +246,6 @@ export const ProjectFormDialog = ({
               </Select>
             </div>
 
-            {/* Project Type Field */}
             <div className="space-y-2">
               <Label htmlFor="projecttype">Project Type</Label>
               <Input
@@ -383,9 +256,7 @@ export const ProjectFormDialog = ({
               />
             </div>
 
-            {/* Date Fields Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Start Date */}
               <div className="space-y-2">
                 <Label htmlFor="startdate">Start Date</Label>
                 <DatePicker
@@ -394,7 +265,6 @@ export const ProjectFormDialog = ({
                   placeholder="Select start date"
                 />
               </div>
-              {/* Target End Date */}
               <div className="space-y-2">
                 <Label htmlFor="targetenddate">Target End Date</Label>
                 <DatePicker
@@ -405,7 +275,6 @@ export const ProjectFormDialog = ({
               </div>
             </div>
 
-            {/* Budget Field */}
             <div className="space-y-2">
               <Label htmlFor="targetbudget">Target Budget (USD)</Label>
               <Input
@@ -419,7 +288,6 @@ export const ProjectFormDialog = ({
               />
             </div>
 
-            {/* Project URL Field */}
             <div className="space-y-2">
               <Label htmlFor="projecturl">Project URL</Label>
               <Input
@@ -431,7 +299,6 @@ export const ProjectFormDialog = ({
               />
             </div>
 
-            {/* Description Field */}
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
@@ -443,7 +310,6 @@ export const ProjectFormDialog = ({
               />
             </div>
 
-            {/* Associated Quote Information (conditional) */}
             {quoteId && quoteData && (
               <div className="bg-muted/50 p-4 rounded-lg border border-border">
                 <div className="flex items-center gap-2 mb-2">
@@ -458,7 +324,6 @@ export const ProjectFormDialog = ({
               </div>
             )}
 
-            {/* Form Action Buttons */}
             <div className="flex gap-2 justify-end pt-4">
               <Button
                 type="button"

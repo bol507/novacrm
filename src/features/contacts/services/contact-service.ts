@@ -41,7 +41,7 @@ export const contactService = {
       ...(filters.sortBy && { sort_by: filters.sortBy }),
       ...(filters.sortOrder && { sort_order: filters.sortOrder }),
     });
-
+    console.log(params);
     const response = await apiClient.get<ContactResponse>('/contacts', { params });
     return response.data;
   },

@@ -128,7 +128,7 @@ export const ProjectsPage = () => {
     setPage(1);
   }, [setPage]);
   const handleCreateClick = useCallback(() => {
-    setIsCreateDialogOpen(true);
+    navigate(`/dashboard/projects/new`);
   }, []);
   const handlePageChange = useCallback((newPage: number) => {
     setPage(newPage);

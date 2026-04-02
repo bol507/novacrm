@@ -27,18 +27,18 @@ export default function AdminOnlyAssignmentField({
 }: AdminOnlyAssignmentFieldProps) {
   const isAdmin = useIsAdmin();
   
-  // ✅ Cargar usuarios con tu hook actual
+ 
   const { 
-    data: usersData,      // ✅ Tipo: PaginatedResponse<User> | undefined
+    data: usersData,      
     isLoading: usersLoading, 
     error 
-  } = useUsers(
-    1,      // page
-    100,    // perPage (cargar suficientes para el selector)
-    ''      // search
-  );
+  } = useUsers({
+    page: 1,      
+    perPage: 100,   
+    search: ''      
+});
 
-  // ✅ Extraer usuarios del response paginado
+ 
   const users = useMemo(() => {
     // usersData.data es el array de usuarios
     const allUsers = usersData?.data || [];

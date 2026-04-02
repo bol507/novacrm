@@ -1,7 +1,5 @@
-import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 // Custom hooks
@@ -18,9 +16,6 @@ import { QuoteDescription } from "../components/QuoteDescription";
 import { QuoteItemsTable } from "../components/QuoteItemsTable";
 import { QuotePdfActions } from "../components/QuotePdfActions";
 import { QuoteMainActions } from "../components/QuoteMainActions";
-
-// Dialog components
-import { ProjectFormDialog } from "@/features/projects/components/ProjectFormDialog";
 
 /**
  * QuoteDetailPage component for displaying detailed information about a quote.
@@ -66,8 +61,6 @@ const QuoteDetailPage = () => {
 
   const { data: quote, isLoading, error } = useQuoteDetail(quoteId);
 
-  const [isCreateProjectDialogOpen, setIsCreateProjectDialogOpen] = useState(false);
-
   const calculations = useQuoteCalculations(quote);
   const actions = useQuoteActions();
 
@@ -110,12 +103,15 @@ const QuoteDetailPage = () => {
     navigate(`/dashboard/quotes/${quoteId}/edit`);
   };
 
-  /**
-   * Handles successful project creation and closes the dialog.
-   */
-  const handleCreateProjectSuccess = () => {
-    toast.success("Project created successfully");
-    setIsCreateProjectDialogOpen(false);
+  const handleCreateProject = () => {
+    const params = new URLSearchParams({
+      fromQuote: quote?.quoteid?.toString() ?? '',
+      accountId: quote?.accountid?.toString() ?? '',
+      accountName: quote?.account_name ?? '',
+      subject: quote?.subject ?? '',
+      description: quote?.description ?? '',
+    });
+    navigate(`/dashboard/projects/new?${params.toString()}`);
   };
 
   return (
@@ -172,20 +168,14 @@ const QuoteDetailPage = () => {
 
           {/* Main Actions */}
           <QuoteMainActions
-            onCreateProject={() => setIsCreateProjectDialogOpen(true)}
+            onCreateProject={handleCreateProject}
             onEdit={handleEditQuote}
             onDelete={() => actions.handleDeleteClick(quote)}
             isDeleting={actions.isDeleting}
           />
         </div>
 
-        {/* Create Project Dialog */}
-        <ProjectFormDialog
-          open={isCreateProjectDialogOpen}
-          onOpenChange={setIsCreateProjectDialogOpen}
-          quoteId={quote?.quoteid}
-          onSuccess={handleCreateProjectSuccess}
-        />
+        
       </div>
     </ErrorBoundary>
   );

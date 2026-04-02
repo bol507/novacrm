@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Pencil, Trash2, Building2, Mail, Phone, Smartphone, User, Calendar, FileText, MapPin } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, Building2, Mail, Phone, Smartphone, User,  FileText  } from "lucide-react";
 import { toast } from "sonner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useConfirm } from "@/components/confirm-dialog";
@@ -232,32 +232,13 @@ const ContactDetailPage = () => {
                   <InfoRow
                     label="Client"
                     value={contact.account_name || `ID: ${contact.accountid}`}
-                    onClick={() => navigate(`/dashboard/accounts/${contact.accountid}`)}
+                    onClick={() => navigate(`/dashboard/clients/${contact.accountid}`)}
                     className="cursor-pointer hover:text-primary"
                   />
                 </CardContent>
               </Card>
 
-              {/* Address Information */}
-              {(contact.mailingstreet || contact.mailingcity || contact.mailingcountry) && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <MapPin className="h-5 w-5" />
-                      Address
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {contact.mailingstreet && <p className="text-sm">{contact.mailingstreet}</p>}
-                    <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                      {contact.mailingcity && <span>{contact.mailingcity}</span>}
-                      {contact.mailingstate && <span>{contact.mailingstate}</span>}
-                      {contact.mailingzip && <span>{contact.mailingzip}</span>}
-                      {contact.mailingcountry && <span>{contact.mailingcountry}</span>}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+             
 
               {/* Additional Information */}
               <Card>
@@ -272,13 +253,7 @@ const ContactDetailPage = () => {
                     {contact.secondaryemail && (
                       <InfoRow label="Secondary Email" value={contact.secondaryemail} icon={Mail} />
                     )}
-                    {contact.otherphone && (
-                      <InfoRow label="Other Phone" value={contact.otherphone} icon={Phone} />
-                    )}
-                    {contact.fax && <InfoRow label="Fax" value={contact.fax} />}
-                    {contact.assistant && <InfoRow label="Assistant" value={contact.assistant} />}
-                    {contact.birthdate && <InfoRow label="Birth Date" value={formatDate(contact.birthdate)} icon={Calendar} />}
-                    {contact.leadsource && <InfoRow label="Lead Source" value={contact.leadsource} />}
+                   
                   </div>
 
                   {contact.description && (
@@ -322,7 +297,7 @@ const ContactDetailPage = () => {
                     <Pencil className="h-4 w-4" />
                     Edit Contact
                   </Button>
-                  <Button variant="outline" className="w-full justify-start gap-2" onClick={() => navigate(`/dashboard/quotes/create?contactId=${contact.contactid}`)}>
+                  <Button variant="outline" className="w-full justify-start gap-2" onClick={() => navigate(`/dashboard/quotes/new?clientId=${contact.accountid}`)}>
                     <FileText className="h-4 w-4" />
                     New Quote
                   </Button>

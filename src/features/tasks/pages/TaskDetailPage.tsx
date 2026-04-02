@@ -15,6 +15,8 @@ import FileUploader from "../components/FileUploader";
 import { useDeleteTask } from "../hooks/use-delete-task";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/confirm-dialog";
+import { useUpdateTaskStatus } from "../hooks/use-update-task-status";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const priorityColors: Record<string, string> = {
   High: "bg-destructive/10 text-destructive border-destructive/20",
@@ -45,11 +47,49 @@ const TaskDetailPage = () => {
   const [replyTo, setReplyTo] = useState<number | null>(null);
 
   const { data: taskResponse, isLoading } = useTask(Number(taskId));
-  
-  // ✅ useDeleteTask sin parámetros (el ID se pasa en mutateAsync)
+  const updateStatusMutation = useUpdateTaskStatus(); 
   const deleteMutation = useDeleteTask();
 
   const task: Task | undefined = taskResponse?.data;
+
+  /**
+   * Handle status change from dropdown
+   */
+  const handleStatusChange = async (newStatus: string) => {
+    if (!taskId || !task) return;
+
+    // Confirm if skipping "In Progress"
+    if (task.status === 'Not Started' && newStatus === 'Completed') {
+      showConfirm({
+        title: "¿Completar sin iniciar?",
+        description: "Esta tarea no ha estado en 'En Progreso'. ¿Seguro que quieres completarla directamente?",
+        confirmLabel: "Completar",
+        cancelLabel: "Cancelar",
+        variant: "default",
+        onConfirm: async () => {
+          await executeStatusChange(newStatus);
+        },
+      });
+    } else {
+      await executeStatusChange(newStatus);
+    }
+  };
+
+  /**
+   * Execute the status change
+   */
+  const executeStatusChange = async (newStatus: string) => {
+    try {
+      await updateStatusMutation.mutateAsync({
+        taskId: Number(taskId),
+        status: newStatus as Task['status'],
+      });
+      toast.success(`Estado actualizado a "${statusLabels[newStatus]}"`);
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      toast.error('Error al actualizar el estado');
+    }
+  };
 
   /**
    * Show confirmation dialog and delete task if confirmed
@@ -111,6 +151,13 @@ const TaskDetailPage = () => {
       </div>
     );
   }
+  const statusColors: Record<string, string> = {
+  "Not Started": "bg-slate-100 text-slate-700 border-slate-200",
+  "In Progress": "bg-blue-100 text-blue-700 border-blue-200",
+  "Completed": "bg-green-100 text-green-700 border-green-200",
+  "Pending Input": "bg-amber-100 text-amber-700 border-amber-200",
+  "Planned": "bg-purple-100 text-purple-700 border-purple-200",
+};
 
   return (
     <div className="space-y-6">
@@ -139,9 +186,34 @@ const TaskDetailPage = () => {
               >
                 {priorityLabels[task.priority] ?? task.priority}
               </Badge>
-              <Badge variant="secondary">
-                {statusLabels[task.status] ?? task.status}
-              </Badge>
+              
+              {/* ✅ DROPDOWN PARA CAMBIAR ESTADO */}
+              <Select
+                value={task.status}
+                onValueChange={handleStatusChange}
+                disabled={updateStatusMutation.isPending}
+              >
+                <SelectTrigger className={`w-[140px] ${statusColors[task.status]}`}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Not Started">
+                    {statusLabels["Not Started"]}
+                  </SelectItem>
+                  <SelectItem value="In Progress">
+                    {statusLabels["In Progress"]}
+                  </SelectItem>
+                  <SelectItem value="Completed">
+                    {statusLabels["Completed"]}
+                  </SelectItem>
+                  <SelectItem value="Pending Input">
+                    {statusLabels["Pending Input"]}
+                  </SelectItem>
+                  <SelectItem value="Planned">
+                    {statusLabels["Planned"]}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardHeader>
@@ -177,9 +249,7 @@ const TaskDetailPage = () => {
             >
               Editar
             </Button>
-            <Button variant="outline" size="sm">
-              Cambiar estado
-            </Button>
+            
             <Button 
               variant="outline" 
               size="sm"
