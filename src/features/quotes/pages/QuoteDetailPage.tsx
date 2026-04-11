@@ -18,6 +18,8 @@ import { QuotePdfActions } from "../components/QuotePdfActions";
 import { QuoteMainActions } from "../components/QuoteMainActions";
 import { useDuplicateQuote } from "../hooks/use-duplicate-quote";
 import { toast } from "sonner";
+import { useUpdateQuote } from "../hooks/useUpdateQuote";
+import type { QuoteItem } from "../types/quote";
 
 /**
  * QuoteDetailPage component for displaying detailed information about a quote.
@@ -50,6 +52,7 @@ const QuoteDetailPage = () => {
     mutateAsync: duplicateQuote, 
     isPending: isDuplicating 
   } = useDuplicateQuote();
+   const updateQuoteMutation = useUpdateQuote();
 
   if (!quoteId) {
     return (
@@ -138,6 +141,37 @@ const QuoteDetailPage = () => {
     }
   };
 
+  const handleItemsReorder = async (reorderedItems: QuoteItem[]) => {
+    if (!quoteId) return;
+    try {
+      await updateQuoteMutation.mutateAsync({
+        id: parseInt(quoteId),
+        data: {
+          subject: quote.subject,
+          quote_stage: quote.quote_stage || "Draft",
+          accountid: quote.accountid,
+          assigned_user_id: quote.assigned_user_id,
+          validtill: quote.validtill,
+          description: quote.description,
+          potentialid: quote.potentialid || null,
+          items: reorderedItems.map(i => ({
+            productid: i.productid,
+            sequence_no: i.sequence_no,
+            productname: i.productname,
+            quantity: i.quantity,
+            listprice: i.listprice,
+            discount_percent: i.discount_percent,
+            description: i.description,
+          }))
+        }
+      });
+      toast.success('Items reordered successfully');
+    } catch (error) {
+      toast.error('Failed to reorder items');
+    }
+  };
+
+
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-background">
@@ -179,6 +213,8 @@ const QuoteDetailPage = () => {
             <QuoteItemsTable
               items={quote.items}
               formatCurrency={calculations.formatCurrency}
+              onReorder={handleItemsReorder} 
+              readOnly={quote.quote_stage === 'Accepted'} 
             />
           </div>
 

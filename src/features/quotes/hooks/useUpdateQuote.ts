@@ -4,9 +4,7 @@ import { quoteService } from '../services/quoteService';
 import type { QuoteFormData } from '../types/quote';
 
 interface UpdateQuoteParams {
-  /** ID of the quote to update */
   id: number;
-  /** Updated quote form data */
   data: QuoteFormData;
 }
 

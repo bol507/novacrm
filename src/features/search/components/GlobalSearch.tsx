@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { useRef, useCallback, useState } from 'react';
 import { SearchResultsByModule } from './SearchResultsByModule';
 import { GlobalSearchMobile } from './GlobalSearchMobile';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 /**
  * GlobalSearch component for performing cross-module searches.
@@ -142,7 +143,7 @@ export const GlobalSearch = () => {
   }, [executeSearch]);
 
   return (
-    <>
+    <ErrorBoundary>
       {/* Desktop View */}
       <div className="hidden sm:block">
         <DropdownMenu
@@ -308,6 +309,6 @@ export const GlobalSearch = () => {
         open={isMobileOpen}
         onOpenChange={setIsMobileOpen}
       />
-    </>
+    </ErrorBoundary>
   );
 };

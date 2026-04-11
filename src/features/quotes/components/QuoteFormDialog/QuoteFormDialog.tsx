@@ -19,7 +19,7 @@ import { useSearchUsers } from "@/features/users/hooks/use-search-users";
 // Presentational components
 
 // Types
-import { normalizeFormStage, type FormQuoteStage, type Quote, type QuoteFormData } from "../../types/quote";
+import { FORM_QUOTE_STAGES, normalizeFormStage, type FormQuoteStage, type Quote, type QuoteFormData } from "../../types/quote";
 import { QuoteFormHeader } from "./QuoteFormHeader";
 import { QuoteFormMainFields } from "./QuoteFormMainFields";
 import { QuoteFormActions, QuoteFormClientSearch, QuoteFormDescription, QuoteFormFinancialSummary, QuoteFormItemsList, QuoteFormUserSearch } from ".";
@@ -30,7 +30,7 @@ const quoteFormSchema = z.object({
   subject: z.string().min(1, "Título requerido").max(255),
   accountid: z.number().min(1, "Cliente requerido"),
   assigned_user_id: z.number().min(1, "Usuario asignado requerido"),
-  quote_stage: z.enum(['Draft', 'Sent', 'Accepted', 'Rejected']).default('Draft'),
+  quote_stage: z.enum(FORM_QUOTE_STAGES).default('Draft'),
   validtill: z.string().optional(),
   description: z.string().optional(),
   account_search: z.string().optional(),
@@ -43,15 +43,10 @@ type QuoteFormValues = z.infer<typeof quoteFormSchema>;
  * Props for QuoteFormDialog container component
  */
 export interface QuoteFormDialogProps {
-  /** Controls dialog visibility */
   open: boolean;
-  /** Callback to change dialog visibility */
   onOpenChange: (open: boolean) => void;
-  /** Callback fired when form is submitted with validated data */
   onSubmit: (values: QuoteFormData) => void;
-  /** Form mode: 'create' for new quote, 'edit' for existing */
   mode?: 'create' | 'edit';
-  /** Initial quote data for edit mode */
   initialData?: Quote;
 }
 

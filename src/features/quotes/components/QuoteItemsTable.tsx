@@ -1,15 +1,15 @@
 import { Package } from "lucide-react";
-import { ExpandableText } from "@/components/ExpandableText";
 import type { QuoteItem } from "../types/quote";
+import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import SortableQuoteCard from "./sortable/SortableQuoteCard";
+import SortableQuoteRow from "./sortable/SortableQuoteRow";
 
-/**
- * Props for QuoteItemsTable component
- */
 export interface QuoteItemsTableProps {
-  /** Array of quote items to display */
   items: QuoteItem[];
-  /** Currency formatter function */
   formatCurrency: (value: number) => string;
+  onReorder?: (reorderedItems: QuoteItem[]) => void;
+  readOnly?: boolean;
 }
 
 /**
@@ -38,7 +38,29 @@ export interface QuoteItemsTableProps {
  *   formatCurrency={formatCurrency}
  * />
  */
-export const QuoteItemsTable = ({ items, formatCurrency }: QuoteItemsTableProps) => {
+export const QuoteItemsTable = ({ items, formatCurrency, onReorder, readOnly = false }: QuoteItemsTableProps) => {
+   const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = items.findIndex(i => i.sequence_no.toString() === active.id);
+    const newIndex = items.findIndex(i => i.sequence_no.toString() === over.id);
+
+    const reordered = arrayMove(items, oldIndex, newIndex).map((item, idx) => ({
+      ...item,
+      sequence_no: idx + 1,
+    }));
+
+    onReorder?.(reordered);
+  };
+
+  const itemIds = items.map(i => i.sequence_no.toString());
+
   return (
     <div className="bg-card rounded-lg border border-border p-6 overflow-hidden">
       <div className="p-4 border-b border-border bg-muted/30">
@@ -53,97 +75,37 @@ export const QuoteItemsTable = ({ items, formatCurrency }: QuoteItemsTableProps)
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        {/* Mobile: Vertical card layout */}
-        <div className="sm:hidden">
-          {items.map((item, index) => (
-            <div key={item.sequence_no || index} className="border-b last:border-b-0 hover:bg-muted/50 p-4">
-              <div className="font-semibold text-lg mb-2">{item.productname}</div>
-              {item.description && (
-                <div className="mt-2">
-                  <ExpandableText
-                    text={item.description}
-                    maxLines={2}
-                    className="text-muted-foreground"
-                    expandedClassName="text-muted-foreground whitespace-pre-line"
-                  />
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4 mt-3">
-                <div>
-                  <div className="text-muted-foreground">Quantity</div>
-                  <div className="font-medium">{item.quantity}</div>
-                </div>
-                <div>
-                  <div className="text-muted-foreground">Price</div>
-                  <div className="font-medium">{formatCurrency(item.listprice)}</div>
-                </div>
-                <div>
-                  <div className="text-muted-foreground">Discount</div>
-                  <div className="font-medium text-destructive">
-                    {item.discount_percent > 0 ? `-${item.discount_percent}%` : '-'}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-muted-foreground">Total</div>
-                  {/* ✅ FIX: Handle undefined total with fallback to 0 */}
-                  <div className="font-medium">{formatCurrency(item.total ?? 0)}</div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Desktop: Table layout */}
-        <div className="hidden sm:block">
-          <table className="w-full table-fixed">
-            <thead>
-              <tr className="border-b">
-                <th className="py-4 text-left font-semibold text-lg w-1/2">Product</th>
-                <th className="py-4 text-left font-semibold text-lg w-1/8">Quantity</th>
-                <th className="py-4 text-left font-semibold text-lg w-1/8">Price</th>
-                <th className="py-4 text-left font-semibold text-lg w-1/8">Discount</th>
-                <th className="py-4 text-left font-semibold text-lg w-1/8">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item, index) => (
-                <tr key={item.sequence_no || index} className="border-b last:border-b-0 hover:bg-muted/50">
-                  <td className="py-5 pr-4">
-                    <div className="font-semibold text-lg truncate">{item.productname}</div>
-                    {item.description && (
-                      <div className="mt-3">
-                        <ExpandableText
-                          text={item.description}
-                          maxLines={2}
-                          className="text-muted-foreground"
-                          expandedClassName="text-muted-foreground whitespace-pre-line"
-                        />
-                      </div>
-                    )}
-                  </td>
-                  <td className="py-5 min-w-[60px]">
-                    <div className="text-lg font-medium text-right">{item.quantity}</div>
-                  </td>
-                  <td className="py-5 min-w-[100px]">
-                    <div className="text-lg font-medium text-right">{formatCurrency(item.listprice)}</div>
-                  </td>
-                  <td className="py-5 min-w-[100px]">
-                    <div className="text-lg font-medium text-right text-destructive">
-                      {item.discount_percent > 0 ? `-${item.discount_percent}%` : '-'}
-                    </div>
-                  </td>
-                  <td className="py-5 min-w-[120px]">
-                    {/* ✅ FIX: Handle undefined total with fallback to 0 */}
-                    <div className="text-lg font-medium text-right">{formatCurrency(item.total ?? 0)}</div>
-                  </td>
-                </tr>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
+          <div className="overflow-x-auto">
+            {/* Mobile View */}
+            <div className="sm:hidden mt-4">
+              {items.map(item => (
+                <SortableQuoteCard key={item.sequence_no} item={item} formatCurrency={formatCurrency} disabled={readOnly} />
               ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </div>
+            {/* Desktop View */}
+            <div className="hidden sm:block mt-4">
+              <table className="w-full table-fixed">
+                <thead>
+                  <tr className="border-b">
+                    <th className="py-4 text-left font-semibold text-lg w-1/2">Product</th>
+                    <th className="py-4 text-left font-semibold text-lg w-1/8">Quantity</th>
+                    <th className="py-4 text-left font-semibold text-lg w-1/8">Price</th>
+                    <th className="py-4 text-left font-semibold text-lg w-1/8">Discount</th>
+                    <th className="py-4 text-left font-semibold text-lg w-1/8">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map(item => (
+                    <SortableQuoteRow key={item.sequence_no} item={item} formatCurrency={formatCurrency} disabled={readOnly} />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </SortableContext>
+      </DndContext>
     </div>
   );
 };

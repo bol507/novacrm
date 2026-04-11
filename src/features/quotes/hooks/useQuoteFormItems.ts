@@ -5,16 +5,12 @@ import type { QuoteFormData } from '../types/quote';
  * Return type for useQuoteFormItems hook
  */
 export interface QuoteFormItemsActions {
-  /** Add a new empty item to the list */
   addItem: () => void;
-  /** Remove an item by index */
   removeItem: (index: number) => void;
-  /** Update a specific field of an item */
   updateItem: (index: number, field: string, value: any) => void;
-  /** Get current items array */
   items: QuoteFormData['items'];
-  /** Check if items can be removed (more than 1) */
   canRemoveItems: boolean;
+  reorderItems: (newOrder: QuoteFormData['items']) => void;
 }
 
 /**
@@ -74,11 +70,18 @@ export const useQuoteFormItems = (
     });
   }, []);
 
+  const reorderItems = (newOrder: QuoteFormData['items']) => {
+  // Actualizar el estado interno con el nuevo orden
+  setItems(newOrder);
+};
+
   return {
     items,
     addItem,
     removeItem,
     updateItem,
     canRemoveItems: items.length > 1,
+    reorderItems,
+
   };
 };

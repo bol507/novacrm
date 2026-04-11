@@ -40,32 +40,11 @@ export const useQuotes = (
 ) => {
   
   return useQuery<QuoteResponse, AxiosError>({
-    /**
-     * Unique query key for caching and invalidation
-     */
     queryKey: ['quotes', page, perPage, search, filters],
-
-    /**
-     * Query function that fetches data from the API
-     */
     queryFn: () => quoteService.getQuotes(page, perPage, search, filters),
-
-    /**
-     * Time in milliseconds before data is considered stale (5 minutes)
-     */
     staleTime: 5 * 60 * 1000,
-
-    /**
-     * Time in milliseconds before inactive data is removed from cache (10 minutes)
-     */
     gcTime: 10 * 60 * 1000,
-
-    /**
-     * Number of retry attempts for failed queries
-     */
     retry: 2,
-
-    
   });
 };
 

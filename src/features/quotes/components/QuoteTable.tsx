@@ -6,23 +6,14 @@ import type { Quote } from '../types/quote';
 import { QUOTE_STAGE_COLORS, QUOTE_STAGE_LABELS } from '../types/quote';
 
 interface QuoteTableProps {
-  /** Array of quotes to display */
   quotes: Quote[];
-  /** Whether data is currently loading */
   isLoading: boolean;
-  /** Current search term value for filtering */
   searchValue?: string;
-  /** Callback for search input changes */
   onSearchChange?: (value: string) => void;
-  /** Callback for viewing quote details */
   onView?: (quote: Quote) => void;
-  /** Callback for editing a quote */
   onEdit?: (quote: Quote) => void;
-  /** Callback for deleting a quote */
   onDelete?: (quote: Quote) => void;
-  /** Callback for refresh action */
   onRefresh?: () => void;
-  /** Additional CSS classes for the container */
   className?: string;
 }
 
@@ -42,17 +33,7 @@ const formatCurrency = (value: number | undefined): string => {
   }).format(value);
 };
 
-/**
- * Formats a date string to Spanish locale format.
- *
- * @param dateString - ISO date string or null
- * @returns Formatted date string or '-' if date is null
- */
-const formatDate = (dateString: string | null): string => {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('es-ES');
-};
+
 
 /**
  * Skeleton loader for the quote table.
@@ -234,10 +215,7 @@ export const QuoteTable = ({
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Number</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Subject</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Client</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Subtotal</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Tax</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Total</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Valid Until</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Status</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Actions</th>
                </tr>
@@ -253,27 +231,20 @@ export const QuoteTable = ({
                     {quote.quoteno}
                    </td>
                   <td className="px-4 py-3">
-                    <div className="font-medium truncate max-w-48" title={quote.subject}>
+                    <div className="font-medium truncate" title={quote.subject}>
                       {quote.subject}
                     </div>
                    </td>
                   <td className="px-4 py-3">
-                    <div className="truncate max-w-32" title={quote.account_name || undefined}>
+                    <div className="truncate " title={quote.account_name || undefined}>
                       {quote.account_name || 'No client'}
                     </div>
                    </td>
-                  <td className="px-4 py-3 text-right">
-                    {formatCurrency(quote.subtotal)}
-                   </td>
-                  <td className="px-4 py-3 text-right">
-                    {formatCurrency(quote.taxtotal)}
-                   </td>
+                  
                   <td className="px-4 py-3 text-right font-medium">
                     {formatCurrency(quote.total)}
                    </td>
-                  <td className="px-4 py-3">
-                    {formatDate(quote.validtill)}
-                   </td>
+                  
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-1 rounded-full border ${QUOTE_STAGE_COLORS[quote.quote_stage]}`}>
                       {QUOTE_STAGE_LABELS[quote.quote_stage]}

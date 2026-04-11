@@ -47,17 +47,11 @@ export const quoteFormSchema = z.object({
  * Props for QuoteFormContent component
  */
 export interface QuoteFormContentProps {
-  /** Form mode: 'create' for new quote, 'edit' for existing */
   mode: 'create' | 'edit';
-  /** Initial quote data for edit mode */
   initialData?: Quote;
-  /** Initial client ID for create mode (optional) */
   initialClientId?: number;
-  /** Callback fired when form is submitted with validated data */
   onSubmit: (values: QuoteFormData) => Promise<void>;
-  /** Callback when cancel is clicked */
   onCancel: () => void;
-  /** Whether form is submitting (optional, falls back to form's internal state) */
   isSubmitting?: boolean;
 }
 
@@ -109,8 +103,8 @@ export const QuoteFormContent = ({
   const [clientSearchTerm, setClientSearchTerm] = useState("");
   const [userSearchTerm, setUserSearchTerm] = useState("");
   const [selectedClientId, setSelectedClientId] = useState<number | null>(
-    mode === 'edit' && initialData?.accountid ? initialData.accountid : 
-    mode === 'create' && initialClientId ? initialClientId : null
+    mode === 'edit' && initialData?.accountid ? initialData.accountid :
+      mode === 'create' && initialClientId ? initialClientId : null
   );
   const [selectedUserId, setSelectedUserId] = useState<number | null>(
     mode === 'edit' && initialData?.assigned_user_id ? initialData.assigned_user_id : null
@@ -124,7 +118,7 @@ export const QuoteFormContent = ({
   );
 
   // Custom hooks
-  const { items, addItem, removeItem, updateItem, canRemoveItems } = useQuoteFormItems(initialData?.items);
+  const { items, addItem, removeItem, updateItem, canRemoveItems, reorderItems } = useQuoteFormItems(initialData?.items);
   const { subtotal, itbms, totalWithTax, formatCurrency } = useQuoteFormCalculations(items);
   const { data: clientResults, isLoading: clientsLoading } = useSearchClients(clientSearchTerm);
   const { data: userResults, isLoading: usersLoading } = useSearchUsers(userSearchTerm);
@@ -183,11 +177,6 @@ export const QuoteFormContent = ({
     }
   }, [mode, clientData, initialClientId, form]);
 
-  /**
-   * Displays validation errors in a toast notification.
-   *
-   * @param errors - Form validation errors object
-   */
   const showValidationErrors = (errors: any) => {
     const errorMessages: string[] = [];
 
@@ -226,18 +215,13 @@ export const QuoteFormContent = ({
     }
   };
 
-  /**
-   * Handles form submission with validation and payload construction.
-   *
-   * @param data - Form values from React Hook Form
-   */
   const handleSubmit = async (data: QuoteFormValues) => {
     try {
       // Validate items before submission
       const validItems = items.filter(item =>
         item.productname?.trim() && item.quantity > 0 && item.listprice > 0
       );
-      
+
       if (validItems.length === 0) {
         form.setError('root', {
           type: 'manual',
@@ -271,10 +255,10 @@ export const QuoteFormContent = ({
       const userIdFromForm = form.getValues('assigned_user_id');
       const payloadAccountId = selectedClientId ?? accountIdFromForm ?? data.accountid;
       const payloadUserId = selectedUserId ?? userIdFromForm ?? data.assigned_user_id;
-      
+
       // Ensure we always have an accountid
       const finalAccountId = payloadAccountId || 101; // Fallback for debugging
-      
+
       const payload: QuoteFormData = {
         subject: data.subject,
         potentialid: initialData?.potentialid || null,
@@ -322,11 +306,7 @@ export const QuoteFormContent = ({
     }
   };
 
-  /**
-   * Handles client selection from search results.
-   *
-   * @param client - Selected client result
-   */
+  
   const handleSelectClient = (client: ClientSearchResult) => {
     form.setValue('account_search', client.accountname);
     form.setValue('accountid', client.id);
@@ -335,11 +315,6 @@ export const QuoteFormContent = ({
     setClientSearchTerm('');
   };
 
-  /**
-   * Handles user selection from search results.
-   *
-   * @param user - Selected user result
-   */
   const handleSelectUser = (user: UserSearchResult) => {
     const userId = user.id ?? user.user_id;
 
@@ -359,6 +334,23 @@ export const QuoteFormContent = ({
   };
 
   const isSubmitting = externalSubmitting ?? form.formState.isSubmitting;
+
+  const handleItemsReorder = (reorderedItems: QuoteFormData['items']) => {
+    if (typeof reorderItems === 'function') {
+      reorderItems(reorderedItems);
+    } else {
+      // Fallback: actualizar item por item
+      reorderedItems.forEach((item, _idx) => {
+        const originalIndex = items.findIndex(i =>
+          i.productid === item.productid &&
+          i.productname === item.productname
+        );
+        if (originalIndex !== -1) {
+          updateItem(originalIndex, 'sequence_no', item.sequence_no);
+        }
+      });
+    }
+  };
 
   return (
     <Form {...form}>
@@ -402,6 +394,10 @@ export const QuoteFormContent = ({
           onRemove={removeItem}
           canRemove={canRemoveItems}
           formatCurrency={formatCurrency}
+          onReorder={mode === 'edit' && ['Accepted', 'Sent'].includes(initialData?.quote_stage || '')
+            ? undefined
+            : handleItemsReorder
+          }
         />
 
         {/* Financial Summary */}

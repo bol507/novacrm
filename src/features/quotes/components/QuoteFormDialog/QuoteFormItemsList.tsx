@@ -2,23 +2,21 @@ import { Button } from "@/components/ui/button";
 import { Package, Plus } from "lucide-react";
 import { QuoteFormItemRow } from "./QuoteFormItemRow";
 import type { QuoteFormData } from "../../types/quote";
+import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
 /**
  * Props for QuoteFormItemsList component
  */
 export interface QuoteFormItemsListProps {
-  /** Array of quote items to display */
   items: QuoteFormData['items'];
-  /** Callback when an item field is updated */
   onUpdate: (index: number, field: string, value: any) => void;
-  /** Callback to add a new item */
   onAdd: () => void;
-  /** Callback to remove an item by index */
   onRemove: (index: number) => void;
-  /** Whether items can be removed (more than 1) */
   canRemove: boolean;
-  /** Currency formatter function */
   formatCurrency: (value: number) => string;
+  onReorder?: (reorderedItems: QuoteFormData['items']) => void;
+  fieldIds?: string[];
 }
 
 /**
@@ -45,7 +43,39 @@ export const QuoteFormItemsList = ({
   onRemove,
   canRemove,
   formatCurrency,
+  onReorder,
+  fieldIds=[],
 }: QuoteFormItemsListProps) => {
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+   const itemIds = fieldIds.length > 0 ? fieldIds : items.map((_, i) => `item-${i}`);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+
+    if (!over || active.id === over.id) return;
+
+
+    const oldIndex = itemIds.indexOf(active.id as string);
+    const newIndex = itemIds.indexOf(over.id as string);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = arrayMove(items, oldIndex, newIndex);
+
+    const itemsWithNewSequence = reordered.map((item, idx) => ({
+      ...item,
+      sequence_no: idx + 1,
+    }));
+
+
+    onReorder?.(itemsWithNewSequence);
+  };
+
   return (
     <div className="space-y-4">
       {/* Header with Add Button */}
@@ -60,20 +90,34 @@ export const QuoteFormItemsList = ({
         </Button>
       </div>
 
-      {/* Items List */}
-      <div className="space-y-4">
-        {items.map((item, index) => (
-          <QuoteFormItemRow
-            key={item.sequence_no || index}
-            item={item}
-            index={index}
-            onUpdate={onUpdate}
-            onRemove={onRemove}
-            canRemove={canRemove}
-            formatCurrency={formatCurrency}
-          />
-        ))}
-      </div>
+      {/*  Items List wrapped with DnD Context */}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={itemIds}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="space-y-4">
+            {items.map((item, index) => (
+              <QuoteFormItemRow
+                key={fieldIds[index] ?? item.sequence_no} 
+                item={item}
+                index={index}
+                onUpdate={onUpdate}
+                onRemove={onRemove}
+                canRemove={canRemove}
+                formatCurrency={formatCurrency}
+                isDraggable={true}
+                sortableId={fieldIds[index] ?? `item-${index}`} 
+              />
+            ))}
+          </div>
+        </SortableContext>
+        
+      </DndContext>
     </div>
   );
 };

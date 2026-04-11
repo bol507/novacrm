@@ -94,10 +94,11 @@ export function normalizeQuoteStage(value: string | null | undefined): QuoteStag
  * normalizeFormStage('Accepted') // returns 'Accepted'
  */
 export function normalizeFormStage(stage: string | null | undefined): FormQuoteStage {
-  if (!stage || !FORM_QUOTE_STAGES.includes(stage as FormQuoteStage)) {
-    return 'Draft'; // Default fallback
+  if (!stage || !isValidFormQuoteStage(stage)) {
+    return 'Draft'; // Default fallback seguro
   }
-  return stage as FormQuoteStage;
+
+  return stage;
 }
 
 // ============================================================================
@@ -112,23 +113,14 @@ export function normalizeFormStage(stage: string | null | undefined): FormQuoteS
  * Matches the Vtiger CRM inventory_items structure.
  */
 export interface QuoteItem {
-  /** Unique identifier for the product (from vtiger_products or vtiger_services) */
   productid: number | null;
-  /** Sequence number for ordering items (1-based) */
   sequence_no: number;
-  /** Product or service name */
   productname: string;
-  /** Quantity being quoted */
   quantity: number;
-  /** Unit price before discount */
   listprice: number;
-  /** Discount percentage (0-100) */
   discount_percent: number;
-  /** Optional description for this specific item */
   description: string | null;
-  /** Calculated total for this item (quantity * netprice) */
   total?: number;
-  /** Net price after discount (calculated field) */
   netprice?: number;
 }
 
@@ -162,51 +154,28 @@ export interface QuoteItemFormData {
  * Matches the Vtiger CRM vtiger_quotes table structure.
  */
 export interface Quote {
-  /** Unique quote identifier (from vtiger_quotes.quoteid) */
   quoteid: number;
-  /** Quote number for display (e.g., "QT-2026-001") */
   quoteno: string;
-  /** Quote subject/title */
   subject: string;
-  /** Current stage of the quote */
   quote_stage: QuoteStage;
-  /** ID of the related account/customer */
   accountid: number;
-  /** Account name (denormalized for display) */
   account_name?: string;
-  /** ID of the user assigned to this quote */
   assigned_user_id: number;
-  /** Assigned user name (denormalized for display) */
   assigned_user_name?: string;
-  /** Date until which the quote is valid */
   validtill: string | null;
-  /** General description of the quote */
   description: string | null;
-  /** Subtotal before tax and discount */
   subtotal: number;
-  /** Total discount amount */
   discount_total?: number;
-  /** Tax amount (ITBMS 7% in Panama) */
   taxtotal?: number;
-  /** Grand total including tax */
   total: number;
-  /** Line items in the quote */
   items: QuoteItem[];
-  /** Related potential/opportunity ID (optional) */
   potentialid: number | null;
-  /** Related contact ID (optional) */
   contactid: number | null;
-  /** Quote creation timestamp */
   createdtime?: string;
-  /** Quote last modification timestamp */
   modifiedtime?: string;
-  /** ID of user who created the quote */
   smcreatorid?: number;
-  /** ID of user who owns the quote */
   smownerid?: number;
-  /** Currency code (default: USD) */
   currency_id?: number;
-  /** Exchange rate if using multi-currency */
   conversion_rate?: number;
 }
 
@@ -222,21 +191,13 @@ export interface Quote {
  * Contains only editable fields (excludes read-only fields like quoteid).
  */
 export interface QuoteFormData {
-  /** Quote subject/title (required) */
   subject: string;
-  /** ID of the related account/customer (required) */
   accountid: number;
-  /** ID of the user assigned to this quote (required) */
   assigned_user_id: number;
-  /** Quote stage (required, defaults to 'Draft' for new quotes) */
-  quote_stage: FormQuoteStage;
-  /** Date until which the quote is valid (optional) */
+  quote_stage: QuoteStage;
   validtill: string | null;
-  /** General description of the quote (optional) */
   description: string | null;
-  /** Related potential/opportunity ID (optional) */
   potentialid: number | null;
-  /** Line items to include in the quote (required, min 1) */
   items: QuoteItemFormData[];
 }
 
@@ -251,7 +212,7 @@ export interface QuoteFormValues {
   subject: string;
   accountid: number;
   assigned_user_id: number;
-  quote_stage: FormQuoteStage;
+  quote_stage: QuoteStage;
   validtill?: string;
   description?: string;
   /** Search input for client autocomplete (not sent to API) */
@@ -360,7 +321,11 @@ export interface QuoteTax {
  * Valid stages that can be set via the form
  * (subset of all possible QuoteStage values)
  */
-export const FORM_QUOTE_STAGES = ['Draft', 'Sent', 'Accepted', 'Rejected'] as const;
+export const FORM_QUOTE_STAGES = ['Draft', 'Sent', 'Accepted', 'Rejected', 'Cancelled', 'Converted', 'Pending'] as const;
+export function isValidFormQuoteStage(value: string): value is FormQuoteStage {
+  return (FORM_QUOTE_STAGES as readonly string[]).includes(value);
+}
+
 export type FormQuoteStage = typeof FORM_QUOTE_STAGES[number];
 
 export type QuoteViewMode = "cards" | "table";
