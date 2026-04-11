@@ -23,7 +23,7 @@ export interface ProjectCommentsTabProps {
  */
 export const ProjectCommentsTab = ({ projectId }: ProjectCommentsTabProps) => {
   const { user, loading: authLoading } = useAuth();
-  const currentUserId = user?.data?.id ?? 0;
+  const currentUserId = user?.id ?? 0;
 
   if (authLoading) {
     return (

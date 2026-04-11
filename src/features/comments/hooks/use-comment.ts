@@ -2,7 +2,7 @@ import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { commentService } from '@/features/comments/services/commentService';
 import type { ApiErrorResponse } from '@/shared/types/api-error';
-import type { ProjectComment } from '../types/comment';
+import type { CommentEntity} from '../types/comment';
 
 /**
  * Hook para obtener un solo comentario por su ID
@@ -14,11 +14,11 @@ import type { ProjectComment } from '../types/comment';
 export const useComment = (
   commentId: number,
   options?: Omit<
-    UseQueryOptions<Comment, AxiosError<ApiErrorResponse>>,
+    UseQueryOptions<CommentEntity, AxiosError<ApiErrorResponse>>,
     'queryKey' | 'queryFn'
   >
 ) => {
-  return useQuery<Comment, AxiosError<ApiErrorResponse>>({
+  return useQuery<CommentEntity, AxiosError<ApiErrorResponse>>({
     queryKey: ['comment', commentId],  
     queryFn: async ({ signal }) => {
       if (signal?.aborted) throw new Error('Request cancelled');
@@ -43,7 +43,7 @@ export const useComment = (
 /**
  * Extract comments array - versión infalible para cualquier estructura
  */
-export const selectComments = (response: any): ProjectComment[] => {
+export const selectComments = (response: any): CommentEntity[] => {
   // Debug temporal para ver qué estamos recibiendo
   console.log('🔍 selectComments input:', {
     type: typeof response,
@@ -61,7 +61,7 @@ export const selectComments = (response: any): ProjectComment[] => {
   // Caso 2: YA ES array directo ← ESTE ES TU CASO
   if (Array.isArray(response)) {
     console.log('→ Response is direct array, returning it');
-    return response as ProjectComment[];
+    return response as CommentEntity[];
   }
   
   // Caso 3: {  [...] }

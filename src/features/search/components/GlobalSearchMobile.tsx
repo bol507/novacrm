@@ -242,7 +242,7 @@ export const GlobalSearchMobile = ({ open, onOpenChange }: GlobalSearchMobilePro
               </div>
 
               <SearchResultsByModule
-                results={searchResults.results}
+                results={searchResults}
                 onSelect={handleSelect}
                 isGeneric={true}
               />

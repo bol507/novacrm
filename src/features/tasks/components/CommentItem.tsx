@@ -12,13 +12,18 @@ interface CommentItemProps {
 }
 
 const CommentItem = ({ comment, isReply = false, onReply }: CommentItemProps) => {
-  const getInitials = (name: string) => {
+  const getInitials = (name: string | null | undefined) => {
+    if (!name || typeof name !== 'string') {
+    return '?';
+  }
+
     return name
       .split(" ")
       .map((n) => n[0])
       .join("")
       .toUpperCase()
       .slice(0, 2);
+      
   };
 
   return (
@@ -32,7 +37,7 @@ const CommentItem = ({ comment, isReply = false, onReply }: CommentItemProps) =>
       <Avatar className="h-8 w-8">
         <AvatarImage src="" alt={comment.userName} />
         <AvatarFallback className="text-xs bg-primary/10 text-primary">
-          {getInitials(comment.userName)}
+          {getInitials(comment.userName) || 'U'}
         </AvatarFallback>
       </Avatar>
 

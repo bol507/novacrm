@@ -18,7 +18,7 @@ import { useSearchUsers } from "@/features/users/hooks/use-search-users";
 // Presentational components
 import { ContactFormTitle } from "../components/ContactFormDialog/ContactFormTitle";
 import { ContactFormMainFields } from "../components/ContactFormDialog/ContactFormMainFields";
-import { ContactFormAccountSearch, type AccountSearchResult } from "../components/ContactFormDialog/ContactFormAccountSearch";
+import { ContactFormAccountSearch } from "../components/ContactFormDialog/ContactFormAccountSearch";
 import { ContactFormUserSearch, type UserSearchResult } from "../components/ContactFormDialog/ContactFormUserSearch";
 import { ContactFormContactInfo } from "../components/ContactFormDialog/ContactFormContactInfo";
 import { ContactFormAdditionalInfo } from "../components/ContactFormDialog/ContactFormAdditionalInfo";

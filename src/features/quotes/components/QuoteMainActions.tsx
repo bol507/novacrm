@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { Folder, Loader2, Pencil, Trash2 } from "lucide-react";
+import { CopyIcon, Folder, Loader2, Pencil, Trash2 } from "lucide-react";
 
 /**
  * Props for QuoteMainActions component
  */
 export interface QuoteMainActionsProps {
+ 
+  
   /** Callback for creating project from quote */
   onCreateProject: () => void;
   /** Callback for editing quote */
@@ -13,6 +15,10 @@ export interface QuoteMainActionsProps {
   onDelete: () => void;
   /** Loading state for delete operation */
   isDeleting: boolean;
+  /** Callback for duplicating quote */
+  onDuplicate?: () => void;
+  /** Loading state for duplicate operation */
+  isDuplicating?: boolean;
 }
 
 /**
@@ -39,41 +45,74 @@ export interface QuoteMainActionsProps {
  * />
  */
 export const QuoteMainActions = ({ 
+
   onCreateProject, 
   onEdit, 
   onDelete, 
-  isDeleting 
+  isDeleting,
+  onDuplicate, 
+  isDuplicating = false,
 }: QuoteMainActionsProps) => {
   return (
-    <div className="flex flex-col sm:flex-row gap-4 mt-8">
+  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
+    {/* Create Project */}
+    <Button
+      variant="outline"
+      className="gap-2 text-base sm:text-lg py-4 sm:py-6 h-auto justify-center"
+      onClick={onCreateProject}
+    >
+      <Folder className="h-5 w-5 sm:h-6 sm:w-6" />
+      <span className="hidden sm:inline">Create Project</span>
+      <span className="sm:hidden">Project</span>
+    </Button>
+
+    {/* Edit Quote */}
+    <Button
+      variant="outline"
+      className="gap-2 text-base sm:text-lg py-4 sm:py-6 h-auto justify-center"
+      onClick={onEdit}
+    >
+      <Pencil className="h-5 w-5 sm:h-6 sm:w-6" />
+      <span className="hidden sm:inline">Edit Quote</span>
+      <span className="sm:hidden">Edit</span>
+    </Button>
+
+    {/* Duplicate Quote */}
+    {onDuplicate ? (
       <Button
         variant="outline"
-        className="flex-1 gap-2 text-lg py-6"
-        onClick={onCreateProject}
+        className="gap-2 text-base sm:text-lg py-4 sm:py-6 h-auto justify-center"
+        onClick={onDuplicate}
+        disabled={isDuplicating}
       >
-        <Folder className="h-6 w-6" />
-        Create Project
-      </Button>
-      <Button
-        className="flex-1 gap-2 text-lg py-6"
-        onClick={onEdit}
-      >
-        <Pencil className="h-6 w-6" />
-        Edit Quote
-      </Button>
-      <Button
-        variant="destructive"
-        className="flex-1 gap-2 text-lg py-6"
-        onClick={onDelete}
-        disabled={isDeleting}
-      >
-        {isDeleting ? (
-          <Loader2 className="h-6 w-6 animate-spin" />
+        {isDuplicating ? (
+          <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
         ) : (
-          <Trash2 className="h-6 w-6" />
+          <CopyIcon className="h-5 w-5 sm:h-6 sm:w-6" />
         )}
-        Delete
+        <span className="hidden sm:inline">Duplicate</span>
+        <span className="sm:hidden">Copy</span>
       </Button>
-    </div>
-  );
+    ) : (
+      /* Spacer para mantener grid consistente si no hay Duplicate */
+      <div className="hidden sm:block" />
+    )}
+
+    {/* Delete Quote */}
+    <Button
+      variant="destructive"
+      className="gap-2 text-base sm:text-lg py-4 sm:py-6 h-auto justify-center"
+      onClick={onDelete}
+      disabled={isDeleting}
+    >
+      {isDeleting ? (
+        <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
+      ) : (
+        <Trash2 className="h-5 w-5 sm:h-6 sm:w-6" />
+      )}
+      <span className="hidden sm:inline">Delete</span>
+      <span className="sm:hidden">Del</span>
+    </Button>
+  </div>
+);
 };

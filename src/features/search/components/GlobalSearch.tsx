@@ -80,6 +80,12 @@ export const GlobalSearch = () => {
    * @param e - Keyboard event
    */
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+
+    if (e.key === ' ') {
+      e.stopPropagation();
+      return;
+    }
+
     if (e.key === 'Enter') {
       e.preventDefault();
       executeSearch();
@@ -145,7 +151,15 @@ export const GlobalSearch = () => {
           modal={false}
         >
           <DropdownMenuTrigger asChild>
-            <div className="relative w-full">
+            <div
+              className="relative w-full"
+              onKeyDown={(e) => {
+                if (e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }
+              }}
+            >
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
                 ref={inputRef}
@@ -155,6 +169,11 @@ export const GlobalSearch = () => {
                 onKeyDown={handleKeyDown}
                 className="pl-10 pr-24 w-full"
                 onClick={(e) => e.stopPropagation()}
+                onKeyDownCapture={(e) => {
+                  if (e.key === ' ') {
+                    e.stopPropagation();
+                  }
+                }}
               />
 
               {isLoading && (
@@ -246,7 +265,7 @@ export const GlobalSearch = () => {
               {!isLoading && searchResults && getTotalCount() > 0 && (
                 <div className="py-2">
                   <SearchResultsByModule
-                    results={searchResults.results}
+                    results={searchResults}
                     onSelect={handleSelect}
                     isGeneric={false}
                   />

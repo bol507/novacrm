@@ -64,7 +64,7 @@ export const ProjectOverviewTab = ({
 }: ProjectOverviewTabProps) => {
   const { user, loading: authLoading } = useAuth();
   const pendingTasks = (totalTasks || 0) - (completedTasks || 0);
-  const currentUserId = user?.data?.id ?? 0;
+  const currentUserId = user?.id ?? 0;
   
 
   if (authLoading) {

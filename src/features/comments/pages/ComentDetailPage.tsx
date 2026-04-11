@@ -167,7 +167,7 @@ const CommentDetailPage = () => {
           <div className="flex items-start gap-4 pb-4 border-b">
             <Avatar className="w-12 h-12">
               <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                {comment.authorName.charAt(0).toUpperCase()}
+                {comment.authorName?.charAt(0).toUpperCase() ?? '?'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">

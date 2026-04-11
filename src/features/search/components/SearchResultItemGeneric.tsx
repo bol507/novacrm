@@ -4,15 +4,8 @@ import type { SearchResultItem as SearchResultItemType } from '../types/search.t
 import { MODULE_CONFIG } from '../types/search.types';
 
 interface SearchResultItemGenericProps {
-  /** The search result item to display */
   item: SearchResultItemType;
-  /** Callback invoked when the item is selected */
   onSelect: (item: SearchResultItemType) => void;
-  /**
-   * Whether to use a generic clickable element (for Dialog/mobile)
-   * When false, uses DropdownMenuItem (for desktop dropdown)
-   * @default false
-   */
   isGeneric?: boolean;
 }
 
@@ -54,11 +47,16 @@ export const SearchResultItemGeneric = ({
   isGeneric = false 
 }: SearchResultItemGenericProps) => {
   const config = MODULE_CONFIG[item.type];
-
+  const safeConfig = config ?? {
+    color: 'bg-gray-500',
+    icon: '❓',
+    label: 'Unknown',
+    route: '/dashboard',
+  };
   const ItemContent = () => (
     <>
-      <div className={`w-9 h-9 rounded-lg ${config.color} flex items-center justify-center text-white shrink-0`}>
-        <span className="text-base">{config.icon}</span>
+      <div className={`w-9 h-9 rounded-lg ${safeConfig.color} flex items-center justify-center text-white shrink-0`}>
+        <span className="text-base">{safeConfig.icon}</span>
       </div>
 
       <div className="flex-1 min-w-0">

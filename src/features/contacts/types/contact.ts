@@ -45,7 +45,21 @@ export interface Contact {
   // Calculated for display
   full_name?: string;
 
+  otherphone?: string | null;
+  assistant?: string | null;
+  birthdate?: string | null;
+  leadsource?: string | null;
+
+  reports_to_id?: number | null;
+
   contact_status?: 'Active' | 'Inactive' | 'Other'; 
+
+  mailingstreet?: string | null;
+  mailingcity?: string | null;
+  mailingstate?: string | null;
+  mailingcountry?: string | null;
+  mailingzip?: string | null;
+  mailingpobox?: string | null;
 }
 
 /**
@@ -82,6 +96,21 @@ export interface ContactFormData {
   // Fields from vtiger_crmentity (handled separately)
   description?: string;
   assigned_user_id?: number; // Maps to smownerid in crmentity
+
+  //additional fields
+  mailingstreet?: string;
+  mailingcity?: string;
+  mailingstate?: string;
+  mailingcountry?: string;
+  mailingzip?: string;
+  mailingpobox?: string;  
+  otherphone?: string;
+  assistant?: string;
+  birthdate?: string;
+  leadsource?: string;
+  reports_to_id?: number;
+
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 /**
@@ -173,6 +202,20 @@ export const contactFormSchema = z.object({
   // UI-only fields (not persisted)
   account_search: z.string().optional(),
   assigned_user_search: z.string().optional(),
+
+  contact_status: z.string().optional(),
+
+  mailingstreet: z.string().optional(),
+  mailingcity: z.string().optional(),
+  mailingstate: z.string().optional(),
+  mailingcountry: z.string().optional(),
+  mailingzip: z.string().optional(),
+  mailingpobox: z.string().optional(),
+  otherphone: z.string().optional(),
+  assistant: z.string().optional(),
+  birthdate: z.string().optional(),
+  leadsource: z.string().optional(),  
+  reports_to_id: z.number().optional(),
 });
 
 /**

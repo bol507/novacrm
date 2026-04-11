@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Check, ChevronDown, ChevronUp, Info, Loader2, Loader2Icon, MessageSquare, PencilIcon, Send, Users, X } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { format, formatDistanceToNow, parseISO } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
 interface CommentsSectionProps {

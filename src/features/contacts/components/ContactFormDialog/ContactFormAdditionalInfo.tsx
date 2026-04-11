@@ -10,7 +10,6 @@ import type { ContactFormValues } from "../../types/contact";
  * Props for ContactFormAdditionalInfo component
  */
 export interface ContactFormAdditionalInfoProps {
-  /** React Hook Form control instance */
   control: Control<ContactFormValues>;
 }
 

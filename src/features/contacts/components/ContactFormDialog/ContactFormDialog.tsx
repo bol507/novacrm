@@ -116,10 +116,10 @@ export const ContactFormDialog = ({
       ? initialData.assigned_user_id 
       : null
   );
-  const [originalAccountId, setOriginalAccountId] = useState<number | null>(
+  const [originalAccountId, _setOriginalAccountId] = useState<number | null>(
     mode === 'edit' && initialData?.accountid != null ? initialData.accountid : null
   );
-  const [originalUserId, setOriginalUserId] = useState<number | null>(
+  const [originalUserId, _setOriginalUserId] = useState<number | null>(
     mode === 'edit' && initialData?.assigned_user_id != null ? initialData.assigned_user_id : null
   );
   const [isAccountValid, setIsAccountValid] = useState(
@@ -161,7 +161,7 @@ export const ContactFormDialog = ({
           secondaryemail: initialData.secondaryemail || '',
           assistant: initialData.assistant || '',
           birthdate: initialData.birthdate || '',
-          reports_to_id: initialData.reports_to_id,
+          reports_to_id: initialData.reports_to_id ?? undefined,
           leadsource: initialData.leadsource || '',
           contact_status: initialData.contact_status || 'Active',
         };

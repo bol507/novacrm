@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { authService } from "@/features/auth/services/auth-service";
-import type { AuthResponse } from "@/features/auth/types/auth";
+import type { UserData } from "@/features/auth/types/auth";
 
 /**
  * Hook for managing authentication and current user state.
@@ -32,9 +32,9 @@ import type { AuthResponse } from "@/features/auth/types/auth";
  * }
  */
 export const useAuth = () => {
-  const [user, setUser] = useState<AuthResponse["user"] | null>(null);
+  const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
-
+ 
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -60,7 +60,7 @@ export const useAuth = () => {
    */
   const login = async (credentials: { user_name: string; password: string }) => {
     const data = await authService.login(credentials);
-    setUser(data.user);
+    setUser(data.user.data);
     return data;
   };
 

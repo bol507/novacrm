@@ -91,6 +91,8 @@ const QuotesPage = () => {
      */
     const handleViewQuote = (quote: Quote) => {
         navigate(`/dashboard/quotes/${quote.quoteid}`);
+       //const url = `/dashboard/quotes/${quote.quoteid}`;
+       // window.open(url, '_blank', 'noopener,noreferrer');
     };
 
     /**

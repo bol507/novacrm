@@ -1,3 +1,22 @@
+export interface CommentEntity {
+  id: number;
+   relatedToId: number;
+  relatedModule: string | null;
+  taskId: number;
+  content: string;
+  authorName?: string; 
+  userName: string | null;  
+  userEmail: string | null; 
+  userId: number;
+  createdAt: string | null; 
+  updatedAt: string | null; 
+  formattedCreatedAt: string | null; 
+  isPrivate: boolean;
+  isReply: boolean;
+  parentCommentId: number | null;
+  attachment: string | null;
+  reasonToEdit: string | null; 
+}
 
 export interface ProjectComment {
   id: number;

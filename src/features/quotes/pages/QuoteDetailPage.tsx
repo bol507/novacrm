@@ -16,6 +16,8 @@ import { QuoteDescription } from "../components/QuoteDescription";
 import { QuoteItemsTable } from "../components/QuoteItemsTable";
 import { QuotePdfActions } from "../components/QuotePdfActions";
 import { QuoteMainActions } from "../components/QuoteMainActions";
+import { useDuplicateQuote } from "../hooks/use-duplicate-quote";
+import { toast } from "sonner";
 
 /**
  * QuoteDetailPage component for displaying detailed information about a quote.
@@ -44,6 +46,10 @@ import { QuoteMainActions } from "../components/QuoteMainActions";
 const QuoteDetailPage = () => {
   const { quoteId } = useParams<{ quoteId: string }>();
   const navigate = useNavigate();
+  const { 
+    mutateAsync: duplicateQuote, 
+    isPending: isDuplicating 
+  } = useDuplicateQuote();
 
   if (!quoteId) {
     return (
@@ -114,6 +120,24 @@ const QuoteDetailPage = () => {
     navigate(`/dashboard/projects/new?${params.toString()}`);
   };
 
+  const handleDuplicateQuote = async () => {
+    if (!quoteId) return;
+    console.log(quoteId);
+    try {
+      const payload ={
+        quoteId: parseInt(quoteId, 10),
+        suffix: '(Copy)',  // Optional: ready to use suffix for the new quote
+      }
+      const newQuoteId = await duplicateQuote(payload);
+      
+      toast.success('Quote duplicated successfully');
+      navigate(`/dashboard/quotes/${newQuoteId}`);
+      
+    } catch (error) {
+      // Handle error
+    }
+  };
+
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-background">
@@ -130,6 +154,7 @@ const QuoteDetailPage = () => {
             {/* Info Cards */}
             <QuoteInfoCards
               accountName={quote.account_name}
+              accountId={quote.accountid}
               assignedUserName={quote.assigned_user_name}
               validUntil={quote.validtill}
               formatDate={calculations.formatDate}
@@ -172,10 +197,12 @@ const QuoteDetailPage = () => {
             onEdit={handleEditQuote}
             onDelete={() => actions.handleDeleteClick(quote)}
             isDeleting={actions.isDeleting}
+            onDuplicate={handleDuplicateQuote}
+            isDuplicating={isDuplicating}
           />
         </div>
 
-        
+
       </div>
     </ErrorBoundary>
   );

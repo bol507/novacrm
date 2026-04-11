@@ -9,11 +9,8 @@ import { MODULE_CONFIG } from '../types/search.types';
 import { SearchResultItemGeneric } from './SearchResultItemGeneric';
 
 interface SearchResultsByModuleProps {
-  /** Grouped search results by module type */
   results: SearchResultsByModuleType;
-  /** Callback invoked when a result item is selected */
   onSelect: (item: SearchResultItemType) => void;
-  /** Whether to use generic wrapper (for mobile) or DropdownMenuGroup (for desktop) */
   isGeneric?: boolean;
 }
 
@@ -66,6 +63,11 @@ export const SearchResultsByModule = ({
   onSelect,
   isGeneric = false 
 }: SearchResultsByModuleProps) => {
+
+  if (!results || typeof results !== 'object') {
+    return null;
+  }
+
   const resultKeys: (keyof SearchResultsByModuleType)[] = [
     'projects',
     'clients',

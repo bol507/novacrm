@@ -4,13 +4,9 @@ import { QuoteCard } from "./QuoteCard";
 import { FileText } from "lucide-react";
 
 interface QuoteCardsProps {
-  /** Array of quotes to display */
   quotes: Quote[];
-  /** Whether data is currently loading */
   isLoading: boolean;
-  /** Callback for editing a quote */
   onEditQuote?: (quote: Quote) => void;
-  /** Callback for deleting a quote */
   onDeleteQuote?: (quote: Quote) => void;
 }
 

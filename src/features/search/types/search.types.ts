@@ -33,7 +33,15 @@ export interface SearchResultsByModule {
 }
 
 export interface GlobalSearchResponse {
-  results: SearchResultsByModule;
+  results: {
+    projects?: Array<any>;
+    clients?: Array<any>;
+    opportunities?: Array<any>;
+    quotes?: Array<any>;
+    tasks?: Array<any>;
+    contacts?: Array<any>;
+    [key: string]: any[] | undefined; 
+  };
   total: number;
   query: string;
 }
@@ -82,4 +90,66 @@ export const MODULE_CONFIG: Record<SearchModuleType, ModuleConfig> = {
     icon: '👤',
     route: '/dashboard/contacts',
   },
+};
+
+/**
+ * Raw backend search results (Vtiger-native field names)
+ * This is what the API actually returns before transformation
+ */
+export type RawBackendSearchResults = {
+  projects?: Array<{
+    projectid: number;
+    projectname: string;
+    project_no?: string;
+    projectstatus?: string;
+    accountname?: string | null;
+    [key: string]: any;
+  }>;
+  clients?: Array<{
+    accountid: number;
+    accountname: string;
+    account_no?: string;
+    email1?: string;
+    phone?: string;
+    description?: string;
+    [key: string]: any;
+  }>;
+  opportunities?: Array<{
+    potentialid: number;
+    potentialname: string;
+    potential_no?: string;
+    sales_stage?: string;
+    related_to_name?: string;
+    amount?: string;
+    [key: string]: any;
+  }>;
+  quotes?: Array<{
+    quoteid: number;
+    subject: string;
+    quote_no?: string;
+    quotestage?: string;
+    accountname?: string;
+    total?: string;
+    [key: string]: any;
+  }>;
+  tasks?: Array<{
+    id: number;
+    title?: string;
+    subject?: string;
+    description?: string;
+    due_date?: string;
+    status?: string;
+    url?: string;
+    [key: string]: any;
+  }>;
+  contacts?: Array<{
+    contactid: number;
+    firstname?: string;
+    lastname?: string;
+    email?: string;
+    phone?: string;
+    accountname?: string;
+    [key: string]: any;
+  }>;
+  [key: string]: any[] | undefined;
 };

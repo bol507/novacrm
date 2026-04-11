@@ -41,7 +41,7 @@ export const useCommentDetail = (
 
   const { data, isLoading, isError, error, refetch } = useQuery<CommentDetail, Error>({
     queryKey: ['comment-detail', commentId],
-    queryFn: async ({ signal }) => {
+    queryFn: async () => {
       if (!commentId) {
         throw new Error('Comment ID is required');
       }

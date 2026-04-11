@@ -1,8 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { searchService } from '../services/searchService';
-import type { GlobalSearchResponse } from '../types/search.types';
+import type { GlobalSearchResponse, SearchResultsByModule } from '../types/search.types';
+import { transformSearchResults } from '../utils/transformSearchResults';
 
 interface UseGlobalSearchOptions {
   limit?: number;
@@ -22,19 +23,21 @@ interface UseGlobalSearchOptions {
  * @returns Search state and control functions
  */
 export const useGlobalSearch = (options: UseGlobalSearchOptions = {}) => {
-  const { 
+  const {
     limit = 10,
-    enabled = true 
+    enabled = true,
+
   } = options;
 
-  const [inputValue, setInputValue] = useState(''); 
-  const [searchQuery, setSearchQuery] = useState(''); 
+  const [inputValue, setInputValue] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
+  //const _debouncedQuery = useDebounce(searchQuery, debounceMs);
 
-  const { 
+  const {
     data,
-    isLoading, 
+    isLoading,
     error,
     refetch,
   } = useQuery<GlobalSearchResponse, AxiosError>({
@@ -47,7 +50,18 @@ export const useGlobalSearch = (options: UseGlobalSearchOptions = {}) => {
     retry: false,
   });
 
-  const searchResults = data;
+  const searchResults: SearchResultsByModule | null = useMemo(() => {
+    if (!data?.results || typeof data.results !== 'object') {
+      return null;
+    }
+
+    try {
+      return transformSearchResults(data.results as Record<string, any[]>);
+    } catch (transformError) {
+      console.error('Failed to transform search results:', transformError);
+      return null;  // Fallback seguro
+    }
+  }, [data]);
 
   /**
    * Updates the input value without triggering a search.
@@ -67,13 +81,13 @@ export const useGlobalSearch = (options: UseGlobalSearchOptions = {}) => {
    */
   const executeSearch = useCallback(() => {
     const trimmedQuery = inputValue.trim();
-    
-    
+
+
     if (trimmedQuery.length >= 3) {
       setSearchQuery(trimmedQuery);
       setIsOpen(true);
     } else {
-      console.warn('Query too short:', trimmedQuery);
+      console.warn('Query too short (min 3 chars):', trimmedQuery);
     }
   }, [inputValue]);
 
@@ -105,13 +119,8 @@ export const useGlobalSearch = (options: UseGlobalSearchOptions = {}) => {
    * input is too short.
    */
   const openSearch = useCallback(() => {
-    const trimmedQuery = inputValue.trim();
-    
-    if (trimmedQuery.length >= 3) {
-      setSearchQuery(trimmedQuery);
-      setIsOpen(true);
-    }
-  }, [inputValue]);
+    setIsOpen(true);
+  }, []);
 
   /**
    * Calculates the total number of search results across all categories.
@@ -119,11 +128,11 @@ export const useGlobalSearch = (options: UseGlobalSearchOptions = {}) => {
    * @returns Sum of all result items from each category, or 0 if no results exist
    */
   const getTotalCount = useCallback(() => {
-    if (!searchResults) return 0;
-    return Object.values(searchResults.results).reduce(
-      (sum, arr) => sum + arr.length, 
-      0
-    );
+    if (!searchResults || typeof searchResults !== 'object') {
+      return 0;
+    }
+    const values = Object.values(searchResults).filter(val => Array.isArray(val));
+    return values.reduce((sum, arr) => sum + arr.length, 0);
   }, [searchResults]);
 
   return {
@@ -140,6 +149,6 @@ export const useGlobalSearch = (options: UseGlobalSearchOptions = {}) => {
     setIsOpen,
     clearSearch,
     closeSearch,
-    refetch, 
+    refetch,
   };
 };

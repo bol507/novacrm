@@ -249,9 +249,7 @@ export const QuoteFormContent = ({
 
       // Validate client and user selection - check both state AND form values
       const formAccountId = form.getValues('accountid');
-      const formUserId = form.getValues('assigned_user_id');
       const hasClient = isClientValid || selectedClientId || formAccountId;
-      const hasUser = isUserValid || selectedUserId || formUserId;
 
       if (!hasClient) {
         form.setError('accountid', {
@@ -365,7 +363,6 @@ export const QuoteFormContent = ({
   return (
     <Form {...form}>
       {(() => {
-        const errorCount = Object.keys(form.formState.errors).length;
         return null;
       })()}
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">

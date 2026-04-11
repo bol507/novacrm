@@ -92,7 +92,7 @@ const ContactCreatePage = () => {
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(
     searchParams.get('accountId') ? parseInt(searchParams.get('accountId')!, 10) : null
   );
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [_selectedUserId, setSelectedUserId] = useState<number | null>(searchParams.get('userId') ? parseInt(searchParams.get('userId')!, 10) : null);
   const [isAccountValid, setIsAccountValid] = useState(!!selectedAccountId);
   const [isUserValid, setIsUserValid] = useState(false);
 
@@ -126,6 +126,9 @@ const ContactCreatePage = () => {
    */
   const handleSubmit = async (data: ContactFormValues) => {
     try {
+      const accountid = data.accountid && data.accountid > 0 ? data.accountid : undefined;
+      const assigned_user_id = data.assigned_user_id && data.assigned_user_id > 0 ? data.assigned_user_id : undefined;
+      
       const payload: ContactFormData = {
         firstname: data.firstname,
         lastname: data.lastname,
@@ -134,13 +137,13 @@ const ContactCreatePage = () => {
         mobile: data.mobile || undefined,
         title: data.title || undefined,
         department: data.department || undefined,
-        ...(selectedAccountId ? { accountid: selectedAccountId } : {}),
-        ...(selectedUserId ? { assigned_user_id: selectedUserId } : {}),
+        ...(accountid ? { accountid } : {}),
+        ...(assigned_user_id ? { assigned_user_id } : {}),
         description: data.description || undefined,
-        
+
         fax: data.fax || undefined,
         secondaryemail: data.secondaryemail || undefined,
-       
+
       };
 
       const newContactId = await createContactMutation.mutateAsync(payload);
@@ -158,10 +161,10 @@ const ContactCreatePage = () => {
    *
    * @param account - Selected account result
    */
-  const handleSelectAccount = (account: AccountSearchResult) => {
-    form.setValue('account_search', account.accountname);
-    form.setValue('accountid', account.id);
-    setSelectedAccountId(account.id);
+  const handleSelectAccount = (data: AccountSearchResult) => {
+    form.setValue('account_search', data.accountname);
+    form.setValue('accountid', data.accountid, { shouldValidate: true, shouldDirty: true });
+    setSelectedAccountId( data.accountid);
     setIsAccountValid(true);
     setAccountSearchTerm('');
   };
@@ -175,7 +178,7 @@ const ContactCreatePage = () => {
     const userId = user.id ?? user.user_id ?? null;
     const userName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.user_name;
     form.setValue('assigned_user_search', userName);
-    form.setValue('assigned_user_id', userId);
+     form.setValue('assigned_user_id', userId, { shouldValidate: true, shouldDirty: true });
     setSelectedUserId(userId);
     setIsUserValid(true);
     setUserSearchTerm('');
@@ -271,12 +274,12 @@ const ContactCreatePage = () => {
                 />
 
               </form>
-              </Form>
-            </CardContent>
-          </Card>
-        </div>
+            </Form>
+          </CardContent>
+        </Card>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
-  export default ContactCreatePage;
+export default ContactCreatePage;

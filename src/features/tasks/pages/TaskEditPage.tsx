@@ -217,7 +217,7 @@ const TaskEditPage = () => {
                     {usersData?.data?.map((u) => (
                       <SelectItem key={u.id} value={u.id.toString()}>
                         {u.first_name} {u.last_name}
-                        {u.id === user?.data.id && ' (Tú)'}
+                        {u.id === user?.id && ' (Tú)'}
                       </SelectItem>
                     ))}
                   </SelectContent>

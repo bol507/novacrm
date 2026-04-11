@@ -11,17 +11,11 @@ import { useUsers } from "@/features/users/hooks/use-users"
 import { useUser } from "@/features/users/hooks/use-user"
 
 interface UserSearchProps {
-  /** Currently selected user ID or null for none */
   value: number | null | undefined
-  /** Callback invoked when user selection changes */
   onChange: (value: number | null) => void
-  /** Label text for the input field */
   label?: string
-  /** Placeholder text for the search input */
   placeholder?: string
-  /** Whether the field is required (adds asterisk to label) */
   required?: boolean
-  /** Whether to show the "All Users" option (group ID=2) */
   showAllOption?: boolean
 }
 
@@ -86,7 +80,12 @@ export function UserSearch({
 
   const { data: selectedUser, isLoading: loadingSelectedUser } = useUser(value)
 
-  const { data: usersData, isLoading: loadingUsers, error } = useUsers(1, 10, debouncedSearchTerm)
+  const { data: usersData, isLoading: loadingUsers, error } = useUsers({
+    page: 1,
+    perPage: 10,
+    search: debouncedSearchTerm,
+    enabled: debouncedSearchTerm.length >= 3,
+  })
   const users = usersData?.data || []
 
   useEffect(() => {

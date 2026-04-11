@@ -9,43 +9,24 @@ import QuoteTable from "../components/QuoteTable";
 import { QuoteStats } from "../components/QuoteStats";
 
 export interface QuoteViewProps {
-  /** Array of quotes to display */
   quotes: Quote[];
-  /** Whether data is currently loading */
   isLoading: boolean;
-  /** Error object if data fetching failed */
   error: Error | null;
-  /** Current search term value */
   searchTerm: string;
-  /** Callback for search input changes */
   onSearchChange: (value: string) => void;
-  /** Callback for create quote action */
   onCreateClick: () => void;
-  /** Callback for view mode toggle */
   onViewModeChange: (mode: QuoteViewMode) => void;
-  /** Callback for refresh action */
   onRefresh: () => void;
-  /** Callback for viewing quote details */
   onView?: (quote: Quote) => void;
-  /** Callback for editing a quote */
   onEdit?: (quote: Quote) => void;
-  /** Callback for deleting a quote */
   onDelete?: (quote: Quote) => void;
-  /** Current view mode ('cards' or 'table') */
   viewMode: QuoteViewMode;
-  /** Current page number */
   page: number;
-  /** Total number of pages */
   totalPages: number;
-  /** Total number of items across all pages */
   totalItems: number;
-  /** Callback for page changes */
   onPageChange: (page: number) => void;
-  /** Total number of quotes matching current filter */
   quoteCount: number;
-  /** Optional client ID filter currently applied */
   clientIdNumber?: number | null;
-  /** Callback to clear client ID filter */
   handleClearClientFilter?: () => void;
 }
 

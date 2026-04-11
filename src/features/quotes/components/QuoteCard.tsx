@@ -1,18 +1,15 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Eye, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 import type { Quote } from "../types/quote";
+import { useNavigate } from "react-router-dom";
 
 /**
  * Props for QuoteCard component
  */
 export interface QuoteCardProps {
-  /** Quote object to display */
   quote: Quote;
-  /** Optional callback when edit button is clicked */
   onEditQuote?: (quote: Quote) => void;
-  /** Optional callback when delete button is clicked */
   onDeleteQuote?: (quote: Quote) => void;
 }
 
@@ -58,23 +55,12 @@ export const QuoteCard = ({
   onDeleteQuote 
 }: QuoteCardProps) => {
   const navigate = useNavigate();
-
-  /**
-   * Navigate to quote detail page
-   */
   const handleViewQuote = () => {
     navigate(`/dashboard/quotes/${quote.quoteid}`);
+    //const url = `/dashboard/quotes/${quote.quoteid}`;
+    //window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  /**
-   * Formats a numeric value as USD currency
-   * 
-   * Uses Panama Spanish locale (es-PA) with no decimal places
-   * for consistent dashboard presentation.
-   * 
-   * @param value - Numeric value to format
-   * @returns Formatted currency string (e.g., "$125,000")
-   */
   const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat('es-PA', {
       style: 'currency',
@@ -84,11 +70,6 @@ export const QuoteCard = ({
     }).format(value);
   };
 
-  /**
-   * Gets CSS classes for status badge based on quote stage
-   * 
-   * @returns Tailwind CSS class string for badge styling
-   */
   const getBadgeColor = () => {
     switch (quote.quote_stage) {
       case 'Draft': return 'bg-gray-100 text-gray-700 border-gray-200';
@@ -99,11 +80,6 @@ export const QuoteCard = ({
     }
   };
 
-  /**
-   * Gets human-readable label for quote stage
-   * 
-   * @returns Display label for the status badge
-   */
   const getStatusLabel = () => {
     switch (quote.quote_stage) {
       case 'Draft': return 'Draft';
