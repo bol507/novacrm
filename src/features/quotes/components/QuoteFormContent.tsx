@@ -39,6 +39,7 @@ export const quoteFormSchema = z.object({
   quote_stage: z.enum(['Draft', 'Sent', 'Accepted', 'Rejected']).default('Draft'),
   validtill: z.string().optional(),
   description: z.string().optional(),
+  comment: z.string().optional(),
   account_search: z.string().optional(),
   assigned_user_search: z.string().optional(),
 });
@@ -139,9 +140,9 @@ export const QuoteFormContent = ({
           assigned_user_id: initialData.assigned_user_id,
           quote_stage: normalizeFormStage(initialData.quote_stage),
           validtill: initialData.validtill || undefined,
-          description: initialData.description || '',
           account_search: initialData.account_name || '',
           assigned_user_search: initialData.assigned_user_name || '',
+          description: initialData.description || '',
         };
       }
       return {
@@ -194,12 +195,13 @@ export const QuoteFormContent = ({
     }
 
     const invalidItems = items.filter((item, _index) => {
-      return !item.productname?.trim() || item.quantity <= 0 || item.listprice <= 0;
+      return !item.description?.trim() || item.quantity <= 0 || item.listprice <= 0;
     });
 
     if (invalidItems.length > 0) {
       errorMessages.push(`• Items: ${invalidItems.length} item(s) have invalid data (name, quantity or price)`);
     }
+    console.table(invalidItems);
 
     if (errorMessages.length > 0) {
       toast.error('Please check the following fields:', {
@@ -219,7 +221,7 @@ export const QuoteFormContent = ({
     try {
       // Validate items before submission
       const validItems = items.filter(item =>
-        item.productname?.trim() && item.quantity > 0 && item.listprice > 0
+        item.description?.trim() && item.quantity > 0 && item.listprice > 0
       );
 
       if (validItems.length === 0) {
@@ -270,11 +272,11 @@ export const QuoteFormContent = ({
         items: validItems.map(item => ({
           productid: item.productid,
           sequence_no: item.sequence_no,
-          productname: item.productname,
           quantity: item.quantity,
           listprice: item.listprice,
           discount_percent: item.discount_percent || 0,
           description: item.description || null,
+          comment: item.comment || null,
         }))
       };
 
@@ -343,7 +345,7 @@ export const QuoteFormContent = ({
       reorderedItems.forEach((item, _idx) => {
         const originalIndex = items.findIndex(i =>
           i.productid === item.productid &&
-          i.productname === item.productname
+          i.description === item.description
         );
         if (originalIndex !== -1) {
           updateItem(originalIndex, 'sequence_no', item.sequence_no);

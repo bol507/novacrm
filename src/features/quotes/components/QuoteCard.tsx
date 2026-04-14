@@ -175,17 +175,17 @@ export const QuoteCard = ({
                 >
                   <div className="flex-1 min-w-0">
                     {/* Product name with truncation */}
-                    <p className="font-medium text-sm truncate" title={item.productname}>
-                      {item.productname || 'Unnamed item'}
+                    <p className="font-medium text-sm truncate" title={item.description || ''}>
+                      {item.description}
                     </p>
                     
                     {/* Item description with truncation (if exists) */}
-                    {item.description && (
+                    {item.comment && (
                       <p 
                         className="text-xs text-muted-foreground line-clamp-2 wrap-break-word mt-0.5"
-                        title={item.description}
+                        title={item.comment}
                       >
-                        {item.description}
+                        {item.comment}
                       </p>
                     )}
                     

@@ -120,7 +120,7 @@ export const QuoteFormDialog = ({
     try {
       // Validate items
       const validItems = items.filter(item =>
-        item.productname?.trim() && item.quantity > 0 && item.listprice > 0
+        item.description?.trim() && item.quantity > 0 && item.listprice > 0
       );
 
       if (validItems.length === 0) {
@@ -142,11 +142,12 @@ export const QuoteFormDialog = ({
         items: validItems.map(item => ({
           productid: item.productid,
           sequence_no: item.sequence_no,
-          productname: item.productname,
+          
           quantity: item.quantity,
           listprice: item.listprice,
           discount_percent: item.discount_percent || 0,
           description: item.description || null,
+          comment: item.comment || null,
         }))
       };
 

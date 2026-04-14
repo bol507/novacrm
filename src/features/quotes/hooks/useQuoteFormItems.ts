@@ -19,11 +19,11 @@ export interface QuoteFormItemsActions {
 const createEmptyItem = (sequenceNo: number): QuoteFormData['items'][0] => ({
   productid: null,
   sequence_no: sequenceNo,
-  productname: '',
   quantity: 1,
   listprice: 0,
   discount_percent: 0,
   description: '',
+  comment: '',
 });
 
 /**
@@ -43,7 +43,7 @@ export const useQuoteFormItems = (
       ? initialItems.map((item, index) => ({
           ...item,
           sequence_no: index + 1,
-          productname: item.productname || item.description || `Producto ${item.productid || 'N/A'}`,
+          
         }))
       : [createEmptyItem(1)]
   );
