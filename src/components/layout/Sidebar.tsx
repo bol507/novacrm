@@ -5,7 +5,6 @@ import {
   LayoutDashboard,
   Users,
   FileText,
-  Settings,
   HelpCircle,
   Building2,
   ChevronLeft,
@@ -14,8 +13,12 @@ import {
   Folder,
   CheckSquare,
   User,
+  ShoppingCart,
+  Store,
+  UserCogIcon,
 } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
+import { useAuth, useIsAdmin } from "@/features/auth/hooks/use-auth";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -23,60 +26,59 @@ interface SidebarProps {
   isMobile?: boolean;
 }
 
-const menuItems = [
+const baseMenuItems = [
   {
-    title: "Principal",
+    title: "Main",
     items: [
       { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-     /*  { name: "Calendario", icon: Calendar, path: "/dashboard/calendar" }, */
     ],
   },
   {
-    title: "Ventas",
+    title: "Sales",
     items: [
-      { name: "Clientes", icon: Users, path: "/dashboard/clients" },
-      { name: "Contactos", icon: User, path: "/dashboard/contacts" },
-      { name: "Oportunidades", icon: Target, path: "/dashboard/opportunities" },
-      { name: "Cotizaciones", icon: FileText, path: "/dashboard/quotes" },
-    ],
-  },
- /*  {
-    title: "Marketing",
-    items: [
-      { name: "Campañas", icon: Mail, path: "/dashboard/campaigns" },
-      { name: "Leads", icon: Briefcase, path: "/dashboard/leads" },
+      { name: "Clients", icon: Users, path: "/dashboard/clients" },
+      { name: "Contacts", icon: User, path: "/dashboard/contacts" },
+      { name: "Opportunities", icon: Target, path: "/dashboard/opportunities" },
+      { name: "Quotes", icon: FileText, path: "/dashboard/quotes" },
     ],
   },
   {
-    title: "Inventario",
+    title: "Projects",
     items: [
-      { name: "Productos", icon: Package, path: "/dashboard/products" },
-      { name: "Reportes", icon: BarChart3, path: "/dashboard/reports" },
+      { name: "Projects", icon: Folder, path: "/dashboard/projects" },
+      { name: "Tasks", icon: CheckSquare, path: "/dashboard/tasks" },
     ],
-  }, */
-  {
-    title: "Proyectos",
-    items: [
-    { name: "Proyectos", icon: Folder, path: "/dashboard/projects" },
-    { name: "Tareas", icon: CheckSquare, path: "/dashboard/tasks" },
-  ],
   },
-  /* {
-    title: "Configuración",
+  {
+    title: "Purchases",
     items: [
-      {
-        name: "Usuarios",
-        icon: UserCogIcon,
-        path: "/dashboard/users",
-      },
-      
+      { name: "Purchase Orders", icon: ShoppingCart, path: "/dashboard/purchases" },
+      { name: "Vendors", icon: Store, path: "/dashboard/vendors" },
     ],
-  }, */
+  },
+  
 ];
 
+
+
+/**
+ * Sidebar Component
+ *
+ * The main navigation sidebar for the dashboard layout.
+ * Features collapsible menu groups, responsive design, and active route highlighting.
+ *
+ * @component
+ * @param props - Component props
+ * @param props.isOpen - Whether the sidebar is expanded
+ * @param props.onToggle - Callback to toggle the sidebar collapsed/expanded state
+ * @param props.isMobile - Whether the sidebar is in mobile mode (optional)
+ * @returns The rendered sidebar component
+ */
 const Sidebar = ({ isOpen, onToggle, isMobile = false }: SidebarProps) => {
   const location = useLocation();
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(["Principal", "Ventas"]);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(["Main", "Sales"]);
+ 
+  const isAdmin = useIsAdmin();
 
   const toggleGroup = (title: string) => {
     setExpandedGroups((prev) =>
@@ -87,6 +89,19 @@ const Sidebar = ({ isOpen, onToggle, isMobile = false }: SidebarProps) => {
   };
 
   const isActive = (path: string) => location.pathname === path;
+
+  const adminMenuItems = isAdmin
+    ? [
+        {
+          title: "Configuración",
+          items: [
+            { name: "Usuarios", icon: UserCogIcon, path: "/dashboard/settings/users" },
+            // { name: "Roles", icon: ShieldCheck, path: "/dashboard/settings/roles" },
+          ],
+        },
+      ]
+    : [];
+  const menuItems = [...baseMenuItems, ...adminMenuItems];
 
   return (
     <motion.aside
@@ -191,24 +206,13 @@ const Sidebar = ({ isOpen, onToggle, isMobile = false }: SidebarProps) => {
 
       {/* Footer */}
       <div className="p-3 border-t border-sidebar-border space-y-1">
-        <Link
-          to="/settings"
-          className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all",
-            isActive("/settings")
-              ? "bg-primary text-primary-foreground"
-              : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-          )}
-        >
-          <Settings className="w-5 h-5 shrink-0" />
-          {isOpen && <span className="text-sm font-medium">Configuración</span>}
-        </Link>
+        
         <Link
           to="/help"
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all"
         >
           <HelpCircle className="w-5 h-5 shrink-0" />
-          {isOpen && <span className="text-sm font-medium">Ayuda</span>}
+          {isOpen && <span className="text-sm font-medium">Help</span>}
         </Link>
       </div>
     </motion.aside>

@@ -3,10 +3,15 @@ import { lazy } from "react";
 import Login from "@/features/auth/pages/Login";
 import NotFound from "@/app/routes/NotFound";
 import { RequireAuth } from "@/app/routes/RequireAuth";
+import { RequireAdmin } from "./RequireAdmin";
 import DashboardLayout from "@/shared/layouts/DashboardLayout";
 import { contactsRoutes } from '@/features/contacts/routes';
 import { tasksRoutes } from '@/features/tasks/routes';
 import { projectsRoutes } from "@/features/projects/routes";
+import { purchasesRoutes } from '@/features/purchases/routes';
+import { vendorsRoutes } from '@/features/vendors/routes';
+import { usersRoutes } from '@/features/users/routes';
+
 
 
 const Dashboard = lazy(() => import("@/features/dashboard/pages/Dashboard"));
@@ -72,7 +77,6 @@ export const router = createBrowserRouter([
       { path: "clients/new", element: <ClientCreatePage /> },
       { path: "clients/:id/edit", element: <ClientEditPage /> },
       { path: "comments/:id", element: <CommentDetailPage /> },
-      { path: "users", element: <UsersPage /> },
       { path: "opportunities", element: <OpportunitiesPage /> },
       { path: "opportunities/new", element: <OpportunityCreatePage /> },
       { path: "opportunities/:id", element: <OpportunityDetailPage /> },
@@ -87,6 +91,9 @@ export const router = createBrowserRouter([
       { path: "tasks/:taskId", element: <TaskDetailPage /> },
       ...contactsRoutes,
       ...tasksRoutes,
+      ...purchasesRoutes,
+      ...vendorsRoutes,
+      ...usersRoutes,
 
     ],
 

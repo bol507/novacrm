@@ -32,11 +32,14 @@ export interface UserData {
   first_name: string;
   last_name: string;
   email: string;
-  role: "Admin" | "Usuario" | "Cliente";
+
+  is_admin: boolean;           
+  role_id?: string | null;     
+  rolename?: string | null;    
+
   status: string;
   department: string | null;
   phone: string | null;
-  is_admin: boolean;
   is_active: boolean;
 }
 

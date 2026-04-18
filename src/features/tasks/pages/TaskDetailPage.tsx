@@ -120,7 +120,7 @@ const TaskDetailPage = () => {
         }
       },
       onCancel: () => {
-        console.log("Delete cancelled");
+        //
       },
     });
   };

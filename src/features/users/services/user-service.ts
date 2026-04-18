@@ -93,6 +93,11 @@ export const userService = {
     return response.data;
   },
 
+  async updateUser(id: number, userData: any) {
+    const response = await apiClient.put(`/users/${id}`, userData);
+    return response.data;
+  },
+
   /**
    * Updates an existing user's profile information.
    *
@@ -167,5 +172,14 @@ export const userService = {
       params: { full_name: fullName }
     });
     return response.data.data;
+  },
+
+  async checkEmailDuplicates(email: string): Promise<{ hasDuplicates: boolean; count: number }> {
+    if (!email) return { hasDuplicates: false, count: 0 };
+
+    const response = await apiClient.get('/users/check-email', {
+      params: { email }
+    });
+    return response.data;
   }
 };

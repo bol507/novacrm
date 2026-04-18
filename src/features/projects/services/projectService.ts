@@ -1,6 +1,8 @@
 import apiClient from '@/shared/lib/axios';
 import type { CreateProjectData, Project, ProjectFilters, ProjectResponse, ProjectUpdateData } from '../types/projects';
+import type { ProjectSearchResult } from '../hooks/use-search-projects';
 
+const PROJECTS_API = '/projects';
 
 
 export const projectService = {
@@ -26,7 +28,7 @@ export const projectService = {
     if (filters.sortBy) params.append('sort_by', filters.sortBy);
     if (filters.sortOrder) params.append('sort_order', filters.sortOrder);
 
-    const response = await apiClient.get<ProjectResponse>('/projects', {
+    const response = await apiClient.get<ProjectResponse>(PROJECTS_API, {
       params,
       signal,
     });
@@ -38,7 +40,7 @@ export const projectService = {
    * get a project by ID
    */
   getProjectById: async (projectId: number) => {
-    const response = await apiClient.get(`/projects/${projectId}`);
+    const response = await apiClient.get(`${PROJECTS_API}/${projectId}`);
     return response.data;
   },
 
@@ -46,7 +48,7 @@ export const projectService = {
    * create a new project
    */
   createProject: async (data: CreateProjectData) => {
-    const response = await apiClient.post('/projects', data);
+    const response = await apiClient.post(PROJECTS_API, data);
     return response.data;
   },
 
@@ -58,7 +60,7 @@ export const projectService = {
     projectId: number,
     data: ProjectUpdateData
   ): Promise<Project> => {
-    const response = await apiClient.put<Project>(`/projects/${projectId}`, data);
+    const response = await apiClient.put<Project>(`${PROJECTS_API}/${projectId}`, data);
     return response.data;
   },
 
@@ -66,7 +68,24 @@ export const projectService = {
    * delete a project
    */
   deleteProject: async (projectId: number) => {
-    const response = await apiClient.delete(`/projects/${projectId}`);
+    const response = await apiClient.delete(`${PROJECTS_API}/${projectId}`);
     return response.data;
+  },
+
+  /**
+   * Search projects by name or number.
+   *
+   * @param searchTerm - Search term to filter projects
+   * @returns Promise resolving to array of project search results
+   */
+  async searchProjects(searchTerm: string): Promise<ProjectSearchResult[]> {
+    if (!searchTerm || searchTerm.length < 2) {
+      return [];
+    }
+
+    const response = await apiClient.get(`${PROJECTS_API}/search`, {
+      params: { search: searchTerm },
+    });
+    return response.data.data || response.data || [];
   },
 };

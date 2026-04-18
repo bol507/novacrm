@@ -44,7 +44,6 @@ export const useDownloadPDF = () => {
       return await quoteService.downloadPDF(quoteId);
     },
     onSuccess: (data: Blob, variables: DownloadPDFVariables) => {
-      console.log(variables.quoteNo);
       const blob = new Blob([data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');

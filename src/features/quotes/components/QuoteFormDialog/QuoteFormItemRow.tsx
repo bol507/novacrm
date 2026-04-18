@@ -63,7 +63,7 @@ export const QuoteFormItemRow = ({
     zIndex: isDragging ? 100 : 'auto',
   };
 
-  console.log(item);
+ 
 
   return (
     <div

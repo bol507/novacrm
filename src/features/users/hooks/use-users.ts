@@ -7,15 +7,10 @@ import type { User } from '@/features/users/types/user';
  * Options for the useUsers hook
  */
 export interface UseUsersOptions {
-  /** Page number (1-based) */
   page?: number;
-  /** Items per page */
   perPage?: number;
-  /** Search term to filter by name/email */
   search?: string;
-  /** Filter by active status only (default: true) */
   active?: boolean;
-  /** Conditionally enable the query (default: true) */
   enabled?: boolean;
 }
 

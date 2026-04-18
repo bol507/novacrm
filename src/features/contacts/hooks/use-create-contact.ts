@@ -18,7 +18,6 @@ import type { ContactFormData } from '../types/contact';
  *
  * const handleCreate = async (formData: ContactFormData) => {
  *   const contactId = await createContact.mutateAsync(formData);
- *   console.log('Contact created with ID:', contactId);
  *   navigate(`/contacts/${contactId}`);
  * };
  *

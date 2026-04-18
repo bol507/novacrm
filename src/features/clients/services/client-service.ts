@@ -142,7 +142,6 @@ export const clientService = {
    *
    * @example
    * const summary = await clientService.getClientSummary(123);
-   * console.log(summary.opportunitiesCount);
    */
   async getClientSummary(clientId: number): Promise<ClientSummary> {
     const response = await apiClient.get(`/clients/${clientId}/summary`);

@@ -100,12 +100,7 @@ const TaskEditPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-     // ✅ DEBUG: Verificar qué se está enviando
-  console.log('=== Form Submission Debug ===');
-  console.log('formData:', formData);
-  console.log('dueDate value:', formData.dueDate);
-  console.log('dueDate type:', typeof formData.dueDate);
-  console.log('taskId:', taskId);
+    
 
     if (!validate()) {
       toast.error('Por favor corrige los errores en el formulario')

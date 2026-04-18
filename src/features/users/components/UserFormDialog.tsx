@@ -31,19 +31,12 @@ import { toast } from "sonner";
  * Base form values shared between create and edit user modes
  */
 interface BaseUserFormValues {
-  /** User's first name */
   first_name: string;
-  /** User's last name */
   last_name: string;
-  /** Username for authentication */
   user_name: string;
-  /** User's email address */
   email: string;
-  /** User's role in the system */
   role: 'Admin' | 'Usuario' | 'Cliente';
-  /** User's department (optional) */
   department?: string;
-  /** User's phone number (optional) */
   phone_crm?: string;
 }
 
@@ -51,7 +44,6 @@ interface BaseUserFormValues {
  * Form values for creating a new user (includes password)
  */
 type CreateUserFormValues = BaseUserFormValues & {
-  /** User's password (required for creation) */
   password: string;
 };
 
@@ -69,13 +61,15 @@ type CreateUserFormValues = BaseUserFormValues & {
  */
 const getUserFormSchema = (mode: 'create' | 'edit') => {
   const baseSchema = z.object({
-    first_name: z.string().min(1, "First name is required").max(50),
-    last_name: z.string().min(1, "Last name is required").max(50),
+    first_name: z.string().min(1, "First name is required").max(30),
+    last_name: z.string().min(1, "Last name is required").max(30),
+
     user_name: z.string().min(1, "Username is required").max(50),
     email: z.string().email("Invalid email address").max(100),
     role: z.enum(USER_ROLES),
-    department: z.string().max(50).optional(),
-    phone_crm: z.string().max(50).optional(),
+
+    department: z.string().max(50).optional().or(z.literal("")),
+    phone_crm: z.string().max(50).optional().or(z.literal("")),
   });
 
   if (mode === 'create') {
@@ -91,15 +85,10 @@ const getUserFormSchema = (mode: 'create' | 'edit') => {
  * Props for UserFormDialog component
  */
 interface UserFormDialogProps {
-  /** Controls dialog visibility */
   open: boolean;
-  /** Callback to change dialog visibility */
   onOpenChange: (open: boolean) => void;
-  /** Callback fired when form is submitted with form data */
   onSubmit: (data: any) => void;
-  /** Form mode: 'create' for new user, 'edit' for existing user */
   mode?: 'create' | 'edit';
-  /** Initial data for edit mode (user data to populate form) */
   initialData?: any;
 }
 
@@ -151,21 +140,7 @@ const UserFormDialog = ({
   mode = 'create',
   initialData
 }: UserFormDialogProps) => {
-  /**
-   * Form schema based on current mode (create or edit)
-   */
   const formSchema = getUserFormSchema(mode);
-
-  /**
-   * Gets default form values based on mode and initial data
-   * 
-   * @returns Default form values object
-   * 
-   * @remarks
-   * - In edit mode, populates fields with initialData
-   * - In create mode, returns empty default values
-   * - Role defaults to 'Usuario' for new users
-   */
   const getDefaultValues = (): Partial<CreateUserFormValues> => {
     if (mode === 'edit' && initialData) {
       return {
@@ -178,40 +153,35 @@ const UserFormDialog = ({
         phone_crm: initialData.phone_crm || '',
       };
     }
-    
+
     return {
       first_name: "",
       last_name: "",
       user_name: "",
       email: "",
-      password: "", 
+      password: "",
       role: "Usuario",
       department: "",
       phone_crm: "",
     };
   };
 
-  /**
-   * React Hook Form instance with zod validation
-   */
   const form = useForm<CreateUserFormValues>({
-    resolver: zodResolver(formSchema as any), 
+    resolver: zodResolver(formSchema as any),
     defaultValues: getDefaultValues(),
   });
 
-  /**
-   * Handles form submission
-   * 
-   * @param data - Form data object
-   * 
-   * @remarks
-   * - Calls parent onSubmit callback with form data
-   * - Resets form to default values
-   * - Closes dialog
-   * - Shows success toast notification
-   */
-  const handleSubmit = (data: any) => {
-    onSubmit(data);
+  const handleSubmit = (data: CreateUserFormValues) => {
+    const sanitized = {
+      ...data,
+      department: data.department?.trim() || null,
+      phone_crm: data.phone_crm?.trim() || null,
+      first_name: data.first_name.trim(),
+      last_name: data.last_name.trim(),
+      user_name: data.user_name.trim(),
+      email: data.email.trim().toLowerCase(),
+    };
+    onSubmit(sanitized);
     form.reset();
     onOpenChange(false);
     toast.success(
@@ -239,7 +209,14 @@ const UserFormDialog = ({
                   <FormItem>
                     <FormLabel>First Name *</FormLabel>
                     <FormControl>
-                      <Input placeholder="First name" {...field} />
+                      <Input
+                        placeholder="First name"
+                        {...field}
+                        onBlur={(e) => {
+                          field.onChange(e.target.value.trim());
+                          field.onBlur?.();
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -253,7 +230,14 @@ const UserFormDialog = ({
                   <FormItem>
                     <FormLabel>Last Name *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Last name" {...field} />
+                      <Input
+                        placeholder="Last name"
+                        {...field}
+                        onBlur={(e) => {
+                          field.onChange(e.target.value.trim());
+                          field.onBlur?.();
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -269,7 +253,14 @@ const UserFormDialog = ({
                 <FormItem>
                   <FormLabel>Username *</FormLabel>
                   <FormControl>
-                    <Input placeholder="username123" {...field} />
+                    <Input
+                      placeholder="Username123"
+                      {...field}
+                      onBlur={(e) => {
+                        field.onChange(e.target.value.trim());
+                        field.onBlur?.();
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -284,7 +275,15 @@ const UserFormDialog = ({
                 <FormItem>
                   <FormLabel>Email *</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="email@company.com" {...field} />
+                    <Input
+                      type="email"
+                      placeholder="email@company.com"
+                      {...field}
+                      onBlur={(e) => {
+                        field.onChange(e.target.value.trim());
+                        field.onBlur?.();
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -342,7 +341,14 @@ const UserFormDialog = ({
                   <FormItem>
                     <FormLabel>Department</FormLabel>
                     <FormControl>
-                      <Input placeholder="Sales, Marketing, etc." {...field} />
+                      <Input
+                      placeholder="Sales, Marketing, etc."
+                      {...field}
+                      onBlur={(e) => {
+                        field.onChange(e.target.value.trim());
+                        field.onBlur?.();
+                      }}
+                    />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -358,7 +364,14 @@ const UserFormDialog = ({
                 <FormItem>
                   <FormLabel>Phone</FormLabel>
                   <FormControl>
-                    <Input placeholder="+1 555 123 4567" {...field} />
+                    <Input
+                      placeholder="+1 555 123 456"
+                      {...field}
+                      onBlur={(e) => {
+                        field.onChange(e.target.value.trim());
+                        field.onBlur?.();
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -367,9 +380,9 @@ const UserFormDialog = ({
 
             {/* Form Actions */}
             <div className="flex justify-end gap-3 pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => onOpenChange(false)}
               >
                 Cancel
