@@ -6,6 +6,7 @@ import { UserView } from "../components/UserView";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useNavigate } from "react-router-dom";
 import { Pagination } from "@/components/Pagination";
+import { useConfirm } from "@/components/confirm-dialog";
 
 /**
  * UsersPage component for managing system users.
@@ -26,6 +27,7 @@ import { Pagination } from "@/components/Pagination";
  */
 const UsersPage = () => {
   const navigate = useNavigate();
+  const showConfirm = useConfirm();
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [viewMode, setViewMode] = useState<UserViewMode>(() => {
@@ -42,7 +44,7 @@ const UsersPage = () => {
     }
   }, [viewMode]);
 
-  const { data, isLoading, error, refetch } = useUsers({page, perPage: 20, search: searchTerm});
+  const { data, isLoading, error, refetch } = useUsers({ page, perPage: 20, search: searchTerm });
   const deleteUserMutation = useDeleteUser();
 
   // Reset to first page when search term changes
@@ -54,12 +56,12 @@ const UsersPage = () => {
   const totalPages = data?.meta?.last_page || 1;
   const totalItems = data?.meta?.total || 0;
 
-  
 
-  
+
+
   const handleCreateClick = () => navigate("/dashboard/settings/users/new");
 
-  
+
   const handleEditUser = (user: User) => navigate(`/dashboard/settings/users/${user.id}/edit`);
 
   const handleViewUser = (user: User) => {
@@ -70,23 +72,36 @@ const UsersPage = () => {
     setPasswordUserId(user.id);
   };*/
   const handleChangePassword = (user: User) => {
-    
+
     navigate(`/dashboard/settings/users/${user.id}/password`);
   };
 
-  
+
   const handleDeleteUser = async (user: User) => {
-    if (!confirm(`Are you sure you want to delete user ${user.first_name} ${user.last_name}?`)) {
-      return;
-    }
-    try {
-      await deleteUserMutation.mutateAsync(user.id);
-    } catch (error) {
-      // Error is already handled in the hook
-    }
+    
+
+    showConfirm({
+      title: "Delete User",
+      description: `Are you sure you want to delete ${user.first_name} ${user.last_name}? This action cannot be undone and the user will no longer be able to log in.`,
+      confirmLabel: "Delete",
+      cancelLabel: "Cancel",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          await deleteUserMutation.mutateAsync(user.id);
+          
+        } catch {
+          // error handled in useDeleteUser hook
+        }
+      },
+      onCancel: () => {
+        // Do nothing
+        console.log('Delete cancelled for user:', user.id);
+      },
+    });
   };
 
-  
+
   const handleViewModeChange = (mode: UserViewMode) => {
     setViewMode(mode);
   };
@@ -118,10 +133,10 @@ const UsersPage = () => {
         onChangePassword={handleChangePassword}
         viewMode={viewMode}
         totalItems={totalItems}
-        
+
       />
 
-      
+
       <Pagination
         currentPage={page}
         totalPages={totalPages}

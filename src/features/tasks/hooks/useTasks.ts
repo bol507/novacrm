@@ -41,6 +41,9 @@ export const useTasks = (
         if (filters.dateTo) {
           params.append('date_to', filters.dateTo);
         }
+        if (filters.assignedTo) {
+          params.append('assignedTo', filters.assignedTo.toString());
+        }
       }
 
       const response = await apiClient.get<TasksResponse>(`/tasks?${params}`);

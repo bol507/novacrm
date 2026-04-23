@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, UserIcon, Mail, Phone, Building2, Shield, Calendar, Key, Save, X } from "lucide-react";
+import { ArrowLeft, Loader2, UserIcon, Mail, Phone, Building2, Shield, Calendar, Save, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,7 +19,6 @@ import { toOptional } from "@/shared/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RoleSelect } from "@/features/roles/components/RoleSelect";
 
-// ✅ Schema con validaciones claras
 const userEditSchema = z.object({
     user_name: z.string().min(3, "Min 3 characters").max(50).optional(),
     first_name: z.string().min(1, "Required").max(30).trim().optional(),
@@ -86,7 +85,7 @@ export const UserEditPage = () => {
         }
     }, [user, form]);
 
-    // ✅ Manejar errores de carga
+    
     useEffect(() => {
         if (userError) {
             toast.error("Error loading user data");
@@ -94,7 +93,7 @@ export const UserEditPage = () => {
         }
     }, [userError, navigate]);
 
-    // ✅ Submit handler con feedback visual
+    
     const onSubmit = async (values: UserEditFormValues) => {
         if (!numericUserId) return;
 

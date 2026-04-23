@@ -3,7 +3,6 @@ import { lazy } from "react";
 import Login from "@/features/auth/pages/Login";
 import NotFound from "@/app/routes/NotFound";
 import { RequireAuth } from "@/app/routes/RequireAuth";
-import { RequireAdmin } from "./RequireAdmin";
 import DashboardLayout from "@/shared/layouts/DashboardLayout";
 import { contactsRoutes } from '@/features/contacts/routes';
 import { tasksRoutes } from '@/features/tasks/routes';
@@ -11,6 +10,7 @@ import { projectsRoutes } from "@/features/projects/routes";
 import { purchasesRoutes } from '@/features/purchases/routes';
 import { vendorsRoutes } from '@/features/vendors/routes';
 import { usersRoutes } from '@/features/users/routes';
+import { settingsRoutes } from '@/features/settings/routes';
 
 
 
@@ -19,7 +19,6 @@ const ClientDetailPage = lazy(() => import("@/features/clients/pages/ClientDetai
 const ClientsPage = lazy(() => import("@/features/clients/pages/ClientsPage"));
 const ClientCreatePage = lazy(() => import("@/features/clients/pages/ClientCreatePage"));
 const ClientEditPage = lazy(() => import("@/features/clients/pages/ClientEditPage"));
-const UsersPage = lazy(() => import("@/features/users/pages/UsersPage"));
 const OpportunitiesPage = lazy(() => import("@/features/opportunity/pages/OpportunitiesPage"));
 //Quotes
 const QuotesPage = lazy(() => import("@/features/quotes/pages/QuotesPage"));
@@ -94,6 +93,7 @@ export const router = createBrowserRouter([
       ...purchasesRoutes,
       ...vendorsRoutes,
       ...usersRoutes,
+      ...settingsRoutes,
 
     ],
 

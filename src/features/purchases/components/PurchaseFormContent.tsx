@@ -31,7 +31,7 @@ import {
     type PurchaseFormValues,
     type PurchaseStatus,
 } from "../types/purchase";
-import { usePurchaseFormItems } from "../hooks/usePurchaseFormItems";
+import { usePurchaseFormItems } from "../hooks/use-purchase-form-items";
 import { usePurchaseFormCalculations } from "../hooks/usePurchaseFormCalculations";
 import { VendorSearch } from "@/features/vendors/components/VendorSearch";
 import { ProjectSearch } from "@/features/projects/components/ProjectSearch";

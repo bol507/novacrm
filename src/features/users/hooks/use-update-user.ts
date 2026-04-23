@@ -4,20 +4,26 @@ import type { UpdateUserRequest, User } from '../types/user';
 import { toast } from 'sonner';
 
 export type UpdateUserVariables = {
-  id: number;
+    id: number;
 } & Omit<UpdateUserRequest, 'password'>;
 
 export const useUpdateUser = () => {
     const queryClient = useQueryClient();
-    
+
     return useMutation<User, Error, UpdateUserVariables>({
         mutationFn: async ({ id, ...data }) => {
-           return await userService.updateUser(id, data);
-            
+            return await userService.updateUser(id, data);
+
         },
-        onSuccess: (updatedUser, variables) => {
-            queryClient.setQueryData(['user-detail', variables.id], updatedUser);
-            queryClient.invalidateQueries({ queryKey: ['users'] });
+        onSuccess: (_, { id }) => {
+            queryClient.invalidateQueries({
+                queryKey: ['user', id],
+                exact: false
+            });
+            queryClient.invalidateQueries({
+                queryKey: ['users'],
+                exact: false
+            });
             toast.success('User updated successfully');
         },
         onError: (error: any) => {

@@ -16,9 +16,11 @@ import {
   ShoppingCart,
   Store,
   UserCogIcon,
+  Key,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
-import { useAuth, useIsAdmin } from "@/features/auth/hooks/use-auth";
+import { useIsAdmin } from "@/features/auth/hooks/use-auth";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -56,7 +58,7 @@ const baseMenuItems = [
       { name: "Vendors", icon: Store, path: "/dashboard/vendors" },
     ],
   },
-  
+
 ];
 
 
@@ -77,7 +79,7 @@ const baseMenuItems = [
 const Sidebar = ({ isOpen, onToggle, isMobile = false }: SidebarProps) => {
   const location = useLocation();
   const [expandedGroups, setExpandedGroups] = useState<string[]>(["Main", "Sales"]);
- 
+
   const isAdmin = useIsAdmin();
 
   const toggleGroup = (title: string) => {
@@ -92,14 +94,18 @@ const Sidebar = ({ isOpen, onToggle, isMobile = false }: SidebarProps) => {
 
   const adminMenuItems = isAdmin
     ? [
-        {
-          title: "Configuración",
-          items: [
-            { name: "Usuarios", icon: UserCogIcon, path: "/dashboard/settings/users" },
-            // { name: "Roles", icon: ShieldCheck, path: "/dashboard/settings/roles" },
-          ],
-        },
-      ]
+      {
+        title: "Configuration",
+        items: [
+          { name: "Users", icon: UserCogIcon, path: "/dashboard/settings/users" },
+           { 
+            name: "Roles & Profiles", 
+            icon: Shield, 
+            path: "/dashboard/settings/roles" 
+          },
+        ],
+      },
+    ]
     : [];
   const menuItems = [...baseMenuItems, ...adminMenuItems];
 
@@ -206,7 +212,7 @@ const Sidebar = ({ isOpen, onToggle, isMobile = false }: SidebarProps) => {
 
       {/* Footer */}
       <div className="p-3 border-t border-sidebar-border space-y-1">
-        
+
         <Link
           to="/help"
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all"

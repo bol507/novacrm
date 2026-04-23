@@ -27,6 +27,7 @@ import { useCreateTask } from "../hooks/useCreateTask"
 import type { CreateTaskPayload } from "../types/task"
 import { useAuth, useIsAdmin } from "@/features/auth/hooks/use-auth"
 import { useUsers } from "@/features/users/hooks/use-users"
+import { Badge } from "@/components/ui/badge"
 
 /**
  * Props for TaskForm component
@@ -240,14 +241,14 @@ export default function TaskForm({ onSuccess, onCancel, initialData }: TaskFormP
                 const firstError = Object.values(messages)[0] as string[]
                 toast.error(firstError?.[0] || 'Validation error')
                 setErrors(messages)
-            } 
+            }
             // Handle permission errors (403)
             else if (error.response?.status === 403) {
                 toast.error(
-                    error.response?.data?.error || 
+                    error.response?.data?.error ||
                     'You do not have permission to assign to other users'
                 )
-            } 
+            }
             // Handle other errors
             else {
                 toast.error(error.response?.data?.error || 'Error creating task')
@@ -315,23 +316,44 @@ export default function TaskForm({ onSuccess, onCancel, initialData }: TaskFormP
                                     <SelectItem
                                         key={userItem.id}
                                         value={userItem.id.toString()}
+                                        className="flex items-center justify-between gap-2"
                                     >
-                                        {userItem.first_name} {userItem.last_name}
-                                        {/* Show "(You)" for current user */}
-                                        {userItem.id === user?.id && (
-                                            <span className="ml-1 text-muted-foreground">(You)</span>
-                                        )}
-                                        {/* Show Admin badge for admin users */}
-                                        {userItem.role === 'Admin' && userItem.id !== user?.id && (
-                                            <span className="ml-1 text-xs text-muted-foreground">(Admin)</span>
-                                        )}
+                                        {/* Nombre del usuario */}
+                                        <span className="flex-1 truncate">
+                                            {userItem.first_name} {userItem.last_name}
+                                        </span>
+
+                                        {/* Badges de referencia (derecha) */}
+                                        <div className="flex items-center gap-1 shrink-0">
+                                            {/* ✅ (You) para el usuario actual */}
+                                            {userItem.id === user?.id && (
+                                                <span className="text-xs text-muted-foreground">(You)</span>
+                                            )}
+
+                                            {/* ✅ Badge de Admin (system flag) */}
+                                            {userItem.is_admin && userItem.id !== user?.id && (
+                                                <Badge
+                                                    variant="secondary"
+                                                    className="bg-purple-500/10 text-purple-700 text-[10px] px-1 py-0 h-auto"
+                                                >
+                                                    Admin
+                                                </Badge>
+                                            )}
+
+                                            {/* ✅ Badge de Rol Jerárquico (opcional, si quieres mostrarlo) */}
+                                            {userItem.rolename && userItem.id !== user?.id && !userItem.is_admin && (
+                                                <span className="text-[10px] text-muted-foreground">
+                                                    • {userItem.rolename}
+                                                </span>
+                                            )}
+                                        </div>
                                     </SelectItem>
                                 ))}
 
                             {/* Empty state when no active users */}
-                            {usersData?.data?.filter((u) => u.is_active).length === 0 && (
+                            {(!usersData?.data || usersData?.data?.filter((u) => u.is_active).length === 0) && (
                                 <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                                    No active users available
+                                    No active users availables
                                 </div>
                             )}
                         </SelectContent>

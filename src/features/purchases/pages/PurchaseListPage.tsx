@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PurchaseStatusBadge } from "../components/PurchaseStatusBadge";
-import { usePurchases } from "../hooks/usePurchases";
+import { usePurchases } from "../hooks/use-purchases";
 import type { Purchase } from "../types/purchase";
 
 /**

@@ -1,6 +1,4 @@
-// src/features/purchases/hooks/usePurchaseFormItems.ts
-
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import type { PurchaseItemFormData } from "../types/purchase";
 
 export const usePurchaseFormItems = (initialItems?: PurchaseItemFormData[]) => {

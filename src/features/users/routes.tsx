@@ -19,6 +19,7 @@ const UsersPage = lazy(() => import('./pages/UsersPage'));
 const UserDetailPage = lazy(() => import('./pages/UserDetailPage'));
 const UserEditPage = lazy(() => import('./pages/UserEditPage'));
 const UserCreatePage = lazy(() => import('./pages/UserCreatePage'));
+const UserChangePasswordPage = lazy(() => import('./pages/UserChangePasswordPage'));
 
 /**
  * User routes configuration.
@@ -97,6 +98,16 @@ export const usersRoutes: RouteObject[] = [
                     <RequireAdmin>
                         <Suspense fallback={<UserPageLoader />}>
                             <UserEditPage />
+                        </Suspense>
+                    </RequireAdmin>
+                ),
+            },
+            {
+                path: ":userId/password",
+                element: (
+                    <RequireAdmin>
+                        <Suspense fallback={<UserPageLoader />}>
+                            <UserChangePasswordPage />
                         </Suspense>
                     </RequireAdmin>
                 ),

@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, RefreshCw, LayoutGrid, List,  } from "lucide-react";
+import { Plus, RefreshCw, LayoutGrid, List,  } from "lucide-react";
 import type { User, UserViewMode } from "../types/user";
 import { UserCards } from "./UserCards";
 import { UserTable } from "./UserTable";

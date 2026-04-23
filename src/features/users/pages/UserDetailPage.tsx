@@ -1,9 +1,7 @@
-// src/features/users/pages/UserDetailPage.tsx
-
 import { useParams, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, Mail, Phone, Building2, Shield, Calendar, 
-  User, Hash, Key, Loader2, Copy, Check 
+  User, Hash, Loader2, Copy, Check 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,10 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useUserDetail } from "../hooks/use-user-detail";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { getHierarchicalRoleColor } from "../components/getHierarchicalRoleColor";
 import { getStatusColor } from "../components/GetStatusColor";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { getHierarchicalRoleColor } from "../components/getHierarchicalRoleColor";
 
 /**
  * UserDetailPage - Enhanced user profile view with clean design
@@ -30,10 +28,14 @@ export const UserDetailPage = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  
-  const { data: user, isLoading } = useUserDetail(userId ? parseInt(userId) : null);
+  const numericUserId = useMemo(() => {
+    if (!userId) return null;
+    const parsed = parseInt(userId,10);
+    return isNaN(parsed) ? null : parsed;
+  },[userId]);
+  const { data: user, isLoading } = useUserDetail(numericUserId);
 
-  // ✅ Copy to clipboard helper
+  
   const copyToClipboard = async (text: string, field: string) => {
     if (!text) return;
     try {
@@ -45,6 +47,7 @@ export const UserDetailPage = () => {
       toast.error(`Failed to copy ${field}`);
     }
   };
+  
 
   if (isLoading) {
     return (

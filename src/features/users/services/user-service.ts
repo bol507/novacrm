@@ -1,6 +1,6 @@
 import type { PaginatedResponse } from '@/features/clients/types/client';
 import apiClient from '@/shared/lib/axios';
-import type { User } from '../types/user';
+import type { ChangePasswordRequest, CreateUserRequest, UpdateUserRequest, User } from '../types/user';
 
 
 
@@ -88,12 +88,12 @@ export const userService = {
    *   role: 'Admin'
    * });
    */
-  async createUser(userData: any) {
+  async createUser(userData: CreateUserRequest) {
     const response = await apiClient.post('/users', userData);
     return response.data;
   },
 
-  async updateUser(id: number, userData: any) {
+  async updateUser(id: number, userData: UpdateUserRequest) {
     const response = await apiClient.put(`/users/${id}`, userData);
     return response.data;
   },
@@ -119,14 +119,14 @@ export const userService = {
    * Changes a user's password.
    *
    * @param id - The ID of the user
-   * @param newPassword - The new password to set
+   * @param data - The new password to set
    * @returns Promise that resolves when password change is complete
    *
    * @example
-   * await userService.changeUserPassword(123, 'newSecurePassword123');
+   * await userService.changeUserPassword(123, { new_password: 'newSecurePassword123' });
    */
-  async changeUserPassword(id: number, newPassword: string): Promise<void> {
-    await apiClient.put(`/users/${id}/password`, { new_password: newPassword });
+  async changeUserPassword(id: number, data: ChangePasswordRequest): Promise<void> {
+    await apiClient.put(`/users/${id}/change-password`, data);
   },
 
   /**

@@ -1,8 +1,8 @@
 
 import { Badge } from "@/components/ui/badge";
 import type { User } from "../types/user";
-import { getHierarchicalRoleColor } from "./getHierarchicalRoleColor";
 import { getStatusColor } from "./GetStatusColor";
+import { getHierarchicalRoleColor } from "./getHierarchicalRoleColor";
 
 /**
  * Mobile card view for a single user in the table view.
@@ -17,16 +17,16 @@ import { getStatusColor } from "./GetStatusColor";
  */
 export const UserTableCard = ({
   user,
-  onView,
-  onEdit,
-  onDelete,
-  onChangePassword,
+  onView
+  //onEdit,
+  //onDelete,
+  //onChangePassword,
 }: {
   user: User;
   onView?: (user: User) => void;
-  onEdit?: (user: User) => void;
-  onDelete?: (user: User) => void;
-  onChangePassword?: (user: User) => void;
+  //onEdit?: (user: User) => void;
+  //onDelete?: (user: User) => void;
+  //onChangePassword?: (user: User) => void;
 }) => (
   <div 
     className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/30 transition-colors cursor-pointer"

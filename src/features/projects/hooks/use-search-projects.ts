@@ -1,8 +1,5 @@
-// src/features/projects/hooks/use-search-projects.ts
-
 import { useQuery } from '@tanstack/react-query';
 import { projectService } from '../services/projectService';
-import { useMemo } from 'react';
 
 export interface ProjectSearchResult {
   id: number;

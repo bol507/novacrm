@@ -7,14 +7,16 @@ export const useDeleteUser = () => {
   
   return useMutation({
     mutationFn: (id: number) => userService.deleteUser(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast.success("Usuario eliminado exitosamente");
+     onSuccess: (_, userId) => {
+      queryClient.invalidateQueries({ queryKey: ['users'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['user', userId], exact: false });
+      toast.success('User deleted successfully');
     },
     onError: (error: any) => {
-      toast.error(
-        error.response?.data?.error || "Error al eliminar el usuario"
-      );
+      const message = error?.response?.data?.error || 'Error deleting user';
+      toast.error(message, {
+        description: 'Please try again or contact support if the issue persists',
+      });
     },
   });
 };

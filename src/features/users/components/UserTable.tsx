@@ -3,11 +3,11 @@ import type { User } from '../types/user';
 import { UserTableSkeleton } from './UserTableSkeleton';
 import { Button } from '@/components/ui/button';
 import { UserTableCard } from './UserTableCard';
-import { getHierarchicalRoleColor } from './getHierarchicalRoleColor';
 import { Badge } from '@/components/ui/badge';
 import { getStatusColor } from './GetStatusColor';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { getHierarchicalRoleColor } from './getHierarchicalRoleColor';
 
 interface UserTableProps {
   users: User[];
@@ -109,9 +109,7 @@ export const UserTable = ({
             key={user.id}
             user={user}
             onView={onView}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onChangePassword={onChangePassword}
+            
           />
         ))}
       </div>

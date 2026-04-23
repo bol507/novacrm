@@ -124,11 +124,16 @@ export interface CreateUserRequest {
   first_name: string;
   last_name: string;
   email: string;
-  role_id: string;
+
+  is_admin?: boolean;
+  role_id?: string;
+
+  status?: UserStatus;
   password: string;
   phone_crm?: string;
   department?: string;
   reports_to_id?: number;
+  
 }
 
 /**
@@ -141,6 +146,7 @@ export interface UpdateUserRequest {
   email?: string;
 
   role_id?: string;
+  is_admin?: boolean;
 
   status?: UserStatus;
   phone_crm?: string;
@@ -232,4 +238,10 @@ export function getStatusColor(status: UserStatus): string {
     Pending: 'warning',
   };
   return colors[status] || 'default';
+}
+
+export interface ChangePasswordRequest {
+  new_password: string;
+  confirm_password: string;
+  current_password?: string; // Only if changing password
 }

@@ -12,17 +12,19 @@ import type { User } from "../types/user";
  * const { data: user, isLoading, error } = useUserDetail(123);
  */
 export const useUserDetail = (userId: number | null | undefined) => {
+  const normalizedId = (userId && !isNaN(userId)) ? Number(userId) : null;
   return useQuery<User, Error>({
-    queryKey: ['user-detail', userId],
+    queryKey: ['user-detail', normalizedId],
     queryFn: async () => {
-      if (!userId || userId <= 0) {
+      if (!normalizedId || normalizedId <= 0) {
         throw new Error('Invalid user ID');
       }
-      const response = await userService.getUserById(userId);
+      const response = await userService.getUserById(normalizedId);
       return response.data;
     },
     enabled: !!userId && userId > 0,
-    staleTime: 2 * 60 * 1000, 
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
     retry: 1,
   });
 };

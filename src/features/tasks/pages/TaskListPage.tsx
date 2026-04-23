@@ -2,12 +2,13 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTasks } from "../hooks/useTasks";
 import { useToggleDashboardTask } from "@/features/dashboard/hooks/useDashboardTasks";
-import type { TaskFilters, TaskViewMode } from "../types/task";
+import type {   TaskViewMode } from "../types/task";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { TaskView } from "../components/TaskView";
 import { useConfirm } from "@/components/confirm-dialog";
 import { useDeleteTask } from "../hooks/use-delete-task";
 import { toast } from "sonner";
+import { useAuth } from "@/features/auth/hooks/use-auth";
 
 /**
  * TaskListPage component for displaying and managing tasks.
@@ -30,20 +31,23 @@ import { toast } from "sonner";
 const TaskListPage = () => {
   const navigate = useNavigate();
   const showConfirm = useConfirm();
-  
-  // ✅ CORREGIDO: useDeleteTask NO recibe taskId aquí
-  // Se pasa el taskId cuando se llama a mutateAsync en handleDeleteTask
   const deleteMutation = useDeleteTask();
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [filters] = useState<TaskFilters>({});
+  const [selectedUserId, setSelectedUserId] = useState<number | undefined>();
+  const filters = useMemo(() => ({
+    ...(selectedUserId && { assignedTo: selectedUserId }),
+  }), [selectedUserId]);
   const [viewMode, setViewMode] = useState<TaskViewMode>(() => {
     if (typeof window !== "undefined") {
       return (localStorage.getItem("tasksViewMode") as TaskViewMode) || "cards";
     }
     return "cards";
   });
+  
+  const { user: currentUser  } = useAuth();
+  
 
   // Persist view mode preference to localStorage
   useMemo(() => {
@@ -54,6 +58,7 @@ const TaskListPage = () => {
 
   const { data, isLoading, error, refetch } = useTasks(page, 20, filters);
   const toggleTaskMutation = useToggleDashboardTask();
+  
 
   // Reset to first page when search term changes
   useEffect(() => {
@@ -142,12 +147,15 @@ const TaskListPage = () => {
         onRefresh={refetch}
         onView={handleViewTask}
         onToggle={handleToggleTask}
-        onDelete={handleDeleteTask}  
+        onDelete={handleDeleteTask}
         viewMode={viewMode}
         page={page}
         totalPages={totalPages}
         totalItems={totalItems}
         onPageChange={handlePageChange}
+        selectedUserId={selectedUserId}
+        onUserFilterChange={setSelectedUserId}
+        currentUserId={currentUser?.id}
       />
     </ErrorBoundary>
   );
