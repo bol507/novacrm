@@ -60,7 +60,7 @@ export const useUsers = (options: UseUsersOptions = {}) => {
   return useQuery<PaginatedResponse<User>, Error>({
     queryKey: ['users', { page, perPage, search, active }],
     queryFn: () => userService.getUsers(page, perPage, search, active),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 1,
     enabled,
   });

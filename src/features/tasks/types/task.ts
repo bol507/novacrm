@@ -54,18 +54,18 @@ export interface CreateTaskRequest {
 
 export interface UpdateTaskRequest {
   subject?: string;
-  dateStart?: string;        
-  dueDate?: string | null;   
-  timeStart?: string | null;
-  timeEnd?: string | null;
+  date_start?: string;        
+  due_date?: string | null;   
+  time_start?: string | null;
+  time_end?: string | null;
   priority?: 'Low' | 'Medium' | 'High';
   status?: 'Not Started' | 'In Progress' | 'Completed' | 'Pending Input' | 'Planned';
   location?: string | null;
   description?: string | null;
-  assignedUserId?: number;
-  relatedRecordId?: number | null;
-  relatedModuleType?: string | null;
-  sendNotification?: boolean;
+  assigned_user_id?: number;
+  related_record_id?: number | null;
+  related_module_type?: string | null;
+  send_notification?: boolean;
 }
 
 // ============================================================================

@@ -1,12 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { settingsService } from '../services/settings-service';
 import { toast } from 'sonner';
-import type { CreateProfileRequest, UpdateProfileRequest } from '../types/settings';
+import type {  Profile, UpdateProfileRequest } from '../types/settings';
 
 export const useProfiles = () => useQuery({
-  queryKey: ['profiles'],
+  queryKey: ['settings-profiles'],
   queryFn: () => settingsService.getProfiles(),
   select: (res) => res.data,
+  staleTime: 0, 
 });
 
 export const useUpdateProfile = () => {
@@ -14,7 +15,8 @@ export const useUpdateProfile = () => {
   return useMutation({
     mutationFn: ({ id, ...data }: { id: string } & UpdateProfileRequest) => settingsService.updateProfile(id, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['profiles'] });
+      qc.invalidateQueries({ queryKey: ['settings-profiles'] });
+      qc.invalidateQueries({ queryKey: ['auth','me'] });
       toast.success('Profile permissions updated');
     },
     onError: (err: any) => toast.error(err.response?.data?.error || 'Failed to update profile'),
@@ -48,10 +50,14 @@ export const useUpdateRoleProfile = () => {
 export const useCreateProfile = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: CreateProfileRequest) => settingsService.createProfile(data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['profiles'] });
+    mutationFn: async (data: { name: string; role_id?: string }) => {
+      const response = await settingsService.createProfile(data);
+      return response.data.data as Profile;
+    },
+    onSuccess: (newProfile) => {
+      qc.invalidateQueries({ queryKey: ['settings-profiles'] });
       toast.success('Profile created successfully');
+      return newProfile;
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.error || 'Failed to create profile');

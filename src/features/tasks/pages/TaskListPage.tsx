@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTasks } from "../hooks/useTasks";
+import { useTasks } from "../hooks/use-tasks";
 import { useToggleDashboardTask } from "@/features/dashboard/hooks/useDashboardTasks";
 import type {   TaskViewMode } from "../types/task";
 import { ErrorBoundary } from "@/components/ErrorBoundary";

@@ -33,7 +33,7 @@ export const RolesPage = () => {
         <RoleTree 
           roles={roles || []} 
           onEdit={setEditingRole}
-          onDelete={(role) => del.mutate(role.roleid)}
+          onDelete={del.mutate}
           onAssignProfile={() => {/* integrate assign dialog or inline */}}
         />
       </div>

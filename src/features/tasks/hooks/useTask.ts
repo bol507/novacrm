@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import apiClient from '@/shared/lib/axios';
 import type { Task } from '../types/task';
+import { activitiesService } from '../services/activities-service';
 
 /**
  * Response structure from GET /api/tasks/{id}
@@ -19,10 +19,10 @@ export const useTask = (taskId: number) => {
   return useQuery<TaskResponse>({
     queryKey: ['tasks', taskId],
     queryFn: async () => {
-      const response = await apiClient.get<TaskResponse>(`/tasks/${taskId}`);
+      const response = await activitiesService.getActivity(taskId);
       return response.data;
     },
     enabled: !!taskId && taskId > 0,
-    staleTime: 2 * 60 * 1000, // 2 minutos
+    staleTime: 0, 
   });
 };

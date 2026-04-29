@@ -16,11 +16,24 @@ import {
   ShoppingCart,
   Store,
   UserCogIcon,
-  Key,
   Shield,
 } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
-import { useIsAdmin } from "@/features/auth/hooks/use-auth";
+import { usePermissions } from "@/features/settings/hooks/use-permissions";
+import type { ModuleKey } from "@/features/settings/types/settings";
+
+const MENU_PERMISSION_MAP: Record<string, ModuleKey | null> = {
+  "/dashboard/clients": "accounts",
+  "/dashboard/contacts": "contacts",
+  "/dashboard/opportunities": "potentials",
+  "/dashboard/quotes": "quotes",
+  "/dashboard/projects": "projects",
+  "/dashboard/tasks": "calendar",
+  "/dashboard/purchases": "PurchaseOrder",
+  "/dashboard/vendors": "vendors",
+  "/dashboard/settings/users": null,
+  "/dashboard/settings/roles": null,
+};
 
 interface SidebarProps {
   isOpen: boolean;
@@ -28,7 +41,18 @@ interface SidebarProps {
   isMobile?: boolean;
 }
 
-const baseMenuItems = [
+interface MenuItem {
+  name: string;
+  icon: React.ComponentType<{ className?: string }>;
+  path: string;
+}
+
+interface MenuGroup {
+  title: string;
+  items: MenuItem[];
+}
+
+const baseMenuItems: MenuGroup[] = [
   {
     title: "Main",
     items: [
@@ -58,29 +82,27 @@ const baseMenuItems = [
       { name: "Vendors", icon: Store, path: "/dashboard/vendors" },
     ],
   },
-
 ];
 
-
-
 /**
- * Sidebar Component
+ * Sidebar component with permission-based menu filtering.
  *
- * The main navigation sidebar for the dashboard layout.
- * Features collapsible menu groups, responsive design, and active route highlighting.
+ * Admin users bypass permission checks and see all menu items.
+ * Regular users only see items for which they have 'read' permission.
+ * Items without permission mapping are always shown as a safe fallback.
  *
  * @component
  * @param props - Component props
  * @param props.isOpen - Whether the sidebar is expanded
- * @param props.onToggle - Callback to toggle the sidebar collapsed/expanded state
- * @param props.isMobile - Whether the sidebar is in mobile mode (optional)
+ * @param props.onToggle - Callback to toggle the sidebar collapsed state
+ * @param props.isMobile - Whether the sidebar is in mobile mode
  * @returns The rendered sidebar component
  */
 const Sidebar = ({ isOpen, onToggle, isMobile = false }: SidebarProps) => {
   const location = useLocation();
   const [expandedGroups, setExpandedGroups] = useState<string[]>(["Main", "Sales"]);
 
-  const isAdmin = useIsAdmin();
+  const { isAdmin, canAccess } = usePermissions();
 
   const toggleGroup = (title: string) => {
     setExpandedGroups((prev) =>
@@ -92,22 +114,39 @@ const Sidebar = ({ isOpen, onToggle, isMobile = false }: SidebarProps) => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const adminMenuItems = isAdmin
+  const filterItemsByPermissions = (items: MenuItem[]): MenuItem[] => {
+    if (isAdmin) return items;
+    
+    return items.filter((item) => {
+      const moduleKey = MENU_PERMISSION_MAP[item.path];
+      if (!moduleKey) return true;
+      return canAccess(moduleKey);
+    });
+  };
+
+  const filterMenuGroups = (groups: MenuGroup[]): MenuGroup[] => {
+    return groups
+      .map((group) => ({
+        ...group,
+        items: filterItemsByPermissions(group.items),
+      }))
+      .filter((group) => group.items.length > 0);
+  };
+
+  const adminMenuItems: MenuGroup[] = isAdmin
     ? [
-      {
-        title: "Configuration",
-        items: [
-          { name: "Users", icon: UserCogIcon, path: "/dashboard/settings/users" },
-           { 
-            name: "Roles & Profiles", 
-            icon: Shield, 
-            path: "/dashboard/settings/roles" 
-          },
-        ],
-      },
-    ]
+        {
+          title: "Configuration",
+          items: [
+            { name: "Users", icon: UserCogIcon, path: "/dashboard/settings/users" },
+            { name: "Roles & Profiles", icon: Shield, path: "/dashboard/settings/roles" },
+          ],
+        },
+      ]
     : [];
-  const menuItems = [...baseMenuItems, ...adminMenuItems];
+
+  const allMenuItems = [...baseMenuItems, ...adminMenuItems];
+  const visibleMenuItems = filterMenuGroups(allMenuItems);
 
   return (
     <motion.aside
@@ -119,7 +158,6 @@ const Sidebar = ({ isOpen, onToggle, isMobile = false }: SidebarProps) => {
         isMobile && "w-64"
       )}
     >
-      {/* Header */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
         <Link to="/dashboard" className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
@@ -150,9 +188,8 @@ const Sidebar = ({ isOpen, onToggle, isMobile = false }: SidebarProps) => {
         )}
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-6">
-        {menuItems.map((group) => (
+        {visibleMenuItems.map((group) => (
           <div key={group.title}>
             {isOpen && (
               <button
@@ -210,9 +247,7 @@ const Sidebar = ({ isOpen, onToggle, isMobile = false }: SidebarProps) => {
         ))}
       </nav>
 
-      {/* Footer */}
       <div className="p-3 border-t border-sidebar-border space-y-1">
-
         <Link
           to="/help"
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all"

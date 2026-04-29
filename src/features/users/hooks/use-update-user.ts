@@ -21,7 +21,7 @@ export const useUpdateUser = () => {
                 exact: false
             });
             queryClient.invalidateQueries({
-                queryKey: ['users'],
+                queryKey: ['users','user'],
                 exact: false
             });
             toast.success('User updated successfully');

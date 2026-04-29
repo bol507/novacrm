@@ -1,12 +1,4 @@
-/**
- * User entity for authentication context
- * 
- * This is a simplified version of the full User entity,
- * containing only the fields needed for authentication and authorization.
- * 
- * @see \App\Domain\Entities\User (backend entity)
- * @see \App\Infrastructure\Mappers\UserMapper (mapping logic)
- */
+
 
 
 export type User = UserData;
@@ -16,7 +8,7 @@ export interface AuthResponse {
   access_token: string;
   token_type?: string;
   expires_in?: number;
-   user: {
+  user: {
     data: UserData;
   };
 }
@@ -33,14 +25,30 @@ export interface UserData {
   last_name: string;
   email: string;
 
-  is_admin: boolean;           
-  role_id?: string | null;     
-  rolename?: string | null;    
+  is_admin: boolean;
+  role_id?: string | null;
+  rolename?: string | null;
+  profile_id?: number | null;
 
   status: string;
   department: string | null;
   phone: string | null;
   is_active: boolean;
+
+  //  (backend-agnostic)
+  permissions?: Record<number, { 
+    read: boolean; 
+    write: boolean; 
+    create: boolean; 
+    delete: boolean; 
+  }>;
+  
+  //  (backend-specific)
+  available_modules?: Record<number, { 
+    name: string; 
+    tablabel: string;
+    sequence: number;
+  }>;
 }
 
 export type ExtractUserData<T> = T extends { data: infer U } ? U : never;
