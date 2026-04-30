@@ -115,11 +115,11 @@ export function normalizeFormStage(stage: string | null | undefined): FormQuoteS
 export interface QuoteItem {
   productid: number | null;
   sequence_no: number;
-  productname: string;
   quantity: number;
   listprice: number;
   discount_percent: number;
   description: string | null;
+  comment: string | null;
   total?: number;
   netprice?: number;
 }
@@ -134,11 +134,11 @@ export interface QuoteItem {
 export interface QuoteItemFormData {
   productid: number | null;
   sequence_no: number;
-  productname: string;
   quantity: number;
   listprice: number;
   discount_percent: number;
   description: string | null;
+  comment: string | null;
 }
 
 // ============================================================================
@@ -215,6 +215,7 @@ export interface QuoteFormValues {
   quote_stage: QuoteStage;
   validtill?: string;
   description?: string;
+  comment?: string;
   /** Search input for client autocomplete (not sent to API) */
   account_search?: string;
   /** Search input for user autocomplete (not sent to API) */

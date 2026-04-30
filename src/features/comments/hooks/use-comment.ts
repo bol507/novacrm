@@ -44,46 +44,26 @@ export const useComment = (
  * Extract comments array - versión infalible para cualquier estructura
  */
 export const selectComments = (response: any): CommentEntity[] => {
-  // Debug temporal para ver qué estamos recibiendo
-  console.log('🔍 selectComments input:', {
-    type: typeof response,
-    isArray: Array.isArray(response),
-    hasData: response?.data !== undefined,
-    responseData: response?.data,
-  });
 
-  // Caso 1: null/undefined
   if (!response) {
-    console.log('→ Response is null/undefined, returning []');
     return [];
   }
-  
-  // Caso 2: YA ES array directo ← ESTE ES TU CASO
+
   if (Array.isArray(response)) {
-    console.log('→ Response is direct array, returning it');
     return response as CommentEntity[];
   }
-  
-  // Caso 3: {  [...] }
+
   if (Array.isArray(response.data)) {
-    console.log('→ Response.data is array, returning it');
     return response.data;
   }
   
-  // Caso 4: {  {  [...] } } (ApiResponse wrapper)
   if (response.data?.data && Array.isArray(response.data.data)) {
-    console.log('→ Response.data.data is array, returning it');
     return response.data.data;
   }
-  
-  // Caso 5: { comments: [...] }
+
   if (response?.comments && Array.isArray(response.comments)) {
-    console.log('→ Response.comments is array, returning it');
     return response.comments;
   }
-  
-  // Fallback
-  console.log('→ Fallback: returning []');
   return [];
 };
 

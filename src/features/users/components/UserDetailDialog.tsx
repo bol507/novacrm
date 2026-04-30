@@ -5,7 +5,6 @@ import {
   Phone, 
   Building2, 
   User as UserIcon,
-  Shield
 } from "lucide-react";
 import type { User } from "../types/user";
 
@@ -124,10 +123,7 @@ export const UserDetailDialog = ({ user, open, onOpenChange }: UserDetailDialogP
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Role</p>
-                <p className="font-medium flex items-center gap-2">
-                  {user.role}
-                  {user.role === 'Admin' && <Shield className="h-4 w-4 text-amber-500" />}
-                </p>
+                
               </div>
             </div>
           </div>

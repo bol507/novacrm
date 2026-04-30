@@ -2,12 +2,11 @@ import { useState, useEffect, useMemo } from "react";
 import type { User, UserViewMode } from "@/features/users/types/user";
 import { useUsers } from "@/features/users/hooks/use-users";
 import { useDeleteUser } from "../hooks/use-delete-user";
-import { userService } from "@/features/users/services/user-service";
-import { toast } from "sonner";
-import UserFormDialog from "@/features/users/components/UserFormDialog";
-import { UserDetailDialog } from "../components/UserDetailDialog";
-import ChangePasswordDialog from "../components/ChangePasswordDialog";
 import { UserView } from "../components/UserView";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { useNavigate } from "react-router-dom";
+import { Pagination } from "@/components/Pagination";
+import { useConfirm } from "@/components/confirm-dialog";
 
 /**
  * UsersPage component for managing system users.
@@ -27,6 +26,8 @@ import { UserView } from "../components/UserView";
  * <Route path="/dashboard/users" element={<UsersPage />} />
  */
 const UsersPage = () => {
+  const navigate = useNavigate();
+  const showConfirm = useConfirm();
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [viewMode, setViewMode] = useState<UserViewMode>(() => {
@@ -43,11 +44,7 @@ const UsersPage = () => {
     }
   }, [viewMode]);
 
-  const { data, isLoading, error, refetch } = useUsers({page, perPage: 20, search: searchTerm});
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [viewingUser, setViewingUser] = useState<User | null>(null);
-  const [passwordUserId, setPasswordUserId] = useState<number | null>(null);
+  const { data, isLoading, error, refetch } = useUsers({ page, perPage: 20, search: searchTerm });
   const deleteUserMutation = useDeleteUser();
 
   // Reset to first page when search term changes
@@ -59,6 +56,56 @@ const UsersPage = () => {
   const totalPages = data?.meta?.last_page || 1;
   const totalItems = data?.meta?.total || 0;
 
+
+
+
+  const handleCreateClick = () => navigate("/dashboard/settings/users/new");
+
+
+  const handleEditUser = (user: User) => navigate(`/dashboard/settings/users/${user.id}/edit`);
+
+  const handleViewUser = (user: User) => {
+    navigate(`/dashboard/settings/users/${user.id}`);
+  };
+
+  /*const handleChangePassword = (user: User) => {
+    setPasswordUserId(user.id);
+  };*/
+  const handleChangePassword = (user: User) => {
+
+    navigate(`/dashboard/settings/users/${user.id}/password`);
+  };
+
+
+  const handleDeleteUser = async (user: User) => {
+    
+
+    showConfirm({
+      title: "Delete User",
+      description: `Are you sure you want to delete ${user.first_name} ${user.last_name}? This action cannot be undone and the user will no longer be able to log in.`,
+      confirmLabel: "Delete",
+      cancelLabel: "Cancel",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          await deleteUserMutation.mutateAsync(user.id);
+          
+        } catch {
+          // error handled in useDeleteUser hook
+        }
+      },
+      onCancel: () => {
+        // Do nothing
+        console.log('Delete cancelled for user:', user.id);
+      },
+    });
+  };
+
+
+  const handleViewModeChange = (mode: UserViewMode) => {
+    setViewMode(mode);
+  };
+
   if (error) {
     return (
       <div className="p-6">
@@ -69,98 +116,15 @@ const UsersPage = () => {
     );
   }
 
-  /**
-   * Handles user creation form submission.
-   *
-   * @param userData - The user data to create
-   */
-  const handleCreateUser = async (userData: any) => {
-    try {
-      await userService.createUser(userData);
-      await refetch();
-      toast.success("User created successfully");
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Error creating user");
-    }
-  };
-
-  /**
-   * Opens the edit dialog for a user.
-   *
-   * @param user - The user to edit
-   */
-  const handleEditUser = (user: User) => {
-    setEditingUser(user);
-  };
-
-  /**
-   * Handles user update form submission.
-   *
-   * @param userData - The updated user data
-   */
-  const handleUpdateUser = async (userData: any) => {
-    try {
-      await userService.updateUserProfile(editingUser!.id, userData);
-      setEditingUser(null);
-      await refetch();
-      toast.success("User updated successfully");
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Error updating user");
-    }
-  };
-
-  /**
-   * Opens the view dialog for a user.
-   *
-   * @param user - The user to view
-   */
-  const handleViewUser = (user: User) => {
-    setViewingUser(user);
-  };
-
-  /**
-   * Opens the change password dialog for a user.
-   *
-   * @param user - The user whose password to change
-   */
-  const handleChangePassword = (user: User) => {
-    setPasswordUserId(user.id);
-  };
-
-  /**
-   * Handles user deletion with confirmation.
-   *
-   * @param user - The user to delete
-   */
-  const handleDeleteUser = async (user: User) => {
-    if (!confirm(`Are you sure you want to delete user ${user.first_name} ${user.last_name}?`)) {
-      return;
-    }
-    try {
-      await deleteUserMutation.mutateAsync(user.id);
-    } catch (error) {
-      // Error is already handled in the hook
-    }
-  };
-
-  /**
-   * Handles view mode changes (cards/table).
-   *
-   * @param mode - The new view mode
-   */
-  const handleViewModeChange = (mode: UserViewMode) => {
-    setViewMode(mode);
-  };
-
   return (
-    <>
+    <ErrorBoundary>
       <UserView
         users={filteredUsers}
         isLoading={isLoading}
         error={error}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        onCreateClick={() => setIsCreateDialogOpen(true)}
+        onCreateClick={handleCreateClick}
         onViewModeChange={handleViewModeChange}
         onRefresh={refetch}
         onView={handleViewUser}
@@ -168,43 +132,19 @@ const UsersPage = () => {
         onDelete={handleDeleteUser}
         onChangePassword={handleChangePassword}
         viewMode={viewMode}
-        page={page}
-        totalPages={totalPages}
         totalItems={totalItems}
+
+      />
+
+
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
         onPageChange={setPage}
+        className="justify-end"
+        showFirstLast={true}
       />
-
-      <UserFormDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-        onSubmit={handleCreateUser}
-        mode="create"
-      />
-
-      {editingUser && (
-        <UserFormDialog
-          open={true}
-          onOpenChange={() => setEditingUser(null)}
-          onSubmit={handleUpdateUser}
-          mode="edit"
-          initialData={editingUser}
-        />
-      )}
-
-      <UserDetailDialog
-        user={viewingUser}
-        open={!!viewingUser}
-        onOpenChange={() => setViewingUser(null)}
-      />
-
-      {passwordUserId && (
-        <ChangePasswordDialog
-          userId={passwordUserId}
-          open={true}
-          onOpenChange={() => setPasswordUserId(null)}
-        />
-      )}
-    </>
+    </ErrorBoundary>
   );
 };
 

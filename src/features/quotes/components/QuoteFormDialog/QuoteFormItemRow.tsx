@@ -47,7 +47,7 @@ export const QuoteFormItemRow = ({
   //  Cálculos en tiempo real
   const netPrice = item.listprice * (1 - (item.discount_percent || 0) / 100);
   const lineTotal = netPrice * (item.quantity || 0);
-  const hasErrors = !item.productname?.trim() || item.quantity <= 0 || item.listprice <= 0;
+  const hasErrors = !item.description?.trim() || item.quantity <= 0 || item.listprice <= 0;
 
   //  Auto-expand del textarea
   useEffect(() => {
@@ -62,6 +62,8 @@ export const QuoteFormItemRow = ({
     transition: isDragging ? 'none' : transition,
     zIndex: isDragging ? 100 : 'auto',
   };
+
+ 
 
   return (
     <div
@@ -116,11 +118,11 @@ export const QuoteFormItemRow = ({
           </label>
           <Input
             placeholder="Enter product or service name..."
-            value={item.productname}
-            onChange={(e) => onUpdate(index, 'productname', e.target.value)}
+            value={item.description || ''}
+            onChange={(e) => onUpdate(index, 'description', e.target.value)}
             className={cn(
               "font-medium text-base",
-              hasErrors && !item.productname?.trim() && "border-destructive focus-visible:ring-destructive"
+              hasErrors && !item.description?.trim() && "border-destructive focus-visible:ring-destructive"
             )}
           />
         </div>
@@ -133,9 +135,9 @@ export const QuoteFormItemRow = ({
             </label>
 
             {/* ✅ Contador de caracteres */}
-            {item.description && item.description.length > 0 && (
+            {item.comment && item.comment.length > 0 && (
               <span className="text-[10px] font-mono text-muted-foreground/60 bg-muted/30 px-2 py-0.5 rounded">
-                {item.description.length} chars
+                {item.comment.length} chars
               </span>
             )}
           </div>
@@ -144,8 +146,8 @@ export const QuoteFormItemRow = ({
             <Textarea
               ref={textareaRef}
               placeholder="Add specifications, notes, or details..."
-              value={item.description || ''}
-              onChange={(e) => onUpdate(index, 'description', e.target.value)}
+              value={item.comment || ''}
+              onChange={(e) => onUpdate(index, 'comment', e.target.value)}
               rows={3}
               className={cn(
                 // Base styles
@@ -191,7 +193,7 @@ export const QuoteFormItemRow = ({
           </div>
 
           {/* ✅ Helper text o preview */}
-          {item.description && item.description.length > 100 && (
+          {item.comment && item.comment.length > 100 && (
             <div className="mt-1.5 flex items-center gap-2 text-[10px] text-muted-foreground/50">
               <div className="h-px flex-1 bg-muted-foreground/20" />
               <span>Tip: Use line breaks for readability</span>

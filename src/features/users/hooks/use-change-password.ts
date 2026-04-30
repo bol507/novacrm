@@ -1,11 +1,17 @@
 import { useMutation } from '@tanstack/react-query';
 import { userService } from '../services/user-service';
 import { toast } from 'sonner';
+import type { ChangePasswordRequest } from '../types/user';
 
-export const useChangePassword = (userId: number) => {
+interface ChangePasswordVariables {
+  userId: number;
+  data: ChangePasswordRequest;
+}
+
+export const useChangePassword = () => {
   return useMutation({
-    mutationFn: (newPassword: string) => 
-      userService.changeUserPassword(userId, newPassword),
+    mutationFn: ({ userId, data }: ChangePasswordVariables) => 
+      userService.changeUserPassword(userId, data),
     onSuccess: () => {
       toast.success("Contraseña actualizada exitosamente");
     },

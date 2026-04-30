@@ -65,10 +65,10 @@ interface UserSearchProps {
  *   required={true}
  * />
  */
-export function UserSearch({ 
-  value, 
-  onChange, 
-  label, 
+export function UserSearch({
+  value,
+  onChange,
+  label,
   placeholder = "Search user...",
   required = false,
   showAllOption = true
@@ -141,12 +141,12 @@ export function UserSearch({
           {label}
         </Label>
       )}
-      
+
       <div className="relative">
         <div className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground">
           <Search className="h-4 w-4" />
         </div>
-        
+
         <Input
           ref={inputRef}
           id="user-search"
@@ -157,7 +157,7 @@ export function UserSearch({
           className="pl-9"
           disabled={loadingSelectedUser}
         />
-        
+
         {(value && value > 0) && (
           <Button
             type="button"
@@ -177,7 +177,7 @@ export function UserSearch({
       </div>
 
       {isOpen && (
-        <div 
+        <div
           className={cn(
             "absolute z-50 w-full mt-1 rounded-md border border-border bg-popover text-popover-foreground shadow-lg",
             "max-h-60 overflow-y-auto"
@@ -212,7 +212,7 @@ export function UserSearch({
                   </div>
                 </div>
               )}
-              
+
               {users.length > 0 ? (
                 users.map((user) => (
                   <div
@@ -224,8 +224,10 @@ export function UserSearch({
                     onClick={() => handleSelectUser(user.id)}
                   >
                     <div className="font-medium">{user.first_name} {user.last_name}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {user.email || "No email"} • {user.role || "No role"}
+
+                    {/* ✅ Actualizado: prioriza flag de sistema sobre rol jerárquico */}
+                    <div className="text-sm text-muted-foreground truncate">
+                      {user.email || "No email"} • {user.is_admin ? "Admin" : (user.rolename || "No role")}
                     </div>
                   </div>
                 ))
@@ -238,7 +240,7 @@ export function UserSearch({
           )}
         </div>
       )}
-      
+
       {value === 2 && showAllOption ? (
         <div className="mt-2 p-2 bg-muted rounded-md border border-border text-sm">
           <div className="font-medium flex items-center gap-2">
@@ -253,7 +255,7 @@ export function UserSearch({
         <div className="mt-2 p-2 bg-muted rounded-md border border-border text-sm">
           <div className="font-medium">{selectedUser.first_name} {selectedUser.last_name}</div>
           <div className="text-muted-foreground">
-            {selectedUser.email} • {selectedUser.role}
+            {selectedUser.email} • {selectedUser.rolename}
           </div>
         </div>
       ) : null}

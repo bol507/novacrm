@@ -45,13 +45,7 @@ export const QuoteEditPage = () => {
   const { data: quote, isLoading: quoteLoading, error: quoteError } = useQuoteDetail(quoteId);
   const updateQuoteMutation = useUpdateQuote();
 
-  /**
-   * Handles form submission to update the quote.
-   * On success, shows a success toast and navigates to the quote detail page.
-   * On error, displays an error toast.
-   *
-   * @param values - Form data containing the updated quote information
-   */
+  
   const handleSubmit = async (values: QuoteFormData) => {
     try {
       await updateQuoteMutation.mutateAsync({

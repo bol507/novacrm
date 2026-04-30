@@ -22,8 +22,6 @@ import type { Quote, QuoteItem } from '../types/quote';
  * @example
  * // Accessing all values
  * const calculations = useQuoteCalculations(quote);
- * console.log(`ITBMS: ${calculations.itbms}`);
- * console.log(`Total Discount: ${calculations.totalDiscountAmount}`);
  */
 export const useQuoteCalculations = (quote: Quote | null | undefined) => {
   return useMemo(() => {

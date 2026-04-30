@@ -20,6 +20,6 @@ export const authService = {
 
   async getCurrentUser(): Promise<User> {
     const response = await apiClient.get('/auth/me');
-    return response.data;
+    return response.data.data;
   }
 };

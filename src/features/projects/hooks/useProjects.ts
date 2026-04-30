@@ -105,7 +105,7 @@ export const useProjects = (
     startDate: filters?.startDate,
     endDate: filters?.endDate,
     clientId: filters?.clientId,
-    sortBy: filters?.sortBy || 'createdtime',
+    sortBy: filters?.sortBy || 'last_activity',
     sortOrder: filters?.sortOrder || 'DESC',
   }), [validatedPage, validatedLimit, validatedSearchTerm, filters]);
 

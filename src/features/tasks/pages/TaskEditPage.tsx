@@ -31,39 +31,51 @@ import { useAuth, useIsAdmin } from "@/features/auth/hooks/use-auth"
 import { useUpdateTask } from "../hooks/use-update-task"
 import { useUsers } from "@/features/users/hooks/use-users"
 
+/**
+ * TaskEditPage component for editing an existing task.
+ *
+ * Features:
+ * - Fetches task data by ID from URL parameters
+ * - Form with validation for required fields
+ * - Admin-only user assignment
+ * - Date pickers with Spanish locale
+ * - Priority and status selection
+ * - Loading and error states
+ *
+ * @component
+ * @returns The rendered task edit page
+ */
 const TaskEditPage = () => {
   const { taskId } = useParams<{ taskId: string }>()
   const navigate = useNavigate()
   const { user } = useAuth()
   const isAdmin = useIsAdmin()
   
-  const {  data: taskResponse, isLoading: taskLoading } = useTask(Number(taskId))
+  const { data: taskResponse, isLoading: taskLoading } = useTask(Number(taskId))
   const updateMutation = useUpdateTask()
   
-  const {  data: usersData } = useUsers({ 
-  active: true,           
-  enabled: isAdmin,       
-  perPage: 100,           
-});
+  const { data: usersData } = useUsers({ 
+    active: true,           
+    enabled: isAdmin,       
+    perPage: 100,           
+  })
   const [formData, setFormData] = useState<UpdateTaskRequest>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  // Cargar datos de la tarea existente
   useEffect(() => {
     if (taskResponse?.data) {
       const task = taskResponse.data
-      // ✅ Mapear de Task (frontend) a UpdateTaskRequest (camelCase)
       setFormData({
-        subject: task.title,              
-        dateStart: task.startDate,        
-        dueDate: task.dueDate,            
-        timeStart: task.startTime,        
-        timeEnd: task.dueTime,            
+        subject: task.title,
+        date_start: task.startDate,
+        due_date: task.dueDate,
+        time_start: task.startTime,
+        time_end: task.dueTime,
         priority: task.priority,
         status: task.status,
         location: task.location,
         description: task.description,
-        assignedUserId: task.assignedUserId,  
+        assigned_user_id: task.assignedUserId,
       })
     }
   }, [taskResponse])
@@ -82,16 +94,16 @@ const TaskEditPage = () => {
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {}
     if (!formData.subject?.trim()) {
-      newErrors.subject = 'El título es requerido'
+      newErrors.subject = 'Title is required'
     }
-    if (!formData.dateStart) { 
-      newErrors.dateStart = 'La fecha de inicio es requerida'  
+    if (!formData.date_start) {
+      newErrors.dateStart = 'Start date is required'
     }
-    if (formData.dueDate && formData.dateStart) {
-      const start = new Date(formData.dateStart)
-      const due = new Date(formData.dueDate)
+    if (formData.due_date && formData.date_start) {
+      const start = new Date(formData.date_start)
+      const due = new Date(formData.due_date)
       if (due < start) {
-        newErrors.dueDate = 'La fecha de vencimiento no puede ser anterior a la fecha de inicio'
+        newErrors.dueDate = 'Due date cannot be earlier than start date'
       }
     }
     setErrors(newErrors)
@@ -100,15 +112,9 @@ const TaskEditPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-     // ✅ DEBUG: Verificar qué se está enviando
-  console.log('=== Form Submission Debug ===');
-  console.log('formData:', formData);
-  console.log('dueDate value:', formData.dueDate);
-  console.log('dueDate type:', typeof formData.dueDate);
-  console.log('taskId:', taskId);
 
     if (!validate()) {
-      toast.error('Por favor corrige los errores en el formulario')
+      toast.error('Please fix the errors in the form')
       return
     }
 
@@ -117,13 +123,12 @@ const TaskEditPage = () => {
         taskId: Number(taskId),  
         ...formData 
       })
-      // O si el hook ya tiene taskId: await updateMutation.mutateAsync(formData)
       
-      toast.success('Tarea actualizada correctamente')
+      toast.success('Task updated successfully')
       navigate(`/dashboard/tasks/${taskId}`)
     } catch (error: any) {
       console.error('Error updating task:', error)
-      toast.error(error.response?.data?.error || 'Error al actualizar la tarea')
+      toast.error(error.response?.data?.error || 'Error updating task')
     }
   }
 
@@ -138,9 +143,9 @@ const TaskEditPage = () => {
   if (!taskResponse?.data) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-lg font-semibold">Tarea no encontrada</h2>
+        <h2 className="text-lg font-semibold">Task not found</h2>
         <Button variant="link" onClick={() => navigate("/dashboard/tasks")}>
-          Volver a tareas
+          Back to tasks
         </Button>
       </div>
     )
@@ -148,32 +153,29 @@ const TaskEditPage = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate(`/dashboard/tasks/${taskId}`)}>
           <ArrowLeftIcon className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">Editar Tarea</h1>
+          <h1 className="text-2xl font-bold">Edit Task</h1>
           <p className="text-muted-foreground">
-            Modifica los detalles de la tarea
+            Modify task details
           </p>
         </div>
       </div>
 
-      {/* Form Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Detalles de la tarea</CardTitle>
+          <CardTitle>Task Details</CardTitle>
           <CardDescription>
-            Los campos marcados con * son obligatorios
+            Fields marked with * are required
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Subject */}
             <div className="space-y-2">
-              <Label htmlFor="subject">Título *</Label>
+              <Label htmlFor="subject">Title *</Label>
               <Input
                 id="subject"
                 value={formData.subject || ''}
@@ -189,9 +191,8 @@ const TaskEditPage = () => {
               )}
             </div>
 
-            {/* Description */}
             <div className="space-y-2">
-              <Label htmlFor="description">Descripción</Label>
+              <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
                 value={formData.description || ''}
@@ -201,23 +202,22 @@ const TaskEditPage = () => {
               />
             </div>
 
-            {/* Assigned User (Admin only) */}
             {isAdmin && (
               <div className="space-y-2">
-                <Label>Asignado a</Label>
+                <Label>Assigned To</Label>
                 <Select
-                  value={formData.assignedUserId?.toString() || ''} 
-                  onValueChange={(val) => handleChange('assignedUserId', parseInt(val))}  
+                  value={formData.assigned_user_id?.toString() || ''}
+                  onValueChange={(val) => handleChange('assigned_user_id', parseInt(val))}
                   disabled={updateMutation.isPending}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar usuario" />
+                    <SelectValue placeholder="Select user" />
                   </SelectTrigger>
                   <SelectContent>
                     {usersData?.data?.map((u) => (
                       <SelectItem key={u.id} value={u.id.toString()}>
                         {u.first_name} {u.last_name}
-                        {u.id === user?.id && ' (Tú)'}
+                        {u.id === user?.id && ' (You)'}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -225,123 +225,121 @@ const TaskEditPage = () => {
               </div>
             )}
 
-            {/* Dates */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Fecha de inicio *</Label>
+                <Label>Start Date *</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className={cn("w-full justify-start", !formData.dateStart && "text-muted-foreground", errors.dateStart && "border-destructive")}  
+                      className={cn("w-full justify-start", !formData.date_start && "text-muted-foreground", errors.dateStart && "border-destructive")}
                       disabled={updateMutation.isPending}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.dateStart ? format(new Date(formData.dateStart), 'PPP', { locale: es }) : 'Seleccionar'}  
+                      {formData.date_start ? format(new Date(formData.date_start), 'PPP', { locale: es }) : 'Select date'}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
                     <Calendar
                       mode="single"
-                      selected={formData.dateStart ? new Date(formData.dateStart) : undefined}  
-                      onSelect={(date) => date && handleChange('dateStart', format(date, 'yyyy-MM-dd'))}  
+                      selected={formData.date_start ? new Date(formData.date_start) : undefined}
+                      onSelect={(date) => date && handleChange('date_start', format(date, 'yyyy-MM-dd'))}
                       disabled={updateMutation.isPending}
                     />
                   </PopoverContent>
                 </Popover>
-                {errors.dateStart && ( 
+                {errors.dateStart && (
                   <p className="text-xs text-destructive flex items-center gap-1">
                     <AlertCircle className="w-3 h-3" />
-                    {errors.dateStart}  
+                    {errors.dateStart}
                   </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label>Fecha de vencimiento</Label>
+                <Label>Due Date</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className={cn("w-full justify-start", !formData.dueDate && "text-muted-foreground")}  
+                      className={cn("w-full justify-start", !formData.due_date && "text-muted-foreground")}
                       disabled={updateMutation.isPending}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.dueDate ? format(new Date(formData.dueDate), 'PPP', { locale: es }) : 'Opcional'}  
+                      {formData.due_date ? format(new Date(formData.due_date), 'PPP', { locale: es }) : 'Optional'}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
                     <Calendar
                       mode="single"
-                      selected={formData.dueDate ? new Date(formData.dueDate) : undefined}  
-                      onSelect={(date) => date && handleChange('dueDate', format(date, 'yyyy-MM-dd'))} 
+                      selected={formData.due_date ? new Date(formData.due_date) : undefined}
+                      onSelect={(date) => date && handleChange('due_date', format(date, 'yyyy-MM-dd'))}
                       disabled={updateMutation.isPending}
                     />
                   </PopoverContent>
                 </Popover>
-                {errors.dueDate && (  
+                {errors.dueDate && (
                   <p className="text-xs text-destructive flex items-center gap-1">
                     <AlertCircle className="w-3 h-3" />
-                    {errors.dueDate}  
+                    {errors.dueDate}
                   </p>
                 )}
               </div>
             </div>
 
-            {/* Priority & Status */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Prioridad</Label>
+                <Label>Priority</Label>
                 <Select
+                  key={`priority-${formData.priority}`}
                   value={formData.priority}
                   onValueChange={(v: any) => handleChange('priority', v)}
                   disabled={updateMutation.isPending}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Select priority" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Low">Baja</SelectItem>
-                    <SelectItem value="Medium">Media</SelectItem>
-                    <SelectItem value="High">Alta</SelectItem>
+                    <SelectItem value="Low">Low</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="High">High</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label>Estado</Label>
+                <Label>Status</Label>
                 <Select
+                  key={`status-${formData.status}`}
                   value={formData.status}
                   onValueChange={(v: any) => handleChange('status', v)}
                   disabled={updateMutation.isPending}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Not Started">No Iniciada</SelectItem>
-                    <SelectItem value="In Progress">En Progreso</SelectItem>
-                    <SelectItem value="Completed">Completada</SelectItem>
-                    <SelectItem value="Pending Input">Pendiente</SelectItem>
-                    <SelectItem value="Planned">Planificada</SelectItem>
+                    <SelectItem value="Not Started">Not Started</SelectItem>
+                    <SelectItem value="In Progress">In Progress</SelectItem>
+                    <SelectItem value="Completed">Completed</SelectItem>
+                    <SelectItem value="Pending Input">Pending Input</SelectItem>
+                    <SelectItem value="Planned">Planned</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
-            {/* Location */}
             <div className="space-y-2">
-              <Label>Ubicación</Label>
+              <Label>Location</Label>
               <Input
                 value={formData.location || ''}
                 onChange={(e) => handleChange('location', e.target.value)}
                 disabled={updateMutation.isPending}
-                placeholder="Ej: Oficina, Zoom, Cliente XYZ"
+                placeholder="E.g., Office, Zoom, Client XYZ"
                 maxLength={150}
               />
             </div>
 
-            {/* Actions */}
             <div className="flex items-center justify-end gap-3 pt-4 border-t">
               <Button
                 type="button"
@@ -349,13 +347,13 @@ const TaskEditPage = () => {
                 onClick={() => navigate(`/dashboard/tasks/${taskId}`)}
                 disabled={updateMutation.isPending}
               >
-                Cancelar
+                Cancel
               </Button>
               <Button type="submit" disabled={updateMutation.isPending}>
                 {updateMutation.isPending ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Guardando...</>
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</>
                 ) : (
-                  'Guardar Cambios'
+                  'Save Changes'
                 )}
               </Button>
             </div>

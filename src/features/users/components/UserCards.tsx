@@ -6,9 +6,6 @@ import {
     Phone,
     Building2,
     MoreVertical,
-    Shield,
-    Trash2Icon,
-    KeyIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,22 +14,17 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { getHierarchicalRoleColor } from './getHierarchicalRoleColor';
 
 /**
  * Props for UserCards component
  */
 interface UserCardsProps {
-    /** Array of user objects to display as cards */
     users: User[];
-    /** Loading state indicator */
     isLoading: boolean;
-    /** Callback fired when user clicks on a user card to view details */
     onUserClick: (user: User) => void;
-    /** Optional callback fired when user clicks edit action */
     onEditUser?: (user: User) => void;
-    /** Optional callback fired when user clicks change password action */
     onChangePassword?: (user: User) => void;
-    /** Optional callback fired when user clicks delete action */
     onDeleteUser?: (user: User) => void;
 }
 
@@ -154,143 +146,99 @@ export const UserCards = ({
 
     // Render user cards grid
     return (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {users.map((user) => (
-                <Card key={user.id} className="overflow-hidden">
-                    <CardContent className="p-0">
-                        {/* Card Header with avatar and actions menu */}
-                        <div className="flex items-start justify-between p-4 pb-3">
-                            {/* User avatar and name section */}
-                            <div className="flex items-center gap-3">
-                                <div className="h-11 w-11 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                    <span className="text-sm font-semibold text-primary">
-                                        {user.first_name.charAt(0)}{user.last_name.charAt(0)}
-                                    </span>
-                                </div>
-                                <div className="min-w-0">
-                                    <div className="flex items-center gap-2">
-                                        <h3 className="font-semibold text-foreground truncate">
-                                            {user.first_name} {user.last_name}
-                                        </h3>
-                                        {/* Admin shield icon */}
-                                        {user.role === 'Admin' && (
-                                            <Shield className="h-4 w-4 text-amber-500 shrink-0" />
-                                        )}
-                                    </div>
-                                    <p className="text-sm text-muted-foreground">
-                                        @{user.user_name}
-                                    </p>
-                                </div>
-                            </div>
-                            
-                            {/* Actions dropdown menu */}
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                                        <MoreVertical className="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="bg-popover">
-                                    <DropdownMenuItem
-                                        className="gap-2 cursor-pointer"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onUserClick(user);
-                                        }}
-                                    >
-                                        <Building2 className="h-4 w-4" />
-                                        View details
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        className="gap-2 cursor-pointer"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onEditUser?.(user);
-                                        }}
-                                    >
-                                        <Building2 className="h-4 w-4" />
-                                        Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        className="gap-2 cursor-pointer"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onChangePassword?.(user);
-                                        }}
-                                    >
-                                        <KeyIcon className="h-4 w-4" />
-                                        Change Password
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        className="gap-2 cursor-pointer text-destructive"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onDeleteUser?.(user);
-                                        }}
-                                    >
-                                        <Trash2Icon className="h-4 w-4" />
-                                        Delete
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
-
-                        {/* Card Body with user details */}
-                        <div className="px-4 pb-4 space-y-3">
-                            {/* Department (conditional) */}
-                            {user.department && (
-                                <div className="flex items-center gap-2 text-sm">
-                                    <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
-                                    <span className="text-muted-foreground">
-                                        {user.department}
-                                    </span>
-                                </div>
-                            )}
-
-                            {/* Email (conditional) */}
-                            {user.email && (
-                                <div className="flex items-center gap-2 text-sm">
-                                    <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
-                                    <span className="text-muted-foreground truncate">
-                                        {user.email}
-                                    </span>
-                                </div>
-                            )}
-
-                            {/* Phone (conditional) */}
-                            {user.phone_crm && (
-                                <div className="flex items-center gap-2 text-sm">
-                                    <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
-                                    <span className="text-muted-foreground">
-                                        {user.phone_crm}
-                                    </span>
-                                </div>
-                            )}
-
-                            {/* Role */}
-                            <div className="flex items-center gap-2 text-sm">
-                                <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
-                                <span className="text-muted-foreground">
-                                    {user.role}
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Card Footer with status badge */}
-                        <div className="px-4 py-3 bg-muted/30 border-t flex items-center justify-between">
-                            <Badge variant="outline" className={getStatusColor(user.status)}>
-                                {user.status === "Active" ? "Active" : "Inactive"}
-                            </Badge>
-                            {/* Admin label for admin users */}
-                            {user.role === 'Admin' && (
-                                <span className="text-xs text-amber-600 font-medium">
-                                    Administrator
-                                </span>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
-            ))}
-        </div>
-    );
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {users.map((user) => (
+        <Card key={user.id} className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => onUserClick(user)}>
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <h3 className="font-semibold">{user.first_name} {user.last_name}</h3>
+                <p className="text-sm text-muted-foreground">@{user.user_name}</p>
+              </div>
+              {/* Dropdown menu se mantiene igual */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {onEditUser && (
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEditUser(user); }}>
+                      Edit
+                    </DropdownMenuItem>
+                  )}
+                  {onChangePassword && (
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onChangePassword(user); }}>
+                      Change password
+                    </DropdownMenuItem>
+                  )}
+                  {onDeleteUser && (
+                    <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); onDeleteUser(user); }}>
+                      Delete
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            
+            {/* Info de contacto se mantiene igual */}
+            <div className="mt-3 space-y-1">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Mail className="h-4 w-4" />
+                <span className="truncate">{user.email || '-'}</span>
+              </div>
+              {user.phone_crm && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Phone className="h-4 w-4" />
+                  <span>{user.phone_crm}</span>
+                </div>
+              )}
+              {user.department && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Building2 className="h-4 w-4" />
+                  <span>{user.department}</span>
+                </div>
+              )}
+            </div>
+            
+            {/*  BADGES ACTUALIZADOS: is_admin + rolename */}
+            <div className="mt-3 flex flex-wrap gap-2">
+              {/* Badge de Admin (flag de sistema) */}
+              {user.is_admin && (
+                <Badge 
+                  variant="outline" 
+                  className="bg-purple-500/10 text-purple-700 border-purple-500/20 font-medium"
+                  title="System Administrator"
+                >
+                  Admin
+                </Badge>
+              )}
+              
+              {/* Badge de Rol Jerárquico */}
+              {user.rolename ? (
+                <Badge 
+                  variant="outline" 
+                  className={getHierarchicalRoleColor(user.rolename)}
+                  title={`Role: ${user.rolename}`}
+                >
+                  {user.rolename}
+                </Badge>
+              ) : user.role_id ? (
+                // Fallback: mostrar role_id si no hay rolename
+                <Badge variant="secondary" className="text-xs" title={`Role ID: ${user.role_id}`}>
+                  {user.role_id}
+                </Badge>
+              ) : null}
+              
+              {/* Badge de Status (se mantiene igual) */}
+              <Badge variant="outline" className={getStatusColor(user.status)}>
+                {user.status}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
 };

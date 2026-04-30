@@ -199,67 +199,23 @@ export interface Project {
  * };
  */
 export interface ProjectFilters {
-  /**
-   * Page number for pagination (1-based index).
-   * Must be a positive integer.
-   */
   page: number;
-
-  /**
-   * Number of results to return per page.
-   * Typically clamped between 1 and 100 for performance.
-   */
   limit: number;
-
-  /**
-   * Search term for filtering projects by name, number, or client.
-   * Performs case-insensitive partial match on multiple fields.
-   */
   search?: string;
-
-  /**
-   * Filter projects by status value.
-   * Common values: "active", "completed", "cancelled", or specific status strings.
-   */
   status?: string;
-
-  /**
-   * Filter projects by priority level.
-   * Values: "low", "normal", "high", "critical".
-   */
   priority?: string;
-
-  /**
-   * Filter projects by assigned user ID.
-   * Returns only projects owned by the specified user.
-   */
   assignedTo?: number;
-
-  /**
-   * Filter projects with start date on or after this value.
-   * Format: "YYYY-MM-DD".
-   */
   startDate?: string;
-
-  /**
-   * Filter projects with target end date on or before this value.
-   * Format: "YYYY-MM-DD".
-   */
   endDate?: string;
-
-  /**
-   * Filter projects by associated client/account ID.
-   * Returns only projects linked to the specified client.
-   */
   clientId?: number;
 
   /**
    * Column name to sort results by.
    * Must be one of the allowed sortable fields.
    * 
-   * @default "createdtime"
+   * @default "last_activity"
    */
-  sortBy?: 'createdtime' | 'projectname' | 'targetenddate' | 'progress';
+  sortBy?: 'createdtime' | 'projectname' | 'targetenddate' | 'progress' | 'last_activity';
 
   /**
    * Sort direction for ordered results.

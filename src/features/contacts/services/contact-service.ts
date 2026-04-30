@@ -41,7 +41,6 @@ export const contactService = {
       ...(filters.sortBy && { sort_by: filters.sortBy }),
       ...(filters.sortOrder && { sort_order: filters.sortOrder }),
     });
-    console.log(params);
     const response = await apiClient.get<ContactResponse>('/contacts', { params });
     return response.data;
   },
@@ -142,8 +141,6 @@ export const contactService = {
    *
    * @example
    * const contacts = await contactService.getContactsByAccount(123);
-   * console.log(contacts.data); // Array of contacts
-   * console.log(contacts.meta.total); // Total count
    */
   getContactsByAccount: async (
     accountId: number,

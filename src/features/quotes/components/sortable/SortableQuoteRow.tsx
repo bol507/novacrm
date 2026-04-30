@@ -25,10 +25,10 @@ export const SortableQuoteRow = ({ item, formatCurrency, disabled }: { item: Quo
             </button>
           )}
           <div className="flex-1 min-w-0">
-            <div className="font-semibold text-lg truncate">{item.productname}</div>
-            {item.description && (
+            <div className="font-semibold text-lg truncate">{item.description}</div>
+            {item.comment && (
               <div className="mt-2">
-                <ExpandableText text={item.description} maxLines={2} className="text-muted-foreground" expandedClassName="text-muted-foreground whitespace-pre-line" />
+                <ExpandableText text={item.comment} maxLines={2} className="text-muted-foreground" expandedClassName="text-muted-foreground whitespace-pre-line" />
               </div>
             )}
           </div>

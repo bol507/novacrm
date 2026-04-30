@@ -47,14 +47,7 @@ export const useCommentDetail = (
       }
       try {
         const result = await commentService.getCommentById(commentId);
-        console.log('🔍 CommentDetail hook debug:', {
-          commentIdFromUrl: commentId,
-          comment: result,
-          isLoading,
-          isError,
-          error: error?.message,
-          commentKeys: result ? Object.keys(result) : 'null',
-        });
+        
         return result;
       } catch (err) {
         throw err;

@@ -38,41 +38,25 @@ export type UserViewMode = "cards" | "table";
  * @see \App\Domain\Entities\User (backend entity)
  */
 export interface User {
-  /** Unique user identifier */
   id: number;
-  
-  /** Username for authentication (login) */
   user_name: string;
-  
-  /** User's first name */
   first_name: string;
-  
-  /** User's last name */
   last_name: string;
-  
-  /** User's email address */
   email: string;
-  
-  /** User's role in the system */
-  role: UserRole;
-  
-  /** User's status (normalized to domain values) */
+
+  is_admin: boolean;           
+  role_id?: string ;     
+  rolename?: string ; 
+
   status: UserStatus;
-  
-  /** User's phone number (optional) */
-  phone_crm: string | null;
-  
-  /** User's department (optional) */
-  department: string | null;
-  
-  /** ID of supervisor user (optional) */
-  reports_to_id: number | null;
-  
-  /** User's profile ID (optional, Vtiger-specific) */
-  profileid: string | null;
-  
-  /** Whether the user account is active */
+  phone_crm?: string ;
+  department?: string ;
+  reports_to_id?: number ;
+  profileid?: string ;
   is_active: boolean;
+
+  created_at?: string;
+  updated_at?: string;
 }
 
 /**
@@ -140,11 +124,16 @@ export interface CreateUserRequest {
   first_name: string;
   last_name: string;
   email: string;
-  role: UserRole;
+
+  is_admin?: boolean;
+  role_id?: string;
+
+  status?: UserStatus;
   password: string;
   phone_crm?: string;
   department?: string;
   reports_to_id?: number;
+  
 }
 
 /**
@@ -155,7 +144,10 @@ export interface UpdateUserRequest {
   first_name?: string;
   last_name?: string;
   email?: string;
-  role?: UserRole;
+
+  role_id?: string;
+  is_admin?: boolean;
+
   status?: UserStatus;
   phone_crm?: string;
   department?: string;
@@ -246,4 +238,10 @@ export function getStatusColor(status: UserStatus): string {
     Pending: 'warning',
   };
   return colors[status] || 'default';
+}
+
+export interface ChangePasswordRequest {
+  new_password: string;
+  confirm_password: string;
+  current_password?: string; // Only if changing password
 }

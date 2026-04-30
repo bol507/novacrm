@@ -125,7 +125,6 @@ const QuoteDetailPage = () => {
 
   const handleDuplicateQuote = async () => {
     if (!quoteId) return;
-    console.log(quoteId);
     try {
       const payload ={
         quoteId: parseInt(quoteId, 10),
@@ -157,11 +156,11 @@ const QuoteDetailPage = () => {
           items: reorderedItems.map(i => ({
             productid: i.productid,
             sequence_no: i.sequence_no,
-            productname: i.productname,
             quantity: i.quantity,
             listprice: i.listprice,
             discount_percent: i.discount_percent,
             description: i.description,
+            comment: i.comment,
           }))
         }
       });

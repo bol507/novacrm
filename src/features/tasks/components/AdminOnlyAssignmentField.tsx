@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Loader2,  UserIcon } from "lucide-react";
+import {  Loader2, UserIcon } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -11,6 +11,7 @@ import {
 import { useIsAdmin } from "@/features/auth/hooks/use-auth";
 import { useUsers } from "@/features/users/hooks/use-users";
 import type { User } from "@/features/users/types/user";
+import { Badge } from "@/components/ui/badge";
 
 interface AdminOnlyAssignmentFieldProps {
   currentUserId?: number;
@@ -26,19 +27,19 @@ export default function AdminOnlyAssignmentField({
   disabled,
 }: AdminOnlyAssignmentFieldProps) {
   const isAdmin = useIsAdmin();
-  
- 
-  const { 
-    data: usersData,      
-    isLoading: usersLoading, 
-    error 
-  } = useUsers({
-    page: 1,      
-    perPage: 100,   
-    search: ''      
-});
 
- 
+
+  const {
+    data: usersData,
+    isLoading: usersLoading,
+    error
+  } = useUsers({
+    page: 1,
+    perPage: 100,
+    search: ''
+  });
+
+
   const users = useMemo(() => {
     // usersData.data es el array de usuarios
     const allUsers = usersData?.data || [];
@@ -94,7 +95,7 @@ export default function AdminOnlyAssignmentField({
         <UserIcon className="w-4 h-4" />
         Asignado a
       </Label>
-      
+
       <Select
         value={value?.toString() || ""}
         onValueChange={(val) => onChange(parseInt(val))}
@@ -110,37 +111,60 @@ export default function AdminOnlyAssignmentField({
               Tú (Usuario actual)
             </SelectItem>
           )}
-          
+
           {/* Divider */}
           {currentUserId && users.length > 0 && (
             <div className="my-1 border-t" />
           )}
-          
+
           {/* List of other active users */}
           {users
-            .filter((u: User) => u.id !== currentUserId)
+            .filter((u: User) => u.id !== currentUserId && u.is_active) // ✅ También filtrar por is_active
             .map((user) => (
-              <SelectItem key={user.id} value={user.id.toString()}>
-                {user.first_name} {user.last_name}
-                {user.role === 'Admin' && (
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    (Admin)
-                  </span>
-                )}
+              <SelectItem
+                key={user.id}
+                value={user.id.toString()}
+                className="flex items-center justify-between gap-2" // ✅ Alinear contenido
+              >
+                {/* Nombre del usuario */}
+                <span className="flex-1 truncate">
+                  {user.first_name} {user.last_name}
+                </span>
+
+                {/* Badges de referencia (derecha) */}
+                <div className="flex items-center gap-1 shrink-0">
+                  {/* ✅ Badge de Admin (system flag) - corregido */}
+                  {user.is_admin && (
+                    <Badge
+                      variant="secondary"
+                      className="bg-purple-500/10 text-purple-700 text-[10px] px-1 py-0 h-auto"
+                    >
+                      Admin
+                    </Badge>
+                  )}
+
+                  {/* ✅ Rol jerárquico (opcional, para contexto adicional) */}
+                  {user.rolename && !user.is_admin && (
+                    <span className="text-[10px] text-muted-foreground">
+                      {user.rolename}
+                    </span>
+                  )}
+                </div>
               </SelectItem>
             ))}
-          
+
+
           {/* Empty state */}
-          {users.length === 0 && (
+          {users.filter((u: User) => u.id !== currentUserId && u.is_active).length === 0 && (
             <div className="px-2 py-1.5 text-sm text-muted-foreground">
-              No hay usuarios activos disponibles
+              No other active users available
             </div>
           )}
         </SelectContent>
       </Select>
-      
+
       <p className="text-xs text-muted-foreground">
-        {value === currentUserId 
+        {value === currentUserId
           ? "La tarea se asignará a ti"
           : "Selecciona el usuario que realizará esta tarea"}
       </p>

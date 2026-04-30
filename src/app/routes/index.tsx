@@ -7,6 +7,11 @@ import DashboardLayout from "@/shared/layouts/DashboardLayout";
 import { contactsRoutes } from '@/features/contacts/routes';
 import { tasksRoutes } from '@/features/tasks/routes';
 import { projectsRoutes } from "@/features/projects/routes";
+import { purchasesRoutes } from '@/features/purchases/routes';
+import { vendorsRoutes } from '@/features/vendors/routes';
+import { usersRoutes } from '@/features/users/routes';
+import { settingsRoutes } from '@/features/settings/routes';
+
 
 
 const Dashboard = lazy(() => import("@/features/dashboard/pages/Dashboard"));
@@ -14,7 +19,6 @@ const ClientDetailPage = lazy(() => import("@/features/clients/pages/ClientDetai
 const ClientsPage = lazy(() => import("@/features/clients/pages/ClientsPage"));
 const ClientCreatePage = lazy(() => import("@/features/clients/pages/ClientCreatePage"));
 const ClientEditPage = lazy(() => import("@/features/clients/pages/ClientEditPage"));
-const UsersPage = lazy(() => import("@/features/users/pages/UsersPage"));
 const OpportunitiesPage = lazy(() => import("@/features/opportunity/pages/OpportunitiesPage"));
 //Quotes
 const QuotesPage = lazy(() => import("@/features/quotes/pages/QuotesPage"));
@@ -72,7 +76,6 @@ export const router = createBrowserRouter([
       { path: "clients/new", element: <ClientCreatePage /> },
       { path: "clients/:id/edit", element: <ClientEditPage /> },
       { path: "comments/:id", element: <CommentDetailPage /> },
-      { path: "users", element: <UsersPage /> },
       { path: "opportunities", element: <OpportunitiesPage /> },
       { path: "opportunities/new", element: <OpportunityCreatePage /> },
       { path: "opportunities/:id", element: <OpportunityDetailPage /> },
@@ -87,6 +90,10 @@ export const router = createBrowserRouter([
       { path: "tasks/:taskId", element: <TaskDetailPage /> },
       ...contactsRoutes,
       ...tasksRoutes,
+      ...purchasesRoutes,
+      ...vendorsRoutes,
+      ...usersRoutes,
+      ...settingsRoutes,
 
     ],
 

@@ -34,6 +34,8 @@ export const ProjectTabsNavigation = () => {
         <FileText className="h-4 w-4" />
         Attachments
       </TabsTrigger>
+
+       <TabsTrigger value="purchases">Purchases</TabsTrigger>
       
     </TabsList>
   );

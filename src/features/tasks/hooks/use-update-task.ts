@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import apiClient from '@/shared/lib/axios';
 import type { UpdateTaskRequest, Task } from '../types/task';
+import { activitiesService } from '../services/activities-service';
 
 /**
  * Payload for updating a task.
@@ -57,10 +57,7 @@ export const useUpdateTask = () => {
 
   return useMutation<Task, Error, UpdateTaskPayload>({
     mutationFn: async ({ taskId, ...payload }: UpdateTaskPayload) => {
-      const response = await apiClient.patch<{ message: string; data: Task }>(
-        `/tasks/${taskId}`,
-        payload
-      );
+      const response = await activitiesService.updateActivity(taskId, payload);
       return response.data.data;
     },
     onSuccess: (_data, variables) => {

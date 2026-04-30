@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Search, Plus, RefreshCw, LayoutGrid, List, Filter } from "lucide-react";
 import type { Task, TaskViewMode } from "../types/task";
 import ListFooter from "@/components/ListFooter";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 /**
  * Priority color mapping for task badges.
@@ -69,6 +70,16 @@ export interface TaskViewProps {
   onPageChange: (page: number) => void;
   /** Callback for deleting a task */
   onDelete?: (task: { id: number; title: string }) => void;
+  /** ID del usuario actual autenticado */
+  currentUserId?: number;
+  /** ID del usuario seleccionado en el filtro */
+  selectedUserId?: number;
+  /** Callback para cambiar el filtro de usuario */
+  onUserFilterChange?: (userId: number | undefined) => void;
+  /** Lista de usuarios disponibles para filtro (opcional) */
+  availableUsers?: Array<{ id: number; first_name: string; last_name: string }>;
+  /** Si el usuario puede ver tareas de otros */
+  canViewOtherUsersTasks?: boolean;
 }
 
 /**
@@ -123,8 +134,12 @@ export const TaskView = ({
   totalPages,
   totalItems,
   onPageChange,
+  selectedUserId,
+  onUserFilterChange,
+  currentUserId,
+  availableUsers,
+  canViewOtherUsersTasks,
 }: TaskViewProps) => {
-
   if (error) {
     return (
       <div className="p-6">
@@ -208,6 +223,28 @@ export const TaskView = ({
               <Filter className="w-4 h-4 mr-2" />
               Filters
             </Button>
+            {canViewOtherUsersTasks && (
+              <div className="flex items-center gap-2">
+                <Select
+                  value={selectedUserId?.toString() || "all"}
+                  onValueChange={(val) =>
+                    onUserFilterChange?.(val === "all" ? undefined : parseInt(val))
+                  }
+                >
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Todas las tareas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas mis tareas</SelectItem>
+                    {availableUsers?.map((user) => (
+                      <SelectItem key={user.id} value={user.id.toString()}>
+                        {user.first_name} {user.last_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -233,6 +270,7 @@ export const TaskView = ({
                   task={task}
                   onView={onView}
                   onToggle={onToggle}
+                  currentUserId={currentUserId}
                 />
               ))}
             </div>
@@ -241,6 +279,7 @@ export const TaskView = ({
               tasks={tasks}
               onView={onView}
               onToggle={onToggle}
+              currentUserId={currentUserId}
             />
           )}
         </CardContent>
@@ -267,6 +306,7 @@ interface TaskCardProps {
   onView?: (task: Task) => void;
   /** Callback for toggling task completion */
   onToggle?: (task: Task) => void;
+  currentUserId?: number;
 }
 
 /**
@@ -283,7 +323,9 @@ const TaskCard = ({
   task,
   onView,
   onToggle,
+  currentUserId
 }: TaskCardProps) => {
+  const isOwnTask = task.assignedUserId === currentUserId;
   return (
     <div
       className="flex items-start gap-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
@@ -312,6 +354,9 @@ const TaskCard = ({
               </Badge>
               <Badge variant="secondary">
                 {statusLabels[task.status]}
+              </Badge>
+              <Badge variant={isOwnTask ? "default" : "outline"}>
+                {isOwnTask ? "Mi tarea" : task.assignedUserName}
               </Badge>
               {task.dueDate && (
                 <span className="text-xs text-muted-foreground">
@@ -343,6 +388,7 @@ interface TaskTableProps {
   onView?: (task: Task) => void;
   /** Callback for toggling task completion */
   onToggle?: (task: Task) => void;
+  currentUserId?: number;
 }
 
 /**
@@ -362,6 +408,7 @@ const TaskTable = ({
   tasks,
   onView,
   onToggle,
+  currentUserId,
 }: TaskTableProps) => {
   return (
     <div className="overflow-x-auto">
@@ -375,7 +422,7 @@ const TaskTable = ({
             <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Due Date</th>
             <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Assigned</th>
             <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Actions</th>
-           </tr>
+          </tr>
         </thead>
         <tbody>
           {tasks.map((task) => (
@@ -389,7 +436,7 @@ const TaskTable = ({
                   onCheckedChange={() => onToggle?.(task)}
                   className="mt-1"
                 />
-               </td>
+              </td>
               <td className="px-4 py-3">
                 <div className={`font-medium ${task.completed ? "line-through text-muted-foreground" : ""}`}>
                   {task.title}
@@ -399,29 +446,31 @@ const TaskTable = ({
                     {task.description}
                   </div>
                 )}
-               </td>
+              </td>
               <td className="px-4 py-3">
                 <Badge variant="outline" className={priorityColors[task.priority]}>
                   {priorityLabels[task.priority]}
                 </Badge>
-               </td>
+              </td>
               <td className="px-4 py-3">
                 <Badge variant="secondary">
                   {statusLabels[task.status]}
                 </Badge>
-               </td>
+              </td>
               <td className="px-4 py-3">
                 {task.dueDate && (
                   <span className="text-sm text-muted-foreground">
                     {new Date(task.dueDate).toLocaleDateString()}
                   </span>
                 )}
-               </td>
+              </td>
               <td className="px-4 py-3">
-                <span className="text-sm text-muted-foreground">
-                  {task.assignedUserName || '-'}
-                </span>
-               </td>
+                <Badge variant={task.assignedUserId === currentUserId ? "default" : "secondary"}>
+                  {task.assignedUserId === currentUserId
+                    ? "Mi tarea"
+                    : task.assignedUserName || '-'}
+                </Badge>
+              </td>
               <td className="px-4 py-3 text-right">
                 <Button
                   variant="ghost"
@@ -430,7 +479,7 @@ const TaskTable = ({
                 >
                   View
                 </Button>
-               </td>
+              </td>
             </tr>
           ))}
         </tbody>

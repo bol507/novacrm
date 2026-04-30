@@ -7,15 +7,10 @@ import type { User } from '@/features/users/types/user';
  * Options for the useUsers hook
  */
 export interface UseUsersOptions {
-  /** Page number (1-based) */
   page?: number;
-  /** Items per page */
   perPage?: number;
-  /** Search term to filter by name/email */
   search?: string;
-  /** Filter by active status only (default: true) */
   active?: boolean;
-  /** Conditionally enable the query (default: true) */
   enabled?: boolean;
 }
 
@@ -65,7 +60,7 @@ export const useUsers = (options: UseUsersOptions = {}) => {
   return useQuery<PaginatedResponse<User>, Error>({
     queryKey: ['users', { page, perPage, search, active }],
     queryFn: () => userService.getUsers(page, perPage, search, active),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     retry: 1,
     enabled,
   });

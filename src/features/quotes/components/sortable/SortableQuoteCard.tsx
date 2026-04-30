@@ -23,11 +23,11 @@ export const SortableQuoteCard = ({ item, formatCurrency, disabled }: { item: Qu
             <GripVerticalIcon className="h-4 w-4 text-muted-foreground" />
           </button>
         )}
-        <div className="font-semibold text-lg">{item.productname}</div>
+        <div className="font-semibold text-lg">{item.description}</div>
       </div>
-      {item.description && (
+      {item.comment && (
         <div className="mt-2">
-          <ExpandableText text={item.description} maxLines={2} className="text-muted-foreground" expandedClassName="text-muted-foreground whitespace-pre-line" />
+          <ExpandableText text={item.comment} maxLines={2} className="text-muted-foreground" expandedClassName="text-muted-foreground whitespace-pre-line" />
         </div>
       )}
       <div className="grid grid-cols-2 gap-4 mt-3">

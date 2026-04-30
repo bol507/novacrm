@@ -21,6 +21,7 @@ import {
   ProjectErrorState,
   ProjectNotFoundState,
 } from '../components/ProjectDetail';
+import { ProjectPurchasesTab } from '@/features/purchases/components/ProjectPurchasesTab';
 
 /**
  * ProjectDetailPage Container Component
@@ -46,13 +47,13 @@ import {
 const ProjectDetailPage = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  
+
   // Data fetching
   const { data: project, isLoading, error, refetch } = useProjectDetail(projectId);
-  
+
   // Tab state
   const [activeTab, setActiveTab] = useState('overview');
-  
+
   // Custom hooks
   const calculations = useProjectCalculations(project);
   const actions = useProjectActions(projectId);
@@ -135,8 +136,16 @@ const ProjectDetailPage = () => {
                   onFileClick={(url) => window.open(url, '_blank')}
                 />
               </TabsContent>
-
               
+              {/* Purchases Tab */}
+              <TabsContent value="purchases">
+                <ProjectPurchasesTab
+                  projectId={parseInt(projectId || '0')}
+                  projectBudget={project?.targetbudget || null}
+                />
+              </TabsContent>
+
+
             </Tabs>
 
             {/* Sticky Action Buttons */}

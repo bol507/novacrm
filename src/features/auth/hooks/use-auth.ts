@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { authService } from "@/features/auth/services/auth-service";
 import type { UserData } from "@/features/auth/types/auth";
 
@@ -79,21 +79,49 @@ export const useAuth = () => {
   };
 
   /**
-   * Whether the current user has admin role.
+   * Whether the current user has system administrator privileges.
+   * Checks the `is_admin` flag (not hierarchical role).
    */
   const isAdmin = useMemo(() => {
-    return user?.role === 'Admin';
+    return user?.is_admin === true;
   }, [user]);
 
   /**
-   * Checks if the current user has a specific role.
+   * Checks if the current user has a specific hierarchical role.
    *
-   * @param role - Role to check ('Admin', 'Usuario', 'Cliente')
-   * @returns True if the user has the specified role
+   * @param roleId - Vtiger role ID to check (e.g., 'H1', 'H2', 'H8')
+   * @returns True if the user has the specified hierarchical role
+   *
+   * @example
+   * if (hasHierarchicalRole('H2')) {
+   *   // User has CEO role
+   * }
    */
-  const hasRole = (role: 'Admin' | 'Usuario' | 'Cliente') => {
-    return user?.role === role;
-  };
+  const hasHierarchicalRole = useCallback((roleId: string): boolean => {
+    return user?.role_id === roleId;
+  }, [user]);
+
+  /**
+   * Checks if the current user has one of multiple hierarchical roles.
+   *
+   * @param roleIds - Array of Vtiger role IDs to check
+   * @returns True if the user has any of the specified roles
+   *
+   * @example
+   * if (hasAnyHierarchicalRole(['H1', 'H2'])) {
+   *   // User is Organization or CEO
+   * }
+   */
+  const hasAnyHierarchicalRole = useCallback((roleIds: string[]): boolean => {
+    return user?.role_id ? roleIds.includes(user.role_id) : false;
+  }, [user]);
+
+  /**
+   * Get the readable role name for display purposes.
+   */
+  const roleName = useMemo(() => {
+    return user?.rolename ?? null;
+  }, [user]);
 
   return { 
     user, 
@@ -101,7 +129,9 @@ export const useAuth = () => {
     login, 
     logout,
     isAdmin,      
-    hasRole,      
+    hasHierarchicalRole,    
+    hasAnyHierarchicalRole,  
+    roleName,             
   };
 };
 
@@ -121,23 +151,43 @@ export const useIsAdmin = (): boolean => {
   return isAdmin;
 };
 
+;
+
 /**
- * Helper hook to check if the current user has a specific role.
+ * Helper hook to check if the current user has a specific hierarchical role.
  *
- * @param role - Role to check ('Admin', 'Usuario', 'Cliente')
- * @returns True if the user has the specified role
+ * @param roleId - Vtiger role ID to check (e.g., 'H2' for CEO)
+ * @returns True if the user has the specified hierarchical role
  *
  * @example
- * const isAdmin = useHasRole('Admin');
- * const isClient = useHasRole('Cliente');
+ * const isCEO = useHasHierarchicalRole('H2');
+ * const isSales = useHasHierarchicalRole('H8');
  *
- * if (isAdmin) {
- *   // Admin content
- * } else if (isClient) {
- *   // Client content
+ * if (isCEO) {
+ *   // CEO content
+ * } else if (isSales) {
+ *   // Sales content
  * }
  */
-export const useHasRole = (role: 'Admin' | 'Usuario' | 'Cliente'): boolean => {
-  const { hasRole } = useAuth();
-  return hasRole(role);
+export const useHasHierarchicalRole = (roleId: string): boolean => {
+  const { hasHierarchicalRole } = useAuth();
+  return hasHierarchicalRole(roleId);
+};
+
+/**
+ * Helper hook to check if the current user has any of multiple hierarchical roles.
+ *
+ * @param roleIds - Array of Vtiger role IDs to check
+ * @returns True if the user has any of the specified roles
+ *
+ * @example
+ * const isExecutive = useHasAnyHierarchicalRole(['H1', 'H2', 'H3']);
+ * 
+ * if (isExecutive) {
+ *   // Show executive dashboard
+ * }
+ */
+export const useHasAnyHierarchicalRole = (roleIds: string[]): boolean => {
+  const { hasAnyHierarchicalRole } = useAuth();
+  return hasAnyHierarchicalRole(roleIds);
 };
