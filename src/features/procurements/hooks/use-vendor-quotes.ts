@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { procurementService } from '../services/procurement-service';
 import type { CreateRFQPayload, AcceptQuotePayload } from '../types/procurement';
+import { toast } from 'sonner';
 
 export const useVendorQuotes = {
   list: (projectId: number, params?: { page?: number; limit?: number; status?: string }) => {
@@ -28,9 +29,13 @@ export const useVendorQuotes = {
     return useMutation({
       mutationFn: (payload: CreateRFQPayload) =>
         procurementService.createRFQ(projectId, payload).then(res => res.data),
-      onSuccess: () => {
+      onSuccess: (data) => {
+        toast.success(`RFQ #${data.id} creada exitosamente`);
         queryClient.invalidateQueries({ queryKey: ['procurement', 'vendor-quotes', projectId] });
         queryClient.invalidateQueries({ queryKey: ['procurement', 'requests', projectId] });
+      },
+      onError: (err) => {
+        toast.error(err.message || 'Error creando RFQ');
       },
     });
   },

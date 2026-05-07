@@ -141,7 +141,7 @@ const VendorListPage = () => {
                       <TableCell className="text-muted-foreground">{v.email || "-"}</TableCell>
                       <TableCell className="text-muted-foreground">{v.phone || "-"}</TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleViewVendor(v.id); }}>
+                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleViewVendor(v.vendorid); }}>
                           View
                         </Button>
                       </TableCell>
