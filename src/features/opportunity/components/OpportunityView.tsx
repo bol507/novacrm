@@ -64,21 +64,24 @@ export const OpportunityView = ({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+    <div className="space-y-4 sm:space-y-6">
+      
+      {/* ===== HEADER ===== */}
+      <div className="flex flex-col gap-4">
+        <div className="space-y-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground flex flex-wrap items-center gap-2">
+            <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
               {opportunityCount}
             </Badge>
-            Oportunidades
+            <span className="truncate">Oportunidades</span>
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Gestiona las oportunidades de venta
           </p>
+          
           {clientIdNumber && (
-            <div className="flex items-center gap-2 mt-2">
-              <Badge variant="secondary" className="text-sm font-normal">
+            <div className="flex flex-wrap items-center gap-2 mt-1">
+              <Badge variant="secondary" className="text-xs font-normal">
                 Cliente ID: {clientIdNumber}
               </Badge>
               <Button
@@ -94,79 +97,125 @@ export const OpportunityView = ({
           )}
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={onRefresh}
-            disabled={isLoading}
-            title="Refresh list"
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-          </Button>
+        {/* Barra de acciones responsive */}
+        <div className="flex flex-wrap items-center gap-2">
+          
+          {/* Búsqueda - adaptable */}
+          <div className="relative flex-1 min-w-[200px] sm:max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar oportunidad..."
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="pl-10 h-9 text-sm"
+              aria-label="Buscar oportunidades"
+            />
+          </div>
 
-          <div className="flex rounded-md border border-border overflow-hidden">
+          {/* 🖥️ DESKTOP: Controles completos (Ocultos en móvil) */}
+          <div className="hidden md:flex items-center gap-2 ml-auto md:ml-0">
             <Button
-              variant={viewMode === "cards" ? "default" : "ghost"}
+              variant="outline"
               size="icon"
-              onClick={() => onViewModeChange("cards")}
-              className="rounded-none border-r border-border"
-              title="Card view"
+              onClick={onRefresh}
+              disabled={isLoading}
+              className="h-9 w-9"
+              title="Actualizar lista"
             >
-              <LayoutGrid className="h-4 w-4" />
+              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             </Button>
-            <Button
-              variant={viewMode === "table" ? "default" : "ghost"}
-              size="icon"
-              onClick={() => onViewModeChange("table")}
-              className="rounded-none"
-              title="Table view"
-            >
-              <List className="h-4 w-4" />
+
+            <div className="flex rounded-md border border-border overflow-hidden">
+              <Button
+                variant={viewMode === "cards" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => onViewModeChange("cards")}
+                className="rounded-none border-r border-border h-9 px-3"
+                title="Vista tarjetas"
+              >
+                <LayoutGrid className="h-4 w-4 mr-1" />
+                <span className="hidden lg:inline">Tarjetas</span>
+              </Button>
+              <Button
+                variant={viewMode === "table" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => onViewModeChange("table")}
+                className="rounded-none h-9 px-3"
+                title="Vista tabla"
+              >
+                <List className="h-4 w-4 mr-1" />
+                <span className="hidden lg:inline">Tabla</span>
+              </Button>
+            </div>
+
+            <Button size="sm" onClick={onCreateClick} className="h-9 gap-1.5">
+              <Plus className="h-4 w-4" />
+              <span className="hidden lg:inline">Nueva Oportunidad</span>
+              <span className="lg:hidden">Nueva</span>
             </Button>
           </div>
 
-          <Button className="gap-2" onClick={onCreateClick}>
-            <Plus className="h-4 w-4" />
-            Nueva Oportunidad
-          </Button>
+          {/* 📱 MOBILE: Controles compactos (Solo actualizar + crear) */}
+          <div className="flex md:hidden items-center gap-2 ml-auto">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onRefresh}
+              disabled={isLoading}
+              className="h-9 w-9"
+            >
+              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+            </Button>
+            <Button size="sm" onClick={onCreateClick} className="h-9 gap-1.5">
+              <Plus className="h-4 w-4" />
+              <span>Nueva</span>
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nombre de oportunidad..."
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10"
-            aria-label="Buscar oportunidades"
+      {/* ===== LISTA: CAMBIO AUTOMÁTICO POR BREAKPOINT ===== */}
+      <div className="min-h-[200px]">
+        
+        {/* 📱 MOBILE: Fuerza siempre Tarjetas (evita tabla rota) */}
+        <div className="block md:hidden">
+          <OpportunityCards
+            opportunities={opportunities}
+            isLoading={isLoading}
+            onViewOpportunity={onView!}
+            onEditOpportunity={onEdit}
+            onDeleteOpportunity={onDelete}
           />
         </div>
+
+        {/* 💻 DESKTOP: Respeta el toggle del usuario */}
+        <div className="hidden md:block">
+          {viewMode === "cards" ? (
+            <OpportunityCards
+              opportunities={opportunities}
+              isLoading={isLoading}
+              onViewOpportunity={onView!}
+              onEditOpportunity={onEdit}
+              onDeleteOpportunity={onDelete}
+            />
+          ) : (
+            <div className="overflow-x-auto rounded-lg border">
+              <OpportunityTable
+                opportunities={opportunities}
+                isLoading={isLoading}
+                searchValue={searchTerm}
+                onSearchChange={onSearchChange}
+                onView={onView}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onRefresh={onRefresh}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
-      {viewMode === "cards" ? (
-        <OpportunityCards
-          opportunities={opportunities}
-          isLoading={isLoading}
-          onViewOpportunity={onView!}
-          onEditOpportunity={onEdit}
-          onDeleteOpportunity={onDelete}
-        />
-      ) : (
-        <OpportunityTable
-          opportunities={opportunities}
-          isLoading={isLoading}
-          searchValue={searchTerm}
-          onSearchChange={onSearchChange}
-          onView={onView}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onRefresh={onRefresh}
-        />
-      )}
-
+      {/* ===== FOOTER ===== */}
       <ListFooter
         currentPage={page}
         totalPages={totalPages}
@@ -175,7 +224,7 @@ export const OpportunityView = ({
         onPageChange={onPageChange}
         isLoading={isLoading}
         entityLabel="oportunidades"
-        className="mt-6"
+        className="mt-4 sm:mt-6"
       />
     </div>
   );

@@ -6,19 +6,12 @@ import { Link } from 'react-router-dom';
  * Props for ProjectInfoCards component
  */
 export interface ProjectInfoCardsProps {
-  /** Client/account name (optional) */
   accountName?: string;
-  /** Client/account ID for navigation (optional) */
   accountId?: number;
-  /** Assigned user name */
   assignedUserName: string;
-  /** Project start date (optional) */
   startDate?: string | null;
-  /** Project target end date (optional) */
   targetEndDate?: string | null;
-  /** Date formatter function */
   formatDate: (date: string | null) => string;
-  /** Days remaining calculator */
   getDaysRemaining: (endDate: string | null) => number | null;
 }
 
@@ -50,7 +43,7 @@ export const ProjectInfoCards = ({
   getDaysRemaining,
 }: ProjectInfoCardsProps) => {
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 space-y-4">
       {accountName && accountId && (
         <Card className="flex items-start gap-3 p-4 border border-border">
           <Link to={`/dashboard/clients/${accountId}`} className="flex items-start gap-3 p-4 hover:bg-muted/50 transition-colors rounded-lg border border-border">

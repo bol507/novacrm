@@ -34,7 +34,7 @@ import type { UserData } from "@/features/auth/types/auth";
 export const useAuth = () => {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
- 
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -123,15 +123,28 @@ export const useAuth = () => {
     return user?.rolename ?? null;
   }, [user]);
 
-  return { 
-    user, 
-    loading, 
-    login, 
+  /**
+ * Checks if the current user has a specific role by its readable name.
+ * Useful when you prefer business-readable names over hierarchical IDs.
+ *
+ * @param roleNames - Array of role names to check (e.g., ['Admin', 'Producción', 'Compras'])
+ * @returns True if user's rolename matches any in the list OR if is_admin=true
+ */
+  const hasRoleByName = useCallback((roleNames: string[]): boolean => {
+    if (user?.is_admin) return true;
+    return user?.rolename ? roleNames.includes(user.rolename) : false;
+  }, [user]);
+
+  return {
+    user,
+    loading,
+    login,
     logout,
-    isAdmin,      
-    hasHierarchicalRole,    
-    hasAnyHierarchicalRole,  
-    roleName,             
+    isAdmin,
+    hasHierarchicalRole,
+    hasAnyHierarchicalRole,
+    roleName,
+    hasRoleByName,
   };
 };
 

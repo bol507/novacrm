@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import {  useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 // Custom hooks
@@ -13,72 +12,54 @@ import {
   ProjectDetailHeader,
   ProjectInfoCards,
   ProjectFinancialSummary,
-  ProjectTabsNavigation,
   ProjectOverviewTab,
-  ProjectAttachmentsTab,
   ProjectActionButtons,
   ProjectLoadingSkeleton,
   ProjectErrorState,
   ProjectNotFoundState,
+  ProjectAttachmentsTab,
 } from '../components/ProjectDetail';
-import { ProjectPurchasesTab } from '@/features/purchases/components/ProjectPurchasesTab';
+import { ProjectModuleNav, type ModuleId } from '../components/ProjectModuleNav';
+import { useAuth } from '@/features/auth/hooks/use-auth';
+import { ProjectProcurementTab } from '@/features/procurements/components/tabs/ProjectProcurementTab';
+import ProjectPurchaseOrdersTab from '@/features/procurements/components/tabs/ProjectPurchaseOrdersTab';
 
 /**
  * ProjectDetailPage Container Component
- * 
+ *
  * Orchestrates data fetching, state management, and composition of presentational components
  * for displaying project details. Handles loading, error, and empty states.
- * 
+ *
  * @component
- * @returns {JSX.Element} Complete project detail page
- * 
- * @remarks
- * Responsibilities:
- * - Fetches project data via useProjectDetail hook
- * - Manages tab state for overview/attachments/comments
- * - Composes presentational components with calculated data
- * - Handles navigation and user interactions
- * - Provides error boundary for graceful error handling
- * 
- * @see {@link useProjectDetail} for data fetching
- * @see {@link useProjectCalculations} for financial/date calculations
- * @see {@link useProjectActions} for action handlers
+ * @returns Complete project detail page
  */
 const ProjectDetailPage = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
 
-  // Data fetching
   const { data: project, isLoading, error, refetch } = useProjectDetail(projectId);
 
-  // Tab state
-  const [activeTab, setActiveTab] = useState('overview');
-
-  // Custom hooks
+  const [currentModule, setCurrentModule] = useState<ModuleId>('overview');
   const calculations = useProjectCalculations(project);
   const actions = useProjectActions(projectId);
+  const { hasRoleByName } = useAuth();
 
-  // Loading state
-  if (isLoading) {
-    return <ProjectLoadingSkeleton />;
-  }
+  const isModuleVisible = (moduleId: ModuleId) => {
+    if (['procurement', 'production'].includes(moduleId)) {
+      return hasRoleByName(['Producción', 'Compras', 'Admin']);
+    }
+    return true;
+  };
 
-  // Error state
-  if (error) {
-    return <ProjectErrorState message={error.message} onBack={() => navigate(-1)} />;
-  }
-
-  // Not found state
-  if (!project) {
-    return <ProjectNotFoundState onBack={() => navigate('/dashboard/projects')} />;
-  }
+  if (isLoading) return <ProjectLoadingSkeleton />;
+  if (error) return <ProjectErrorState message={error.message} onBack={() => navigate(-1)} />;
+  if (!project) return <ProjectNotFoundState onBack={() => navigate('/dashboard/projects')} />;
 
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto p-6">
-          {/* Header Section */}
-          <div className="grid grid-cols-1 gap-6 mb-6">
+        <div className="container">
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 mb-4 sm:mb-6">
             <ProjectDetailHeader
               projectname={project.projectname}
               projectNo={project.project_no}
@@ -86,7 +67,6 @@ const ProjectDetailPage = () => {
               onBack={() => navigate(-1)}
             />
 
-            {/* Info Cards */}
             <ProjectInfoCards
               accountName={project.account_name}
               accountId={project.linktoaccountscontacts}
@@ -97,7 +77,6 @@ const ProjectDetailPage = () => {
               getDaysRemaining={calculations.getDaysRemaining}
             />
 
-            {/* Financial Summary */}
             <ProjectFinancialSummary
               targetBudget={calculations.targetBudget}
               itbms={calculations.itbms}
@@ -107,14 +86,15 @@ const ProjectDetailPage = () => {
             />
           </div>
 
-          {/* Tabbed Content Section */}
-          <div className="space-y-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              {/* Tab Navigation */}
-              <ProjectTabsNavigation />
+          <div className="space-y-4 sm:space-y-6">
+            <ProjectModuleNav
+              currentModule={currentModule}
+              onModuleChange={setCurrentModule}
+              isModuleVisible={isModuleVisible}
+            />
 
-              {/* Overview Tab */}
-              <TabsContent value="overview">
+            <div className="min-h-[300px] sm:min-h-[400px]">
+              {currentModule === 'overview' && (
                 <ProjectOverviewTab
                   projectid={parseInt(projectId || '0')}
                   description={project.description}
@@ -127,28 +107,30 @@ const ProjectDetailPage = () => {
                   actualenddate={project.actualenddate}
                   formatDate={calculations.formatDate}
                 />
-              </TabsContent>
-
-              {/* Attachments Tab */}
-              <TabsContent value="attachments">
+              )}
+              {currentModule === 'attachments' && (
                 <ProjectAttachmentsTab
                   projectId={parseInt(projectId || '0')}
                   onFileClick={(url) => window.open(url, '_blank')}
                 />
-              </TabsContent>
-              
-              {/* Purchases Tab */}
-              <TabsContent value="purchases">
-                <ProjectPurchasesTab
+              )}
+              {currentModule === 'procurement' && (
+                <ProjectProcurementTab
                   projectId={parseInt(projectId || '0')}
-                  projectBudget={project?.targetbudget || null}
                 />
-              </TabsContent>
+              )}
+              {currentModule === 'purchases' && (
+                <ProjectPurchaseOrdersTab
+                  projectId={parseInt(projectId || '0')}
+                />
+              )}
+              {!['overview', 'attachments', 'procurement', 'purchases'].includes(currentModule) && (
+                <div className="text-center py-12 text-muted-foreground">
+                  <p>Module "{currentModule}" under development</p>
+                </div>
+              )}
+            </div>
 
-
-            </Tabs>
-
-            {/* Sticky Action Buttons */}
             <ProjectActionButtons
               project={project}
               onEdit={() => actions.handleEditProject(projectId || '')}

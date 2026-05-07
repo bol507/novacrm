@@ -255,11 +255,24 @@ export const QuoteFormContent = ({
       // Build payload - use both state and form values
       const accountIdFromForm = form.getValues('accountid');
       const userIdFromForm = form.getValues('assigned_user_id');
-      const payloadAccountId = selectedClientId ?? accountIdFromForm ?? data.accountid;
-      const payloadUserId = selectedUserId ?? userIdFromForm ?? data.assigned_user_id;
 
-      // Ensure we always have an accountid
-      const finalAccountId = payloadAccountId || 101; // Fallback for debugging
+      console.log('[DEBUG] Submit - selectedClientId:', selectedClientId);
+      console.log('[DEBUG] Submit - accountIdFromForm:', accountIdFromForm);
+      console.log('[DEBUG] Submit - data.accountid:', data.accountid);
+
+      // Use form value as primary source (more reliable than state)
+      const finalAccountId = accountIdFromForm || selectedClientId || data.accountid;
+      const payloadUserId = selectedUserId || userIdFromForm || data.assigned_user_id;
+
+      console.log('[DEBUG] Submit - finalAccountId:', finalAccountId);
+
+      if (!finalAccountId || finalAccountId === 0) {
+        form.setError('accountid', {
+          type: 'manual',
+          message: 'You must select a client'
+        });
+        return;
+      }
 
       const payload: QuoteFormData = {
         subject: data.subject,
@@ -310,11 +323,13 @@ export const QuoteFormContent = ({
 
   
   const handleSelectClient = (client: ClientSearchResult) => {
+    console.log('[DEBUG] handleSelectClient called with client:', client);
     form.setValue('account_search', client.accountname);
-    form.setValue('accountid', client.id);
-    setSelectedClientId(client.id);
+    form.setValue('accountid', client.accountid);
+    setSelectedClientId(client.accountid);
     setIsClientValid(true);
     setClientSearchTerm('');
+    console.log('[DEBUG] After handleSelectClient - selectedClientId:', client.accountid, 'form accountid:', form.getValues('accountid'));
   };
 
   const handleSelectUser = (user: UserSearchResult) => {

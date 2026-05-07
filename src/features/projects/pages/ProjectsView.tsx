@@ -1,30 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, RefreshCw, Folder, ListFilter, LayoutGrid, List, X } from "lucide-react";
+import { Search, Plus, RefreshCw, Folder, ListFilter, LayoutGrid, List, X, Settings, Check } from "lucide-react";
 import type { Project, ProjectViewMode } from "../types/projects";
 import { ProjectsStats } from "../components/ProjectsStats";
 import { ProjectsGrid } from "../components/ProjectsGrid";
 import type { SortKey, SortOrder } from "../components/ProjectsTable/types";
 import ProjectsTable from "../components/ProjectsTable";
 import ListFooter from "@/components/ListFooter";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-/**
- * Valid filter options for project list view.
- *
- * @remarks
- * - "all": Display all projects regardless of status
- * - "active": Display only projects that are not completed or cancelled
- */
 export type ProjectFilter = "all" | "active";
 
-/**
- * Props for the ProjectsView presentational component.
- *
- * This component is purely presentational and receives all data and callbacks
- * from its parent container. It handles rendering of the projects list UI
- * including header, search, statistics, project grid/table, and pagination.
- */
 export interface ProjectsViewProps {
   projects: Project[];
   isLoading: boolean;
@@ -60,119 +47,17 @@ export interface ProjectsViewProps {
  *
  * This component is purely presentational and contains no internal state
  * or side effects. All business logic, data fetching, and state management
- * are handled by the parent container component. It receives data and
- * callbacks via props and focuses solely on UI rendering.
+ * are handled by the parent container component.
  *
  * @param props - Component props containing data and callbacks
- * @param props.projects - Array of project objects to display
- * @param props.isLoading - Whether projects are currently being fetched
- * @param props.error - Error object if project fetching failed, null otherwise
- * @param props.searchTerm - Current search input value for filtering
- * @param props.onSearchChange - Callback invoked when search input changes
- * @param props.onCreateClick - Callback invoked when create project button is clicked
- * @param props.onFilterChange - Callback invoked when active/all filter toggles
- * @param props.onViewModeChange - Callback invoked when cards/table view mode toggles
- * @param props.onRefresh - Callback invoked to refresh the projects list
- * @param props.onEdit - Optional callback invoked when editing a project
- * @param props.onView - Optional callback invoked when viewing a project
- * @param props.viewMode - Current display mode: "cards" or "table"
- * @param props.page - Current pagination page number (1-indexed)
- * @param props.totalPages - Total number of pages available
- * @param props.totalItems - Total number of items across all pages
- * @param props.onPageChange - Callback invoked when pagination page changes
- * @param props.filter - Current filter state: "active" or "all"
- * @param props.projectCount - Number of projects matching the current filter
- * @param props.sortBy - Optional sort field key for table view
- * @param props.sortOrder - Optional sort direction: "asc" or "desc"
- * @param props.onSortChange - Optional callback invoked when table sorting changes
- * @param props.renderProjectName - Optional custom renderer for project name column
- * @param props.renderClient - Optional custom renderer for client column
- * @param props.renderActions - Optional custom renderer for actions column
- * @param props.clientIdNumber - Optional client ID filter currently applied
- * @param props.handleClearClientFilter - Optional callback to clear client ID filter
  * @returns The rendered projects list view
- *
- * @example
- * // Basic usage with required props
- * <ProjectsView
- *   projects={projects}
- *   isLoading={false}
- *   error={null}
- *   searchTerm=""
- *   onSearchChange={setSearchTerm}
- *   onCreateClick={handleCreateClick}
- *   onFilterChange={handleFilterChange}
- *   onViewModeChange={handleViewModeChange}
- *   onRefresh={refetchProjects}
- *   viewMode="cards"
- *   page={1}
- *   totalPages={5}
- *   totalItems={42}
- *   onPageChange={handlePageChange}
- *   filter="active"
- *   projectCount={15}
- * />
- *
- * @example
- * // Usage with optional render props for customization
- * <ProjectsView
- *   projects={projects}
- *   isLoading={false}
- *   error={null}
- *   searchTerm=""
- *   onSearchChange={setSearchTerm}
- *   onCreateClick={handleCreateClick}
- *   onFilterChange={handleFilterChange}
- *   onViewModeChange={handleViewModeChange}
- *   onRefresh={refetchProjects}
- *   viewMode="table"
- *   page={1}
- *   totalPages={5}
- *   totalItems={42}
- *   onPageChange={handlePageChange}
- *   filter="all"
- *   projectCount={42}
- *   sortBy="projectname"
- *   sortOrder="asc"
- *   onSortChange={handleSortChange}
- *   renderProjectName={(project) => (
- *     <span className="font-bold">{project.projectname}</span>
- *   )}
- *   renderClient={(project) => (
- *     <Badge>{project.account_name}</Badge>
- *   )}
- * />
- *
- * @remarks
- * - Pure presentational component: contains no internal state or side effects
- * - Error state displays a retry button that calls the onRefresh callback
- * - Search input changes are debounced by the parent component for performance
- * - Filter toggle switches between "all" and "active" project views
- * - View mode toggle switches between card grid and table layouts
- * - Statistics component receives the full projects array for accurate calculations
- * - Grid component handles responsive layout with 1-3 columns based on screen size
- * - Table component provides sortable columns and responsive mobile card view
- * - Pagination component is disabled during loading to prevent race conditions
- * - All interactive elements use stopPropagation to prevent event bubbling conflicts
- * - Supports render props for customizing project name, client, and action displays
- * - When clientIdNumber is present, displays a badge and clear button for active client filter
- *
- * @see {@link ProjectsStats} for statistics display component
- * @see {@link ProjectsGrid} for card-based project grid component
- * @see {@link ProjectsTable} for table-based project list component
- * @see {@link ListFooter} for pagination controls component
  */
 export const ProjectsView = ({
-  // Data props
   projects,
   isLoading,
   error,
-
-  // Search props
   searchTerm,
   onSearchChange,
-
-  // Action callbacks
   onCreateClick,
   onFilterChange,
   onViewModeChange,
@@ -180,34 +65,24 @@ export const ProjectsView = ({
   onRefresh,
   onView,
   onEdit,
-
-  // Pagination props
   page,
   totalPages,
   totalItems,
   onPageChange,
-
-  // Filter props
   filter,
   projectCount,
-
-  // Sorting props
   sortBy = 'last_activity',
   sortOrder = 'desc',
-
-  // Render props for customization
   renderProjectName,
   renderClient,
   renderActions,
-
   clientIdNumber,
   handleClearClientFilter
 }: ProjectsViewProps) => {
 
-
   if (error) {
     return (
-      <div className="p-6">
+      <div className="p-4">
         <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
           <p className="text-destructive">Error loading projects: {error.message}</p>
           <Button variant="outline" className="mt-4" onClick={onRefresh}>
@@ -219,29 +94,31 @@ export const ProjectsView = ({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header section with title, filter toggle, view mode toggle, refresh, and create button */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        {/* Title and description section */}
-        <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+    <div className="space-y-4 sm:space-y-6">
+
+      <div className="flex flex-col gap-4">
+
+        <div className="space-y-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground flex flex-wrap items-center gap-2">
             <Badge
               variant="secondary"
-              className={filter === "active" ? "bg-blue-100 text-blue-800" : "bg-muted"}
+              className={filter === "active" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100" : "bg-muted"}
             >
               {projectCount}
             </Badge>
-            {filter === "active" ? "Active Projects" : "All Projects"}
+            <span className="truncate">
+              {filter === "active" ? "Active Projects" : "All Projects"}
+            </span>
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             {filter === "active"
               ? "Projects in progress and pending completion"
               : "View and manage all projects"}
           </p>
           {clientIdNumber && (
-            <div className="flex items-center gap-2 mt-2">
-              <Badge variant="secondary" className="text-sm font-normal">
-                Cliente ID: {clientIdNumber}
+            <div className="flex flex-wrap items-center gap-2 mt-1">
+              <Badge variant="secondary" className="text-xs font-normal">
+                Client ID: {clientIdNumber}
               </Badge>
               <Button
                 variant="ghost"
@@ -250,129 +127,167 @@ export const ProjectsView = ({
                 className="h-6 px-2 text-xs hover:bg-muted"
               >
                 <X className="h-3 w-3 mr-1" />
-                Limpiar filtro
+                Clear
               </Button>
             </div>
           )}
         </div>
 
-        {/* Action buttons section: refresh, filter toggle, view mode toggle, create */}
-        <div className="flex items-center gap-3">
-          {/* Refresh button with loading spinner */}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={onRefresh}
-            disabled={isLoading}
-            title="Refresh list"
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-          </Button>
+        <div className="flex flex-wrap items-center gap-2">
 
-          {/* Filter toggle buttons: Active / All */}
-          <div className="flex rounded-md border border-border overflow-hidden">
+          <div className="relative flex-1 min-w-0 sm:max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search projects..."
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="pl-10 h-9 text-sm"
+              aria-label="Search projects"
+            />
+          </div>
+
+          <div className="hidden md:flex items-center gap-2 ml-auto md:ml-0">
             <Button
-              variant={filter === "active" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => onFilterChange("active")}
-              className="rounded-none border-r border-border"
+              variant="outline"
+              size="icon"
+              onClick={onRefresh}
+              disabled={isLoading}
+              className="h-9 w-9"
+              title="Refresh"
             >
-              <Folder className="h-4 w-4 mr-1" />
-              Active
+              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             </Button>
-            <Button
-              variant={filter === "all" ? "default" : "ghost"}
-              size="sm"
-              onClick={() => onFilterChange("all")}
-              className="rounded-none"
-            >
-              <ListFilter className="h-4 w-4 mr-1" />
-              All
+
+            <div className="flex rounded-md border border-border overflow-hidden">
+              <Button
+                variant={filter === "active" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => onFilterChange("active")}
+                className="rounded-none border-r border-border h-9 px-3"
+              >
+                <Folder className="h-4 w-4 mr-1" />
+                Active
+              </Button>
+              <Button
+                variant={filter === "all" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => onFilterChange("all")}
+                className="rounded-none h-9 px-3"
+              >
+                <ListFilter className="h-4 w-4 mr-1" />
+                All
+              </Button>
+            </div>
+
+            <div className="flex rounded-md border border-border overflow-hidden">
+              <Button
+                variant={viewMode === "cards" ? "default" : "ghost"}
+                size="icon"
+                onClick={() => onViewModeChange("cards")}
+                className="rounded-none border-r border-border h-9 w-9"
+                title="Card view"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "table" ? "default" : "ghost"}
+                size="icon"
+                onClick={() => onViewModeChange("table")}
+                className="rounded-none h-9 w-9"
+                title="Table view"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <Button size="sm" onClick={onCreateClick} className="h-9 gap-1.5">
+              <Plus className="h-4 w-4" />
+              <span className="hidden lg:inline">New Project</span>
+              <span className="lg:hidden">New</span>
             </Button>
           </div>
 
-          {/* View mode toggle buttons: Cards / Table */}
-          <div className="flex rounded-md border border-border overflow-hidden">
+          <div className="flex md:hidden items-center gap-2 ml-auto">
             <Button
-              variant={viewMode === "cards" ? "default" : "ghost"}
+              variant="outline"
               size="icon"
-              onClick={() => onViewModeChange("cards")}
-              className="rounded-none border-r border-border"
-              title="Card view"
+              onClick={onRefresh}
+              disabled={isLoading}
+              className="h-9 w-9"
             >
-              <LayoutGrid className="h-4 w-4" />
+              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             </Button>
-            <Button
-              variant={viewMode === "table" ? "default" : "ghost"}
-              size="icon"
-              onClick={() => onViewModeChange("table")}
-              className="rounded-none"
-              title="Table view"
-            >
-              <List className="h-4 w-4" />
-            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-9">
+                  <Settings className="h-4 w-4 mr-1" />
+                  Options
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem
+                  onClick={() => onFilterChange("active")}
+                  className={filter === "active" ? "bg-accent" : ""}
+                >
+                  <Folder className="h-4 w-4 mr-2" />
+                  Active
+                  {filter === "active" && <Check className="h-4 w-4 ml-auto" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onFilterChange("all")}
+                  className={filter === "all" ? "bg-accent" : ""}
+                >
+                  <ListFilter className="h-4 w-4 mr-2" />
+                  All
+                  {filter === "all" && <Check className="h-4 w-4 ml-auto" />}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={onCreateClick} className="text-primary font-medium">
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Project
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-
-          {/* Create new project button */}
-          <Button className="gap-2" onClick={onCreateClick}>
-            <Plus className="h-4 w-4" />
-            New Project
-          </Button>
         </div>
       </div>
 
-      {/* Search input section */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by project name or number..."
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10"
-            aria-label="Search projects"
-          />
-        </div>
-      </div>
-
-      {/* Statistics cards section displaying project metrics */}
       <ProjectsStats projects={projects} totalItems={totalItems} />
 
-      {/* Project list section - renders grid or table based on viewMode */}
-      {viewMode === "cards" ? (
-        <ProjectsGrid projects={projects} />
-      ) : (
-        <ProjectsTable
-          // Data props
-          projects={projects}
-          isLoading={isLoading}
+      <div className="min-h-[200px]">
 
-          // Sorting props (controlled by parent)
-          sortBy={sortBy}
-          sortOrder={sortOrder}
+        <div className="block md:hidden">
+          <ProjectsGrid projects={projects} />
+        </div>
 
-          // Search props (controlled by parent)
-          searchValue={searchTerm}
-          onSearchChange={onSearchChange}
+        <div className="hidden md:block">
+          {viewMode === "cards" ? (
+            <ProjectsGrid projects={projects} />
+          ) : (
+            <div className="overflow-x-auto rounded-lg border">
+              <ProjectsTable
+                projects={projects}
+                isLoading={isLoading}
+                sortBy={sortBy}
+                sortOrder={sortOrder}
+                searchValue={searchTerm}
+                onSearchChange={onSearchChange}
+                onRefresh={onRefresh}
+                onView={onView}
+                onEdit={onEdit}
+                renderProjectName={renderProjectName}
+                renderClient={renderClient}
+                renderActions={renderActions}
+                showProgress={true}
+                showBudget={true}
+                compact={false}
+              />
+            </div>
+          )}
+        </div>
+      </div>
 
-          // Action callbacks
-          onRefresh={onRefresh}
-          onView={onView}
-          onEdit={onEdit}
-
-          // Render props for UI customization
-          renderProjectName={renderProjectName}
-          renderClient={renderClient}
-          renderActions={renderActions}
-
-          // UI configuration props
-          showProgress={true}
-          showBudget={true}
-          compact={false}
-        />
-      )}
-
-      {/* Pagination controls section */}
       <ListFooter
         currentPage={page}
         totalPages={totalPages}
@@ -380,8 +295,8 @@ export const ProjectsView = ({
         displayedItems={projects.length}
         onPageChange={onPageChange}
         isLoading={isLoading}
-        entityLabel="projectos"
-        className="mt-6"
+        entityLabel="projects"
+        className="mt-4 sm:mt-6"
       />
     </div>
   );

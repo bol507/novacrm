@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -30,12 +31,6 @@ export interface QuoteViewProps {
   handleClearClientFilter?: () => void;
 }
 
-/**
- * Calculates quote statistics from the current list.
- *
- * @param quotes - Array of quotes to analyze
- * @returns Object containing pending count, accepted count, total value, and accepted value
- */
 const calculateStats = (quotes: Quote[]) => {
   const pending = quotes.filter(q => q.quote_stage === 'Draft' || q.quote_stage === 'Sent').length;
   const accepted = quotes.filter(q => q.quote_stage === 'Accepted').length;
@@ -64,40 +59,11 @@ const calculateStats = (quotes: Quote[]) => {
  * - Pagination controls via ListFooter
  * - Error state handling with retry button
  * - Loading states for async operations
+ * - Responsive design with mobile-specific layouts
  *
  * @component
  * @param props - Component props
  * @returns The rendered quote view component
- *
- * @example
- * // Basic usage
- * <QuoteView
- *   quotes={quotes}
- *   isLoading={isLoading}
- *   error={null}
- *   searchTerm={searchTerm}
- *   onSearchChange={setSearchTerm}
- *   onCreateClick={handleCreate}
- *   onViewModeChange={setViewMode}
- *   onRefresh={refetch}
- *   onView={handleViewQuote}
- *   onEdit={handleEditQuote}
- *   onDelete={handleDeleteQuote}
- *   viewMode="cards"
- *   page={1}
- *   totalPages={5}
- *   totalItems={42}
- *   onPageChange={setPage}
- *   quoteCount={42}
- * />
- *
- * @example
- * // With client filter
- * <QuoteView
- *   // ... required props
- *   clientIdNumber={123}
- *   handleClearClientFilter={clearClientFilter}
- * />
  */
 export const QuoteView = ({
   quotes,
@@ -136,21 +102,23 @@ export const QuoteView = ({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+    <div className="space-y-4 sm:space-y-6">
+      
+      <div className="flex flex-col gap-4">
+        <div className="space-y-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground flex flex-wrap items-center gap-2">
+            <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
               {quoteCount}
             </Badge>
-            Quotes
+            <span className="truncate">Quotes</span>
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Manage sales quotes
           </p>
+          
           {clientIdNumber && (
-            <div className="flex items-center gap-2 mt-2">
-              <Badge variant="secondary" className="text-sm font-normal">
+            <div className="flex flex-wrap items-center gap-2 mt-1">
+              <Badge variant="secondary" className="text-xs font-normal">
                 Client ID: {clientIdNumber}
               </Badge>
               <Button
@@ -166,42 +134,76 @@ export const QuoteView = ({
           )}
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={onRefresh}
-            disabled={isLoading}
-            title="Refresh list"
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-          </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          
+          <div className="relative flex-1 min-w-[200px] sm:max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search quotes..."
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="pl-10 h-9 text-sm"
+              aria-label="Search quotes"
+            />
+          </div>
 
-          <div className="flex rounded-md border border-border overflow-hidden">
+          <div className="hidden md:flex items-center gap-2 ml-auto md:ml-0">
             <Button
-              variant={viewMode === "cards" ? "default" : "ghost"}
+              variant="outline"
               size="icon"
-              onClick={() => onViewModeChange("cards")}
-              className="rounded-none border-r border-border"
-              title="Card view"
+              onClick={onRefresh}
+              disabled={isLoading}
+              className="h-9 w-9"
+              title="Refresh list"
             >
-              <LayoutGrid className="h-4 w-4" />
+              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             </Button>
-            <Button
-              variant={viewMode === "table" ? "default" : "ghost"}
-              size="icon"
-              onClick={() => onViewModeChange("table")}
-              className="rounded-none"
-              title="Table view"
-            >
-              <List className="h-4 w-4" />
+
+            <div className="flex rounded-md border border-border overflow-hidden">
+              <Button
+                variant={viewMode === "cards" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => onViewModeChange("cards")}
+                className="rounded-none border-r border-border h-9 px-3"
+                title="Card view"
+              >
+                <LayoutGrid className="h-4 w-4 mr-1" />
+                <span className="hidden lg:inline">Cards</span>
+              </Button>
+              <Button
+                variant={viewMode === "table" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => onViewModeChange("table")}
+                className="rounded-none h-9 px-3"
+                title="Table view"
+              >
+                <List className="h-4 w-4 mr-1" />
+                <span className="hidden lg:inline">Table</span>
+              </Button>
+            </div>
+
+            <Button size="sm" onClick={onCreateClick} className="h-9 gap-1.5">
+              <Plus className="h-4 w-4" />
+              <span className="hidden lg:inline">New Quote</span>
+              <span className="lg:hidden">New</span>
             </Button>
           </div>
 
-          <Button className="gap-2" onClick={onCreateClick}>
-            <Plus className="h-4 w-4" />
-            New Quote
-          </Button>
+          <div className="flex md:hidden items-center gap-2 ml-auto">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onRefresh}
+              disabled={isLoading}
+              className="h-9 w-9"
+            >
+              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+            </Button>
+            <Button size="sm" onClick={onCreateClick} className="h-9 gap-1.5">
+              <Plus className="h-4 w-4" />
+              <span>New</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -212,38 +214,41 @@ export const QuoteView = ({
         acceptedValue={stats.acceptedValue}
       />
 
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by name or quote number..."
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10"
-            aria-label="Search quotes"
+      <div className="min-h-[200px]">
+        
+        <div className="block md:hidden">
+          <QuoteCards
+            quotes={quotes}
+            isLoading={isLoading}
+            onEditQuote={onEdit}
+            onDeleteQuote={onDelete}
           />
         </div>
-      </div>
 
-      {viewMode === "cards" ? (
-        <QuoteCards
-          quotes={quotes}
-          isLoading={isLoading}
-          onEditQuote={onEdit}
-          onDeleteQuote={onDelete}
-        />
-      ) : (
-        <QuoteTable
-          quotes={quotes}
-          isLoading={isLoading}
-          searchValue={searchTerm}
-          onSearchChange={onSearchChange}
-          onView={onView}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onRefresh={onRefresh}
-        />
-      )}
+        <div className="hidden md:block">
+          {viewMode === "cards" ? (
+            <QuoteCards
+              quotes={quotes}
+              isLoading={isLoading}
+              onEditQuote={onEdit}
+              onDeleteQuote={onDelete}
+            />
+          ) : (
+            <div className="overflow-x-auto rounded-lg border">
+              <QuoteTable
+                quotes={quotes}
+                isLoading={isLoading}
+                searchValue={searchTerm}
+                onSearchChange={onSearchChange}
+                onView={onView}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onRefresh={onRefresh}
+              />
+            </div>
+          )}
+        </div>
+      </div>
 
       <ListFooter
         currentPage={page}
@@ -253,7 +258,7 @@ export const QuoteView = ({
         onPageChange={onPageChange}
         isLoading={isLoading}
         entityLabel="quotes"
-        className="mt-6"
+        className="mt-4 sm:mt-6"
       />
     </div>
   );

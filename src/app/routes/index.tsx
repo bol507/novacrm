@@ -11,6 +11,7 @@ import { purchasesRoutes } from '@/features/purchases/routes';
 import { vendorsRoutes } from '@/features/vendors/routes';
 import { usersRoutes } from '@/features/users/routes';
 import { settingsRoutes } from '@/features/settings/routes';
+import { procurementsRoutes } from '@/features/procurements/routes';
 
 
 
@@ -94,6 +95,7 @@ export const router = createBrowserRouter([
       ...vendorsRoutes,
       ...usersRoutes,
       ...settingsRoutes,
+      ...procurementsRoutes
 
     ],
 

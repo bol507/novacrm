@@ -19,6 +19,29 @@ export interface QuoteFormItemRowProps {
   formatCurrency?: (value: number) => string;
 }
 
+/**
+ * QuoteFormItemRow component for editing a single quote line item.
+ *
+ * Features:
+ * - Editable fields: product name, quantity, unit price, discount percentage, description
+ * - Drag-and-drop support for reordering
+ * - Calculated net price and line total
+ * - Auto-expanding textarea for descriptions
+ * - Real-time validation with error indicators
+ * - Visual feedback for dragging state
+ *
+ * @component
+ * @param props - Component props
+ * @param props.item - Item data to display and edit
+ * @param props.index - Item index in the list
+ * @param props.onUpdate - Callback when any field is updated
+ * @param props.onRemove - Callback to remove this item
+ * @param props.canRemove - Whether this item can be removed
+ * @param props.isDraggable - Whether drag-and-drop is enabled
+ * @param props.sortableId - Unique ID for drag-and-drop sorting
+ * @param props.formatCurrency - Currency formatter function
+ * @returns The rendered quote form item row
+ */
 export const QuoteFormItemRow = ({
   item,
   index,
@@ -44,12 +67,10 @@ export const QuoteFormItemRow = ({
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  //  Cálculos en tiempo real
   const netPrice = item.listprice * (1 - (item.discount_percent || 0) / 100);
   const lineTotal = netPrice * (item.quantity || 0);
   const hasErrors = !item.description?.trim() || item.quantity <= 0 || item.listprice <= 0;
 
-  //  Auto-expand del textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -63,8 +84,6 @@ export const QuoteFormItemRow = ({
     zIndex: isDragging ? 100 : 'auto',
   };
 
- 
-
   return (
     <div
       ref={setNodeRef}
@@ -77,7 +96,6 @@ export const QuoteFormItemRow = ({
         !isDraggable && "cursor-default"
       )}
     >
-      {/* Header: Drag Handle + Remove + Badge Secuencia */}
       <div className="flex items-center justify-between mb-3">
         {isDraggable && (
           <button
@@ -110,7 +128,6 @@ export const QuoteFormItemRow = ({
         </div>
       </div>
 
-      {/*  SECCIÓN 1: Product & Description (Vertical, Full Width) */}
       <div className="space-y-3 mb-4">
         <div>
           <label className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
@@ -127,14 +144,12 @@ export const QuoteFormItemRow = ({
           />
         </div>
 
-        {/* Description - Auto-expand Textarea con diseño mejorado */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
               Description <span className="font-normal text-muted-foreground/70">(optional)</span>
             </label>
 
-            {/* ✅ Contador de caracteres */}
             {item.comment && item.comment.length > 0 && (
               <span className="text-[10px] font-mono text-muted-foreground/60 bg-muted/30 px-2 py-0.5 rounded">
                 {item.comment.length} chars
@@ -150,23 +165,13 @@ export const QuoteFormItemRow = ({
               onChange={(e) => onUpdate(index, 'comment', e.target.value)}
               rows={3}
               className={cn(
-                // Base styles
                 "w-full resize-y",
                 "min-h-[80px] max-h-[300px]",
                 "p-3 text-sm leading-relaxed",
-                //"font-mono", // Para descripciones técnicas más legibles
-
-                // Focus states
                 "focus:outline-none focus-visible:ring-1 focus-visible:ring-primary/50",
-
-                // Hover effect
                 "hover:border-primary/30 transition-colors duration-200",
-
-                // Dark theme scrollbar styles (inline for better support)
                 "scrollbar-thin scrollbar-thumb-muted-foreground/30 scrollbar-track-transparent",
                 "hover:scrollbar-thumb-muted-foreground/50",
-
-                // Custom scrollbar for Webkit
                 "[&::-webkit-scrollbar]:w-2",
                 "[&::-webkit-scrollbar]:h-2",
                 "[&::-webkit-scrollbar-track]:bg-transparent",
@@ -176,7 +181,6 @@ export const QuoteFormItemRow = ({
               )}
             />
 
-            {/* ✅ Indicador visual de resize en la esquina */}
             <div className="absolute bottom-1.5 right-1.5 pointer-events-none opacity-40">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -192,7 +196,6 @@ export const QuoteFormItemRow = ({
             </div>
           </div>
 
-          {/* ✅ Helper text o preview */}
           {item.comment && item.comment.length > 100 && (
             <div className="mt-1.5 flex items-center gap-2 text-[10px] text-muted-foreground/50">
               <div className="h-px flex-1 bg-muted-foreground/20" />
@@ -203,27 +206,40 @@ export const QuoteFormItemRow = ({
         </div>
       </div>
 
-      {/* Divider */}
       <div className="border-t border-border/50 my-4" />
 
-      {/* ✅ SECCIÓN 2: Numeric Fields (Horizontal Grid) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 items-end">
-
-        {/* Quantity */}
         <div>
           <label className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
             Qty <span className="text-destructive">*</span>
           </label>
           <Input
             type="number"
-            min="1"
+            min="0.01"
+            step="0.01"
             value={item.quantity}
-            onChange={(e) => onUpdate(index, 'quantity', Math.max(1, Number(e.target.value)))}
+            onChange={(e) => {
+              const raw = e.target.value;
+              if (raw === '') {
+                onUpdate(index, 'quantity', '');
+                return;
+              }
+              const value = parseFloat(raw);
+              if (!isNaN(value) && value > 0) {
+                const rounded = Math.round(value * 100) / 100;
+                onUpdate(index, 'quantity', rounded);
+              }
+            }}
+            onBlur={(e) => {
+              const value = Number(e.target.value);
+              if (!isNaN(value) && value > 0) {
+                onUpdate(index, 'quantity', Number(value.toFixed(2)));
+              }
+            }}
             className="text-right font-mono"
           />
         </div>
 
-        {/* Price */}
         <div>
           <label className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
             Price <span className="text-destructive">*</span>
@@ -238,13 +254,11 @@ export const QuoteFormItemRow = ({
           />
         </div>
 
-        {/*  Discount con Tooltip/Badge de Net Price */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label className="text-xs font-medium text-muted-foreground">
               Discount %
             </label>
-            {/*  Tooltip estático: aparece solo si hay descuento */}
             {item.discount_percent > 0 && (
               <span className="text-[10px] font-mono font-medium bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20">
                 Net: {formatCurrency(netPrice)}
@@ -261,7 +275,6 @@ export const QuoteFormItemRow = ({
           />
         </div>
 
-        {/* Line Total */}
         <div>
           <label className="text-xs font-medium text-muted-foreground mb-1.5 block text-right sm:text-left">
             Line Total
