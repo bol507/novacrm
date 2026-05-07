@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useClients } from "@/features/clients/hooks/use-clients";
-import { Search, Plus, LayoutGridIcon, ListIcon } from "lucide-react";
+import { Search, Plus,  Settings,  LayoutGrid, List } from "lucide-react";
 import type { Client, ClientViewMode } from "@/features/clients/types/client";
 import { toast } from "sonner";
 import { clientService } from "@/features/clients/services/client-service";
@@ -10,6 +10,8 @@ import { ClientCards } from "@/features/clients/components/ClientCards";
 import { useNavigate } from "react-router-dom";
 import ListFooter from "@/components/ListFooter";
 import ClientTable from "../components/ClientTable";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem,  DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 /**
  * ClientsPage component for managing client records.
@@ -116,90 +118,140 @@ const ClientsPage = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Clients</h1>
-          <p className="text-muted-foreground">
-            Manage your client portfolio
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Toggle Cards/Table */}
-          <div className="flex rounded-md border border-border overflow-hidden">
-            <Button
-              variant={viewMode === "cards" ? "default" : "ghost"}
-              size="icon"
-              onClick={() => handleViewModeChange("cards")}
-              className="rounded-none border-r border-border"
-              title="Card view"
-            >
-              <LayoutGridIcon className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === "table" ? "default" : "ghost"}
-              size="icon"
-              onClick={() => handleViewModeChange("table")}
-              className="rounded-none"
-              title="Table view"
-            >
-              <ListIcon className="h-4 w-4" />
-            </Button>
+    <ErrorBoundary>
+      <div className="space-y-4 sm:space-y-6">
+        
+        {/* ===== HEADER ===== */}
+        <div className="flex flex-col gap-4">
+          <div className="space-y-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Clients</h1>
+            <p className="text-sm text-muted-foreground">
+              Manage your client portfolio
+            </p>
           </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Search Input */}
+            <div className="relative flex-1 min-w-[200px] sm:min-w-0 sm:max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search clients..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-9 text-sm"
+              />
+            </div>
+
+            {/* Controls */}
+            <div className="flex items-center gap-2 ml-auto sm:ml-0">
+              
+              {/* 🖥️ DESKTOP: Toggle Cards/Table (Oculto en móvil) */}
+              <div className="hidden md:flex rounded-md border border-border overflow-hidden">
+                <Button
+                  variant={viewMode === "cards" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => handleViewModeChange("cards")}
+                  className="rounded-none border-r border-border h-9 px-3"
+                  title="Card view"
+                >
+                  <LayoutGrid className="h-4 w-4 mr-1" />
+                  <span className="hidden lg:inline">Cards</span>
+                </Button>
+                <Button
+                  variant={viewMode === "table" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => handleViewModeChange("table")}
+                  className="rounded-none h-9 px-3"
+                  title="Table view"
+                >
+                  <List className="h-4 w-4 mr-1" />
+                  <span className="hidden lg:inline">Table</span>
+                </Button>
+              </div>
+
+              {/* 📱 MOBILE: Dropdown compacto (Opcional, si prefieres botón directo, quítalo) */}
+              <div className="flex md:hidden">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-9">
+                      <Settings className="h-4 w-4 mr-1" />
+                      Options
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-40">
+                    <DropdownMenuItem onClick={handleCreateClick} className="text-primary font-medium">
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Client
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {/* 🖥️ DESKTOP: New Client Button */}
+              <Button 
+                size="sm" 
+                onClick={handleCreateClick} 
+                className="hidden md:flex h-9 gap-1.5"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden lg:inline">New Client</span>
+                <span className="lg:hidden">New</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* ===== CLIENT LIST: RESPONSIVE SWITCH ===== */}
+        <div className="min-h-[200px]">
           
-          {/* New Client Button */}
-          <Button className="gap-2" onClick={handleCreateClick}>
-            <Plus className="h-4 w-4" />
-            New Client
-          </Button>
+          {/* 📱 MOBILE: Fuerza siempre Cards/Grid (evita tabla rota) */}
+          <div className="block md:hidden">
+            <ClientCards
+              clients={filteredClients}
+              isLoading={isLoading}
+              onView={handleViewClient}
+              onEdit={handleEditClient}
+              onDelete={handleDeleteClient}
+            />
+          </div>
+
+          {/* 💻 DESKTOP: Respeta el toggle del usuario */}
+          <div className="hidden md:block">
+            {viewMode === "cards" ? (
+              <ClientCards
+                clients={filteredClients}
+                isLoading={isLoading}
+                onView={handleViewClient}
+                onEdit={handleEditClient}
+                onDelete={handleDeleteClient}
+              />
+            ) : (
+              <div className="overflow-x-auto rounded-lg border">
+                <ClientTable
+                  clients={filteredClients}
+                  isLoading={isLoading}
+                  onView={handleViewClient}
+                  onEdit={handleEditClient}
+                  onDelete={handleDeleteClient}
+                />
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Search */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by name, email or phone..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-      </div>
-
-      {/* Client list based on view mode */}
-      {viewMode === "cards" ? (
-        <ClientCards
-          clients={filteredClients}
+        {/* ===== FOOTER ===== */}
+        <ListFooter
+          currentPage={page}
+          totalPages={data?.meta?.last_page || 1}
+          totalItems={data?.meta?.total || 0}
+          displayedItems={filteredClients.length}
+          onPageChange={setPage}
           isLoading={isLoading}
-          onView={handleViewClient}
-          onEdit={handleEditClient}
-          onDelete={handleDeleteClient}
+          entityLabel="clients"
+          className="mt-4 sm:mt-6"
         />
-      ) : (
-        <ClientTable
-          clients={filteredClients}
-          isLoading={isLoading}
-          onView={handleViewClient}
-          onEdit={handleEditClient}
-          onDelete={handleDeleteClient}
-        />
-      )}
-
-      {/* Footer info */}
-      <ListFooter
-        currentPage={page}
-        totalPages={data?.meta?.last_page || 1}
-        totalItems={data?.meta?.total || 0}
-        displayedItems={filteredClients.length}
-        onPageChange={setPage}
-        isLoading={isLoading}
-        entityLabel="clients"
-        className="mt-4"
-      />
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 };
 

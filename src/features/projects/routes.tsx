@@ -8,6 +8,8 @@ const ProjectDetailPage = lazy(() => import('./pages/ProjectDetailPage'));
 const ProjectEditPage = lazy(() => import('./pages/ProjectEditPage'));
 const ProjectCreatePage = lazy(() => import('./pages/ProjectCreatePage'));
 
+
+
 export const projectsRoutes: RouteObject[] = [
   {
     path: 'projects',
@@ -19,6 +21,14 @@ export const projectsRoutes: RouteObject[] = [
             <ProjectsPage />
           </Suspense>
         )
+      },
+      {
+        path: 'new',
+        element: (
+          <Suspense fallback={<ProjectPageLoader />}>
+            <ProjectCreatePage />
+          </Suspense>
+        ),
       },
       {
         path: ':projectId',
@@ -36,14 +46,10 @@ export const projectsRoutes: RouteObject[] = [
           </Suspense>
         ),
       },
-      {
-        path: 'new',
-        element: (
-          <Suspense fallback={<ProjectPageLoader />}>
-            <ProjectCreatePage />
-          </Suspense>
-        ),
-      },
+      
+
+      
+
     ],
   },
 ];

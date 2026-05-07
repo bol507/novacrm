@@ -417,7 +417,7 @@ export const ProjectsTableRow = ({
         return new Intl.NumberFormat('es-PA', {
             style: 'currency',
             currency: 'USD',
-            minimumFractionDigits: 0,
+            minimumFractionDigits: 2 ,
         }).format(num);
     };
 
@@ -513,16 +513,11 @@ export const ProjectsTableRow = ({
                      * - Description is hidden in compact mode to save vertical space
                      * - Description also has truncation and tooltip for long values
                      */
-                    <div>
+                    
                         <div className="font-medium truncate max-w-xs" title={project.projectname}>
                             {project.projectname}
                         </div>
-                        {project.description && !compact && (
-                            <div className="text-xs text-muted-foreground truncate max-w-xs mt-1" title={project.description}>
-                                {project.description}
-                            </div>
-                        )}
-                    </div>
+                        
                 )}
             </td>
 

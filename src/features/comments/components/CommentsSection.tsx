@@ -197,11 +197,11 @@ export const CommentsSection = ({
     try {
 
       const isoString = dateString.includes('T') || dateString.includes('Z')
-      ? dateString
-      : dateString.replace(' ', 'T') + 'Z';  // ← Agregar Z para indicar UTC
-    
-    const date = new Date(isoString);
-    
+        ? dateString
+        : dateString.replace(' ', 'T') + 'Z';  // ← Agregar Z para indicar UTC
+
+      const date = new Date(isoString);
+
 
       return formatDistanceToNow(date, {
         addSuffix: true,
@@ -213,218 +213,235 @@ export const CommentsSection = ({
   }, []);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <MessageSquare className="h-5 w-5" />
+  <div className="space-y-4 sm:space-y-6">
+    
+    {/* ===== HEADER ===== */}
+    <div className="px-1 sm:px-0">
+      <h3 className="text-base sm:text-lg font-bold mb-3 flex items-center gap-2">
+        <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+        <span className="truncate">
           Comments ({comments?.length || 0})
-        </h3>
+        </span>
+      </h3>
+    </div>
+
+    {/* ===== NEW COMMENT FORM ===== */}
+    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+      <div className="relative">
+        <Textarea
+          placeholder="Write a comment..."
+          value={commentContent}
+          onChange={handleInputChange}
+          className="min-h-[80px] sm:min-h-[100px] resize-none text-sm pr-14"
+          disabled={createCommentMutation.isPending}
+        />
+        {/* Character counter con fondo para mejor legibilidad */}
+        <div className="absolute bottom-2 right-2 text-[10px] sm:text-xs text-muted-foreground bg-background/80 px-1.5 py-0.5 rounded">
+          {commentContent.length}/{MAX_LENGTH}
+        </div>
       </div>
+      
+      {/* Botones apilados en móvil, en fila en desktop */}
+      <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="w-full sm:w-auto h-10"
+          onClick={() => setCommentContent("")}
+          disabled={!commentContent.trim() || createCommentMutation.isPending}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          size="sm"
+          className="w-full sm:w-auto h-10"
+          disabled={createCommentMutation.isPending || !commentContent.trim()}
+        >
+          {createCommentMutation.isPending ? (
+            <><Loader2Icon className="h-4 w-4 mr-2 animate-spin" /> Sending...</>
+          ) : (
+            <><Send className="h-4 w-4 mr-2" /> Send</>
+          )}
+        </Button>
+      </div>
+    </form>
 
-      {/* New comment form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="relative">
-          <Textarea
-            placeholder="Write a comment..."
-            value={commentContent}
-            onChange={handleInputChange}
-            className="min-h-[100px] resize-none"
-            disabled={createCommentMutation.isPending}
-          />
-          <div className="absolute bottom-2 right-2 text-xs text-muted-foreground">
-            {commentContent.length}/{MAX_LENGTH}
-          </div>
-        </div>
-        <div className="flex justify-end gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setCommentContent("")}
-            disabled={!commentContent.trim() || createCommentMutation.isPending}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            disabled={createCommentMutation.isPending || !commentContent.trim()}
-          >
-            {createCommentMutation.isPending ? (
-              <><Loader2Icon className="h-4 w-4 mr-2 animate-spin" /> Sending...</>
-            ) : (
-              <><Send className="h-4 w-4 mr-2" /> Send comment</>
-            )}
-          </Button>
-        </div>
-      </form>
-
-      {/* Comments list */}
-      <div className="space-y-4">
-        {isLoading ? (
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="flex gap-4 animate-pulse">
-                <div className="w-10 h-10 rounded-full bg-muted" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 w-1/4 bg-muted rounded" />
-                  <div className="h-4 w-full bg-muted rounded" />
-                  <div className="h-4 w-1/2 bg-muted rounded" />
-                </div>
+    {/* ===== COMMENTS LIST ===== */}
+    <div className="space-y-3 sm:space-y-4">
+      {isLoading ? (
+        <div className="space-y-3 sm:space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="flex gap-3 sm:gap-4 animate-pulse">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-muted flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3.5 sm:h-4 w-1/3 bg-muted rounded" />
+                <div className="h-3.5 sm:h-4 w-full bg-muted rounded" />
+                <div className="h-3.5 sm:h-4 w-2/3 bg-muted rounded" />
               </div>
-            ))}
-          </div>
-        ) : displayedComments.length === 0 ? (
-          <div className="text-center py-8 bg-muted/30 rounded-lg border border-dashed">
-            <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-2 opacity-50" />
-            <p className="text-muted-foreground">No comments yet</p>
-          </div>
-        ) : (
-          <>
-            {displayedComments.map((comment) => (
-              <div
-                key={comment.id}
-                className="flex gap-4 p-4 bg-card rounded-lg border border-border hover:border-primary/30 transition-colors"
-              >
-                <Avatar className="w-10 h-10 flex-shrink-0">
-                  <AvatarFallback className={comment.userId === 2 ? "bg-blue-100 text-blue-800" : ""}>
-                    {comment.userId === 2 ? <Users className="h-4 w-4" /> : getAvatarFallback(comment)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  {/* Comment header with author, timestamp, and edit button */}
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <div className="min-w-0">
-                      <p className="font-semibold truncate">
-                        {getAuthorName(comment)}
-                        {comment.userId === 2 && (
-                          <span className="ml-2 text-xs text-muted-foreground font-normal">
-                            (Group)
-                          </span>
-                        )}
+            </div>
+          ))}
+        </div>
+      ) : displayedComments.length === 0 ? (
+        <div className="text-center py-6 sm:py-8 bg-muted/30 rounded-lg border border-dashed px-4">
+          <MessageSquare className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-muted-foreground mb-2 opacity-50" />
+          <p className="text-sm text-muted-foreground">No comments yet</p>
+        </div>
+      ) : (
+        <>
+          {displayedComments.map((comment) => (
+            <div
+              key={comment.id}
+              className="flex gap-3 sm:gap-4 p-3 sm:p-4 bg-card rounded-lg border border-border hover:border-primary/30 transition-colors"
+            >
+              {/* Avatar responsive */}
+              <Avatar className="w-9 h-9 sm:w-10 sm:h-10 flex-shrink-0">
+                <AvatarFallback className={`${comment.userId === 2 ? "bg-blue-100 text-blue-800" : ""} text-xs sm:text-sm`}>
+                  {comment.userId === 2 ? (
+                    <Users className="h-4 w-4 sm:h-5 sm:w-5" />
+                  ) : (
+                    getAvatarFallback(comment)
+                  )}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="flex-1 min-w-0">
+                {/* Header: autor + timestamp + edit */}
+                <div className="flex flex-wrap items-center justify-between gap-1 sm:gap-2 mb-1">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-sm truncate">
+                      {getAuthorName(comment)}
+                      {comment.userId === 2 && (
+                        <span className="ml-1 text-[10px] text-muted-foreground font-normal">(Group)</span>
+                      )}
+                    </p>
+                    {comment.userEmail && (
+                      <p className="text-[10px] text-muted-foreground truncate">
+                        {comment.userEmail}
                       </p>
-                      {comment.userEmail && (
-                        <p className="text-xs text-muted-foreground truncate">
-                          {comment.userEmail}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <span className="text-xs text-muted-foreground">
-                        {formatTimeAgo(comment.createdAt)}
-                      </span>
-                      {/* Edit button - only visible for author or admin */}
-                      {canEditComment(comment) && editingCommentId !== comment.id && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                          onClick={() => handleEditClick(comment)}
-                          title="Edit comment"
-                          disabled={updateCommentMutation.isPending}
-                        >
-                          <PencilIcon className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
-                    </div>
+                    )}
                   </div>
+                  
+                  <div className="flex items-center gap-1 shrink-0">
+                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                      {formatTimeAgo(comment.createdAt)}
+                    </span>
+                    {canEditComment(comment) && editingCommentId !== comment.id && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        onClick={() => handleEditClick(comment)}
+                        title="Edit comment"
+                        disabled={updateCommentMutation.isPending}
+                      >
+                        <PencilIcon className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
 
-                  {/* Comment content - View mode or Edit mode */}
-                  {editingCommentId === comment.id ? (
-                    // Edit mode
-                    <div className="mt-2 space-y-3">
+                {/* ===== EDIT MODE ===== */}
+                {editingCommentId === comment.id ? (
+                  <div className="mt-2 space-y-3">
+                    <Textarea
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      className="min-h-[70px] sm:min-h-[80px] resize-none text-sm"
+                      autoFocus
+                      disabled={updateCommentMutation.isPending}
+                    />
+
+                    {/* Reason for editing */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                        <Info className="h-3 w-3 flex-shrink-0" />
+                        <span>Reason (optional):</span>
+                      </div>
                       <Textarea
-                        value={editContent}
-                        onChange={(e) => setEditContent(e.target.value)}
-                        className="min-h-[80px] resize-none"
-                        autoFocus
+                        value={editReason}
+                        onChange={(e) => setEditReason(e.target.value)}
+                        placeholder="e.g., Fixed typo..."
+                        className="min-h-[50px] resize-none text-xs"
+                        maxLength={255}
                         disabled={updateCommentMutation.isPending}
                       />
-
-                      {/* Optional reason for editing (audit trail) */}
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Info className="h-3.5 w-3.5" />
-                          <span>Reason for editing (optional):</span>
-                        </div>
-                        <Textarea
-                          value={editReason}
-                          onChange={(e) => setEditReason(e.target.value)}
-                          placeholder="e.g., Fixed typo, updated information..."
-                          className="min-h-[60px] resize-none text-sm"
-                          maxLength={255}
-                          disabled={updateCommentMutation.isPending}
-                        />
-                        <div className="text-xs text-muted-foreground text-right">
-                          {editReason.length}/255
-                        </div>
-                      </div>
-
-                      {/* Save/Cancel buttons */}
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleEditSubmit(comment.id)}
-                          disabled={updateCommentMutation.isPending || !editContent.trim()}
-                        >
-                          {updateCommentMutation.isPending ? (
-                            <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> Saving...</>
-                          ) : (
-                            <><Check className="h-3.5 w-3.5 mr-1" /> Save</>
-                          )}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={handleEditCancel}
-                          disabled={updateCommentMutation.isPending}
-                        >
-                          <X className="h-3.5 w-3.5 mr-1" /> Cancel
-                        </Button>
+                      <div className="text-[10px] text-muted-foreground text-right">
+                        {editReason.length}/255
                       </div>
                     </div>
-                  ) : (
-                    // View mode
-                    <>
-                      <p className="text-sm whitespace-pre-wrap break-words text-foreground/90">
-                        {comment.content}
+
+                    {/* Action buttons - apilados en móvil */}
+                    <div className="flex flex-col-reverse sm:flex-row gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full sm:w-auto h-10"
+                        onClick={handleEditCancel}
+                        disabled={updateCommentMutation.isPending}
+                      >
+                        <X className="h-3.5 w-3.5 mr-1" /> Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="w-full sm:w-auto h-10"
+                        onClick={() => handleEditSubmit(comment.id)}
+                        disabled={updateCommentMutation.isPending || !editContent.trim()}
+                      >
+                        {updateCommentMutation.isPending ? (
+                          <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> Saving...</>
+                        ) : (
+                          <><Check className="h-3.5 w-3.5 mr-1" /> Save</>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  /* ===== VIEW MODE ===== */
+                  <>
+                    <p className="text-sm whitespace-pre-wrap break-words text-foreground/90 leading-relaxed">
+                      {comment.content}
+                    </p>
+                    {comment.reasonToEdit && (
+                      <p className="mt-2 text-[10px] text-muted-foreground italic flex items-start gap-1">
+                        <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                        <span>Edited: {comment.reasonToEdit}</span>
                       </p>
-                      {/* Display edit reason if comment was modified */}
-                      {comment.reasonToEdit && (
-                        <p className="mt-2 text-xs text-muted-foreground italic flex items-center gap-1">
-                          <Info className="h-3 w-3" />
-                          Edited: {comment.reasonToEdit}
-                        </p>
-                      )}
-                    </>
-                  )}
-                </div>
+                    )}
+                  </>
+                )}
               </div>
-            ))}
+            </div>
+          ))}
 
-            {/* Show All / Show Less toggle buttons */}
-            {hasMoreComments && (
-              <Button
-                variant="outline"
-                onClick={() => setShowAll(true)}
-                className="w-full mt-2"
-              >
-                View all comments ({comments?.length})
-                <ChevronDown className="h-4 w-4 ml-2" />
-              </Button>
-            )}
+          {/* ===== TOGGLE BUTTONS ===== */}
+          {hasMoreComments && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAll(true)}
+              className="w-full mt-1 sm:mt-2 h-10 text-xs"
+            >
+              View all comments ({comments?.length})
+              <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 ml-1 sm:ml-2" />
+            </Button>
+          )}
 
-            {showAll && comments && comments.length > initialLimit && (
-              <Button
-                variant="outline"
-                onClick={() => setShowAll(false)}
-                className="w-full mt-2"
-              >
-                Show only last {initialLimit}
-                <ChevronUp className="h-4 w-4 ml-2" />
-              </Button>
-            )}
-          </>
-        )}
-      </div>
+          {showAll && comments && comments.length > initialLimit && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAll(false)}
+              className="w-full mt-1 sm:mt-2 h-10 text-xs"
+            >
+              Show only last {initialLimit}
+              <ChevronUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 ml-1 sm:ml-2" />
+            </Button>
+          )}
+        </>
+      )}
     </div>
-  );
+  </div>
+);
 };

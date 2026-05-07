@@ -4,6 +4,7 @@ import { ListCheck, TrendingUp, Folder } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { CommentsSection } from '@/features/comments/components/CommentsSection';
 import { useAuth } from '@/features/auth/hooks/use-auth';
+import { InfoRow } from '@/components/info-row';
 
 /**
  * Props for ProjectOverviewTab component
@@ -29,6 +30,8 @@ export interface ProjectOverviewTabProps {
   /** Date formatter function */
   formatDate: (date: string | null) => string;
 }
+
+
 
 /**
  * ProjectOverviewTab Component
@@ -65,7 +68,7 @@ export const ProjectOverviewTab = ({
   const { user, loading: authLoading } = useAuth();
   const pendingTasks = (totalTasks || 0) - (completedTasks || 0);
   const currentUserId = user?.id ?? 0;
-  
+
 
   if (authLoading) {
     return (
@@ -94,106 +97,90 @@ export const ProjectOverviewTab = ({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Project Description */}
-      <Card className="p-6">
-        <h2 className="text-2xl font-bold mb-4">Description</h2>
+    <div className="space-y-4 sm:space-y-6">
+
+      {/* Description Card */}
+      <Card className="p-4 sm:p-6 w-full">
+        <h2 className="text-base sm:text-lg font-semibold mb-3 text-foreground">Description</h2>
         <ExpandableText
-          text={description || 'No description'}
+          text={description || 'No description available'}
           maxLines={3}
-          className="text-lg"
-          expandedClassName="text-lg whitespace-pre-line"
+          className="text-sm sm:text-base leading-relaxed text-muted-foreground"
+          expandedClassName="text-sm sm:text-base whitespace-pre-line leading-relaxed text-muted-foreground"
         />
       </Card>
 
-      <Card>
-        <CardContent className="p-6">
-          <CommentsSection
-            module="Project"
-            relatedId={projectid}
-            currentUserId={currentUserId}
-            initialLimit={5} 
-          />
-        </CardContent>
+      {/* Comments Section */}
+      <Card className="p-4 sm:p-6 w-full">
+        <CommentsSection
+          module="Project"
+          relatedId={projectid}
+          currentUserId={currentUserId}
+          initialLimit={5}
+        />
       </Card>
 
-      {/* Additional Information Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Info Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+
         {/* Tasks Summary */}
-        <Card className="p-6">
-          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <ListCheck className="h-5 w-5" />
-            Tasks
-          </h3>
-          <div className="space-y-2">
-            <div>
-              <p className="text-sm text-muted-foreground">Total tasks</p>
-              <p className="text-2xl font-bold">{totalTasks || 0}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Completed</p>
-              <p className="text-2xl font-bold text-green-600">
-                {completedTasks || 0}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Pending</p>
-              <p className="text-2xl font-bold text-yellow-600">
-                {pendingTasks}
-              </p>
+        <Card className="p-4 sm:p-6 h-full flex flex-col justify-between">
+          <div>
+            <h3 className="text-sm sm:text-base font-semibold mb-3 flex items-center gap-2 text-foreground">
+              <ListCheck className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+              Tasks
+            </h3>
+            <div className="space-y-2 sm:space-y-3">
+              <InfoRow label="Total" value={totalTasks || 0} />
+              <InfoRow label="Completed" value={completedTasks || 0} valueClass="text-green-600" />
+              <InfoRow label="Pending" value={pendingTasks || 0} valueClass="text-yellow-600" />
             </div>
           </div>
         </Card>
 
         {/* Project Metrics */}
-        <Card className="p-6">
-          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Metrics
-          </h3>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Priority</p>
-              <p className="text-lg font-semibold">
-                {projectpriority || 'Medium'}
-              </p>
+        <Card className="p-4 sm:p-6 h-full flex flex-col justify-between">
+          <div>
+            <h3 className="text-sm sm:text-base font-semibold mb-3 flex items-center gap-2 text-foreground">
+              <TrendingUp className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+              Metrics
+            </h3>
+            <div className="space-y-2 sm:space-y-3">
+              <InfoRow label="Priority" value={projectpriority || 'Medium'} />
+              <InfoRow label="Type" value={projecttype || 'General'} />
+              {hits !== undefined && <InfoRow label="Hits" value={hits} />}
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Type</p>
-              <p className="text-lg font-semibold">
-                {projecttype || 'General'}
-              </p>
-            </div>
-            {hits !== undefined && (
-              <div>
-                <p className="text-sm text-muted-foreground">Hits</p>
-                <p className="text-lg font-semibold">{hits}</p>
-              </div>
-            )}
           </div>
         </Card>
 
         {/* Current Status */}
-        <Card className="p-6">
-          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <Folder className="h-5 w-5" />
-            Current status
-          </h3>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Status</p>
-              <ProjectStatusBadge status={projectstatus || 'in progress'} />
-            </div>
-            {actualenddate && (
-              <div>
-                <p className="text-sm text-muted-foreground">Completion date</p>
-                <p className="text-lg font-semibold">
-                  {formatDate(actualenddate)}
-                </p>
+        <Card className="p-4 sm:p-6 h-full flex flex-col justify-between">
+          <div className="space-y-3 sm:space-y-4">
+            <h3 className="text-sm sm:text-base font-semibold flex items-center gap-2 text-foreground">
+              <Folder className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+              Current Status
+            </h3>
+
+            <div className="space-y-2 sm:space-y-3">
+              <div className="flex flex-col gap-1">
+                <p className="text-xs text-muted-foreground">Status</p>
+                <div className="w-fit">
+                  <ProjectStatusBadge status={projectstatus || 'in progress'} />
+                </div>
               </div>
-            )}
+
+              {actualenddate && (
+                <div className="flex flex-col gap-1">
+                  <p className="text-xs text-muted-foreground">Completion Date</p>
+                  <p className="text-sm sm:text-base font-medium break-words">
+                    {formatDate(actualenddate)}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </Card>
+
       </div>
     </div>
   );
