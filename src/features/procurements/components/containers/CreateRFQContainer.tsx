@@ -22,15 +22,9 @@ export const CreateRFQContainer = () => {
     if (!projectId) return;
     
     createRFQ(payload, {
-      onSuccess: (res) => {
-        toast.success(`RFQ #${res.id} creada exitosamente`);
-        // Navegar a la lista de cotizaciones o al detalle de la nueva RFQ
-        //navigate(`/projects/${projectId}/vendor-quotes`, { replace: true });
+      onSuccess: () => {
         navigate(-1);
-      },
-      onError: (err) => {
-        toast.error(err.message || 'Error creando RFQ');
-      },
+      }      
     });
   };
 

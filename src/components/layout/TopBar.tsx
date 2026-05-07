@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Menu,
   Bell,
@@ -18,18 +18,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { ModeToggle } from "../mode-toggle";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import MyProfileDialog from "@/features/users/components/MyProfileDialog";
 import { GlobalSearch } from "@/features/search/components/GlobalSearch";
+import { useNotifications } from "@/features/notifications/hooks/use-notifications";
+import { NotificationPanel } from "@/features/notifications/components/NotificationPanel";
 
 interface TopBarProps {
-  /** Callback invoked when the mobile menu button is clicked */
   onMenuClick: () => void;
-  /** Whether the sidebar is currently open (optional, for responsive behavior) */
   sidebarOpen?: boolean;
-  /** Callback to toggle the sidebar (optional, alternative to onMenuClick) */
   onSidebarToggle?: () => void;
 }
 
@@ -65,7 +63,34 @@ interface TopBarProps {
 const TopBar = ({ onMenuClick }: TopBarProps) => {
   const navigate = useNavigate();
   const { user, loading, logout } = useAuth();
+  const { projectId } = useParams<{ projectId?: string }>();
   const [isMyProfileOpen, setIsMyProfileOpen] = useState(false);
+
+  
+
+
+
+
+
+  const handleMyProfileClick = () => {
+    setIsMyProfileOpen(true);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  const { data: notificationData, isLoading: notificationsLoading } = useNotifications.list({
+    project_id: projectId ? Number(projectId) : undefined,
+    unread_only: true // Solo contar no leídas para el badge
+  });
+
+  const unreadCount = notificationData?.meta?.unread_count ?? 0;
+
+  if (!user) {
+    return null;
+  }
 
   if (loading) {
     return (
@@ -80,32 +105,13 @@ const TopBar = ({ onMenuClick }: TopBarProps) => {
     );
   }
 
-  if (!user) {
-    return null;
-  }
-
-  const notifications = [
-    { id: 1, title: "New opportunity", message: "Client ABC requested a quote", time: "5 min" },
-    { id: 2, title: "Task completed", message: "Lead follow-up completed", time: "1 hr" },
-    { id: 3, title: "Upcoming meeting", message: "Presentation in 30 minutes", time: "30 min" },
-  ];
-
-  const handleMyProfileClick = () => {
-    setIsMyProfileOpen(true);
-  };
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
   return (
     <>
       <header className="h-16 bg-card border-b border-border flex items-center justify-between px-3 sm:px-4 lg:px-6 sticky top-0 z-50">
-        
+
         {/* ===== LEFT SECTION: Menu + Search ===== */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 lg:flex-none lg:w-auto">
-          
+
           {/* Mobile Menu Button - solo visible en móvil */}
           <Button
             variant="ghost"
@@ -125,104 +131,48 @@ const TopBar = ({ onMenuClick }: TopBarProps) => {
 
         {/* ===== RIGHT SECTION: Actions ===== */}
         <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-          
+
           {/* Theme Toggle - siempre visible */}
           <ModeToggle />
 
-          {/* Notifications Dropdown - responsive */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="relative h-9 w-9 flex-shrink-0"
-                aria-label="Notifications"
-              >
-                <Bell className="h-5 w-5" />
-                {/* Badge con posición segura */}
-                {notifications.length > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-4.5 sm:h-5 px-1 bg-destructive text-destructive-foreground rounded-full text-[10px] sm:text-xs flex items-center justify-center font-medium leading-none">
-                    {notifications.length > 9 ? '9+' : notifications.length}
-                  </span>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            
-            {/* Dropdown mobile-friendly */}
-            <DropdownMenuContent 
-              align="end" 
-              sideOffset={8}
-              className="w-[280px] sm:w-80 max-w-[90vw] sm:max-w-none"
+          {/* ===== NOTIFICATIONS ===== */}
+          <NotificationPanel projectId={projectId ? Number(projectId) : undefined}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative h-9 w-9 flex-shrink-0"
+              aria-label="Notifications"
+              disabled={notificationsLoading}
             >
-              <DropdownMenuLabel className="flex items-center justify-between py-2.5">
-                <span className="text-sm font-semibold">Notifications</span>
-                {notifications.length > 0 && (
-                  <Badge variant="secondary" className="text-xs">
-                    {notifications.length} new
-                  </Badge>
-                )}
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              
-              {/* Lista scrollable si hay muchas notificaciones */}
-              <div className="max-h-[60vh] sm:max-h-[400px] overflow-y-auto">
-                {notifications.length === 0 ? (
-                  <div className="py-6 text-center text-sm text-muted-foreground">
-                    No new notifications
-                  </div>
-                ) : (
-                  notifications.map((notif) => (
-                    <DropdownMenuItem 
-                      key={notif.id} 
-                      className="flex flex-col items-start p-3 cursor-pointer hover:bg-accent/50"
-                      onClick={() => {
-                        // Tu lógica de navegación
-                      }}
-                    >
-                      <div className="flex items-center justify-between w-full gap-2">
-                        <span className="font-medium text-sm line-clamp-1">{notif.title}</span>
-                        <span className="text-[10px] sm:text-xs text-muted-foreground flex-shrink-0">{notif.time}</span>
-                      </div>
-                      <span className="text-sm text-muted-foreground mt-1 line-clamp-2">{notif.message}</span>
-                    </DropdownMenuItem>
-                  ))
-                )}
-              </div>
-              
-              {notifications.length > 0 && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    className="justify-center text-primary font-medium py-2.5 text-sm"
-                    onClick={() => {
-                      // Navegar a página de notificaciones
-                    }}
-                  >
-                    View all notifications
-                  </DropdownMenuItem>
-                </>
+              <Bell className={`h-5 w-5 ${notificationsLoading ? 'animate-pulse opacity-50' : ''}`} />
+
+              {/* Badge con posición segura */}
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-4.5 sm:h-5 px-1 bg-destructive text-destructive-foreground rounded-full text-[10px] sm:text-xs flex items-center justify-center font-medium leading-none">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
               )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </Button>
+          </NotificationPanel>
 
           {/* User Menu - responsive */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 className="flex items-center gap-1.5 sm:gap-2 px-1.5 sm:px-2 h-9 sm:h-10 flex-shrink-0"
                 aria-label="User menu"
               >
                 <Avatar className="h-8 w-8 flex-shrink-0">
-                  <AvatarImage 
-                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.user_name}`} 
+                  <AvatarImage
+                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.user_name}`}
                     alt={user.first_name || user.user_name}
                   />
                   <AvatarFallback className="text-xs">
                     {(user.first_name?.charAt(0) || '?') + (user.last_name?.charAt(0) || '?')}
                   </AvatarFallback>
                 </Avatar>
-                
+
                 {/* Nombre de usuario - solo en desktop */}
                 <div className="hidden lg:flex flex-col items-start min-w-0">
                   <span className="text-sm font-medium truncate max-w-[120px]">
@@ -232,16 +182,16 @@ const TopBar = ({ onMenuClick }: TopBarProps) => {
                     {user.user_name}
                   </span>
                 </div>
-                
+
                 {/* Chevron - solo en desktop */}
                 <ChevronDown className="h-4 w-4 text-muted-foreground hidden lg:block flex-shrink-0" />
               </Button>
             </DropdownMenuTrigger>
-            
+
             <DropdownMenuContent align="end" className="w-48 sm:w-56 max-w-[90vw] sm:max-w-none">
               <DropdownMenuLabel className="text-sm font-semibold">My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={handleMyProfileClick}
                 className="text-sm py-2.5"
               >

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/form";
 import { vendorFormSchema, type VendorFormValues, type Vendor } from "../types/vendor";
 import { useMemo } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export interface VendorFormContentProps {
   mode: "create" | "edit";
@@ -105,9 +106,19 @@ export const VendorFormContent = ({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Category</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g., Materials, Services..." {...field} />
-                </FormControl>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Materials">Materials</SelectItem>
+                    <SelectItem value="Services">Services</SelectItem>
+                    <SelectItem value="Equipment">Equipment</SelectItem>
+                    <SelectItem value="Consulting">Consulting</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}

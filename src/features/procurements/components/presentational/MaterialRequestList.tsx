@@ -5,10 +5,10 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Plus, Eye, CheckCircle, FileText, Clock } from 'lucide-react';
+import { Loader2, Plus, Eye, CheckCircle, FileText, Clock, FileTextIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import type { MaterialRequest } from '../../types/procurement';
+import type { MaterialRequest, MaterialRequestItem } from '../../types/procurement';
 
 interface Props {
   requests: MaterialRequest[];
@@ -17,8 +17,8 @@ interface Props {
   onViewDetails: (id: number) => void;
   onApprove: (id: number) => void;
   canApprove: boolean;
-  // ✅ NUEVO: Prop para navegar a cotizaciones (inyectado desde container)
   onViewQuotes?: (requestId: number) => void;
+  onCreateRFQ?: (requestId: number, items: MaterialRequestItem[]) => void;
 }
 
 // ✅ AGREGAR el nuevo estado al config de badges
@@ -28,7 +28,7 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'second
   approved: { label: 'Approved', variant: 'default' },
   partially_approved: { label: 'Partial', variant: 'outline' },
   rejected: { label: 'Rejected', variant: 'destructive' },
-  procurement_in_progress: { label: 'En Cotización', variant: 'outline' }, 
+  procurement_in_progress: { label: 'En Cotización', variant: 'outline' },
   partially_procured: { label: 'In Procurement', variant: 'outline' },
   fully_procured: { label: 'Procured', variant: 'default' },
   closed: { label: 'Closed', variant: 'secondary' },
@@ -41,9 +41,10 @@ export const MaterialRequestList = ({
   onViewDetails,
   onApprove,
   canApprove,
-  onViewQuotes, 
+  onViewQuotes,
+  onCreateRFQ,
 }: Props) => {
-  
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -51,6 +52,21 @@ export const MaterialRequestList = ({
       </div>
     );
   }
+
+
+  const getApprovedItemsForRequest = (request: MaterialRequest): MaterialRequestItem[] => {
+    return (request.items || []).filter(item => {
+      const status = String(item.item_status || '').toLowerCase().trim();
+      return ['approved', 'partially_approved'].includes(status);
+    });
+  };
+
+  const canCreateRFQForRequest = (request: MaterialRequest): boolean => {
+    const approvedItems = getApprovedItemsForRequest(request);
+    return approvedItems.length > 0 &&
+      ['approved', 'partially_approved'].includes(request.status) &&
+      request.status !== 'procurement_in_progress';
+  };
 
   if (requests.length === 0) {
     return (
@@ -113,7 +129,7 @@ export const MaterialRequestList = ({
                         size="icon"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onViewQuotes(req.id); 
+                          onViewQuotes(req.id);
                         }}
                         title="Ver cotizaciones de esta solicitud"
                         className="text-blue-600 hover:text-blue-700"
@@ -122,10 +138,38 @@ export const MaterialRequestList = ({
                       </Button>
                     )}
 
+                    {/* Badge visual para estado de cotización */}
+                    {req.status === 'procurement_in_progress' && (
+                      <Badge variant="outline" className="ml-1 text-[10px] bg-orange-50 text-orange-700 border-orange-200">
+                        RFQ
+                      </Badge>
+                    )}
+
                     {/* Aprobar (si tiene permisos y está submitted) */}
                     {canApprove && req.status === 'submitted' && (
                       <Button variant="ghost" size="icon" onClick={() => onApprove(req.id)}>
                         <CheckCircle className="h-4 w-4 text-green-600" />
+                      </Button>
+                    )}
+
+                    {/*  Botón Crear RFQ (solo si la solicitud lo permite) */}
+                    {canCreateRFQForRequest(req) && onCreateRFQ && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-blue-600 hover:text-blue-700"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const approvedItems = getApprovedItemsForRequest(req);
+                          onCreateRFQ(req.id, approvedItems);
+                        }}
+                        title={`Crear RFQ con ${getApprovedItemsForRequest(req).length} ítem(s) aprobado(s)`}
+                      >
+                        <FileTextIcon className="h-4 w-4" />
+                        {/* Tooltip personalizado al hover */}
+                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-slate-900 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                          Crear RFQ ({getApprovedItemsForRequest(req).length})
+                        </span>
                       </Button>
                     )}
                   </TableCell>
