@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Loader2, Plus, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { useProcurement } from '../../hooks/useProcurement';
+import { useProcurement } from '../../hooks/use-procurement';
 import type { MaterialRequestItemInput } from '../../types/procurement';
 
 const UNIT_OPTIONS = [

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeftIcon, Clock, FileTextIcon, Plus } from 'lucide-react';
 import { procurementService } from '../../services/procurement-service';
 import type { ApproveRequestPayload, MaterialRequestItem } from '../../types/procurement';
-import { useProcurement } from '../../hooks/useProcurement';
+import { useProcurement } from '../../hooks/use-procurement';
 import { CreateMaterialRequestForm } from '../presentational/CreateMaterialRequestForm';
 
 interface Props {

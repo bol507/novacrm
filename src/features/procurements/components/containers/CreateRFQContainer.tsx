@@ -4,7 +4,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useVendorQuotes } from '../../hooks/use-vendor-quotes';
-import { useProcurement } from '../../hooks/useProcurement';
+import { useProcurement } from '../../hooks/use-procurement';
 import { CreateRFQPage, type CreateRFQPayload } from '../presentational/CreateRFQPage';
 
 export const CreateRFQContainer = () => {

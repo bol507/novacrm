@@ -1,5 +1,3 @@
-// src/features/procurement/containers/VendorQuoteDetailContainer.tsx
-
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -8,83 +6,148 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useVendorQuotes } from '../../hooks/use-vendor-quotes';
 import { VendorQuoteDetailPage } from '../presentational/VendorQuoteDetailPage';
+import type { GeneratePOFromQuotePayload, VendorQuoteItem } from '../../types/procurement';
+import { PackageIcon } from 'lucide-react';
+import { GeneratePOFromQuoteModal } from '../presentational/GeneratePOFromQuoteModal';
+import { usePurchaseOrders } from '../../hooks/use-purchase-order';
 
+/**
+ * VendorQuoteDetailContainer component for managing vendor quote details.
+ *
+ * Features:
+ * - Fetches and displays vendor quote details
+ * - Handles quote status actions: send, accept, negotiate
+ * - Provides negotiation modal for requesting changes
+ * - Generates purchase orders from accepted quotes
+ *
+ * @component
+ * @returns The rendered vendor quote detail container
+ */
 export const VendorQuoteDetailContainer = () => {
-  const { projectId: projectIdStr, quoteId: quoteIdStr } = useParams<{ 
-    projectId: string; 
-    quoteId: string; 
-  }>();
-  const navigate = useNavigate();
-  const projectId = Number(projectIdStr);
-  const quoteId = Number(quoteIdStr);
+    const { projectId: projectIdStr, quoteId: quoteIdStr } = useParams<{
+        projectId: string;
+        quoteId: string;
+    }>();
+    const navigate = useNavigate();
+    const projectId = Number(projectIdStr);
+    const quoteId = Number(quoteIdStr);
 
-  const { data: quote, isLoading, error } = useVendorQuotes.get(projectId, quoteId);
-  const { mutate: send, isPending: isSending } = useVendorQuotes.send();
-  const { mutate: accept, isPending: isAccepting } = useVendorQuotes.accept();
-  const { mutate: negotiate, isPending: isNegotiating } = useVendorQuotes.negotiate();
+    const { data: quote, isLoading, error } = useVendorQuotes.get(projectId, quoteId);
+    const { mutate: send, isPending: isSending } = useVendorQuotes.send();
+    const { mutate: accept, isPending: isAccepting } = useVendorQuotes.accept();
+    const { mutate: negotiate, isPending: isNegotiating } = useVendorQuotes.negotiate();
 
-  // Estado para modal de negociación
-  const [negotiateModal, setNegotiateModal] = useState({ open: false, notes: '', terms: '' });
-
-  const handleSend = () => {
-    send(quoteId, {
-      onSuccess: () => toast.success('Cotización enviada al proveedor'),
-      onError: (err) => toast.error(err.message || 'Error al enviar'),
+    const [negotiateModal, setNegotiateModal] = useState({ open: false, notes: '', terms: '' });
+    const [poModal, setPoModal] = useState<{ open: boolean; quoteId?: number; items: VendorQuoteItem[] }>({
+        open: false, items: []
     });
-  };
 
-  const handleAccept = () => {
-    accept({ quoteId, payload: {} }, {
-      onSuccess: () => toast.success('Cotización aceptada exitosamente. Ya puedes generar la OC.'),
-      onError: (err) => toast.error(err.message || 'Error al aceptar'),
-    });
-  };
+    const handleSend = () => {
+        send(quoteId, {
+            onSuccess: () => toast.success('Quote sent to vendor'),
+            onError: (err) => toast.error(err.message || 'Error sending'),
+        });
+    };
 
-  const handleNegotiate = () => {
-    setNegotiateModal({ open: true, notes: '', terms: '' });
-  };
+    const handleAccept = () => {
+        accept({ quoteId, payload: {} }, {
+            onSuccess: () => toast.success('Quote accepted successfully. You can now generate the PO.'),
+            onError: (err) => toast.error(err.message || 'Error accepting'),
+        });
+    };
 
-  const handleNegotiateSubmit = () => {
-    negotiate({ quoteId, payload: { notes: negotiateModal.notes, new_terms: negotiateModal.terms } }, {
-      onSuccess: () => {
-        toast.success('Cotización marcada como en negociación');
-        setNegotiateModal({ open: false, notes: '', terms: '' });
-      },
-      onError: (err) => toast.error(err.message || 'Error al negociar'),
-    });
-  };
+    const handleNegotiate = () => {
+        setNegotiateModal({ open: true, notes: '', terms: '' });
+    };
 
-  if (isLoading) return <div className="p-10 text-center text-muted-foreground">Cargando cotización...</div>;
-  if (error || !quote) return <div className="p-10 text-center text-destructive">Error o cotización no encontrada</div>;
+    const handleNegotiateSubmit = () => {
+        negotiate({ quoteId, payload: { notes: negotiateModal.notes, new_terms: negotiateModal.terms } }, {
+            onSuccess: () => {
+                toast.success('Quote marked as negotiating');
+                setNegotiateModal({ open: false, notes: '', terms: '' });
+            },
+            onError: (err) => toast.error(err.message || 'Error negotiating'),
+        });
+    };
 
-  return (
-    <>
-      <VendorQuoteDetailPage
-        quote={quote}
-        onBack={() => navigate(-1)}
-        onSend={handleSend}
-        onAccept={handleAccept}
-        onNegotiate={handleNegotiate}
-        isSending={isSending}
-        isAccepting={isAccepting}
-        isNegotiating={isNegotiating}
-      />
+    const handleGeneratePO = () => {
+        if (!quote?.items?.length) {
+            toast.info('No items in this quote to generate PO');
+            return;
+        }
+        setPoModal({ open: true, quoteId: quote.id, items: quote.items });
+    };
 
-      <Dialog open={negotiateModal.open} onOpenChange={(o) => !o && setNegotiateModal(prev => ({...prev, open: o}))}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Iniciar Negociación</DialogTitle></DialogHeader>
-          <div className="space-y-4 py-2">
-            <Textarea placeholder="Motivos de la negociación / Contrapropuesta..." value={negotiateModal.notes} onChange={e => setNegotiateModal(p => ({...p, notes: e.target.value}))} />
-            <Textarea placeholder="Nuevos términos (opcional)..." value={negotiateModal.terms} onChange={e => setNegotiateModal(p => ({...p, terms: e.target.value}))} />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setNegotiateModal(p => ({...p, open: false}))}>Cancelar</Button>
-            <Button onClick={handleNegotiateSubmit} disabled={isNegotiating || !negotiateModal.notes.trim()}>Confirmar Negociación</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
+    const { mutate: createPO, isPending: isCreatingPO } = usePurchaseOrders.createFromQuote(Number(projectId));
+
+    const handlePOSubmit = (payload: GeneratePOFromQuotePayload) => {
+        createPO(payload, {
+            onSuccess: (res) => {
+                toast.success(`PO #${res.data.po_number} generated successfully`);
+                setPoModal({ open: false, items: [] });
+                navigate(`/dashboard/projects/${projectId}/procurement/purchase-orders/${res.data.id}`);
+            },
+            onError: (err) => toast.error(err.message || 'Error generating PO'),
+        });
+    };
+
+    if (isLoading) return <div className="p-10 text-center text-muted-foreground">Loading quote...</div>;
+    if (error || !quote) return <div className="p-10 text-center text-destructive">Error or quote not found</div>;
+
+    return (
+        <>
+            {quote.status === 'accepted' && (
+                <Button onClick={handleGeneratePO} variant="default" className="w-full gap-2">
+                    <PackageIcon className="h-4 w-4" />
+                    Generate Purchase Order
+                </Button>
+            )}
+            <VendorQuoteDetailPage
+                quote={quote}
+                onBack={() => navigate(-1)}
+                onSend={handleSend}
+                onAccept={handleAccept}
+                onNegotiate={handleNegotiate}
+                isSending={isSending}
+                isAccepting={isAccepting}
+                isNegotiating={isNegotiating}
+            />
+
+            <Dialog open={negotiateModal.open} onOpenChange={(o) => !o && setNegotiateModal(prev => ({ ...prev, open: o }))}>
+                <DialogContent>
+                    <DialogHeader><DialogTitle>Start Negotiation</DialogTitle></DialogHeader>
+                    <div className="space-y-4 py-2">
+                        <Textarea
+                            placeholder="Negotiation reasons / Counter-proposal..."
+                            value={negotiateModal.notes}
+                            onChange={e => setNegotiateModal(p => ({ ...p, notes: e.target.value }))}
+                        />
+                        <Textarea
+                            placeholder="New terms (optional)..."
+                            value={negotiateModal.terms}
+                            onChange={e => setNegotiateModal(p => ({ ...p, terms: e.target.value }))}
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setNegotiateModal(p => ({ ...p, open: false }))}>Cancel</Button>
+                        <Button onClick={handleNegotiateSubmit} disabled={isNegotiating || !negotiateModal.notes.trim()}>Confirm Negotiation</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {poModal.open && quote && (
+                <GeneratePOFromQuoteModal
+                    open
+                    onClose={() => setPoModal({ open: false, items: [] })}
+                    onSubmit={handlePOSubmit}
+                    quoteId={poModal.quoteId!}
+                    items={poModal.items}
+                    vendorName={quote.vendor_name || `Vendor #${quote.vendor_id}`}
+                    isPending={isCreatingPO}
+                />
+            )}
+        </>
+    );
 };
 
 export default VendorQuoteDetailContainer;

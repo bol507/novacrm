@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ProjectErrorState } from '@/features/projects/components/ProjectDetail';
 import { ProjectPageLoader } from '@/features/projects/components/ProjectPageLoader';
 import MaterialRequestDetailPage from '../presentational/MaterialRequestDetailPage';
-import { useProcurement } from '../../hooks/useProcurement';
+import { useProcurement } from '../../hooks/use-procurement';
 
 export const MaterialRequestDetailContainer = () => {
   const { projectId, requestId } = useParams<{ projectId: string; requestId: string }>();

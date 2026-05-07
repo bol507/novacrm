@@ -1,7 +1,7 @@
 // src/features/procurement/containers/PurchaseOrderListContainer.tsx
 
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { useProcurement } from '../../hooks/useProcurement';
+import { useProcurement } from '../../hooks/use-procurement';
 import { ProjectPageLoader } from '@/features/projects/components/ProjectPageLoader';
 import { ProjectErrorState } from '@/features/projects/components/ProjectDetail';
 import { PurchaseOrderListPage } from '../../pages/PurchaseOrderListPage';

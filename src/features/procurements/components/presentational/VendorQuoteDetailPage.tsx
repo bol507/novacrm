@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/table';
 import { ArrowLeft, Building2, Calendar, CheckCircle2, Clock, FileText, Send, MessageSquare } from 'lucide-react';
 import type { VendorQuote, VendorQuoteItem } from '../../types/procurement';
-import type { JSX } from 'react';
+import { useState, type JSX } from 'react';
 
 interface Props {
     quote: VendorQuote;
@@ -26,7 +26,7 @@ export const VendorQuoteDetailPage = ({
     quote, onBack, onAccept, onSend, onNegotiate,
     isAccepting, isSending, isNegotiating
 }: Props) => {
-
+    
     const getStatusBadge = (status: VendorQuote['status']) => {
         const base = 'text-xs font-medium';
         const map: Record<string, JSX.Element> = {

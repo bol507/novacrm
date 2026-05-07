@@ -99,28 +99,68 @@ export interface MaterialRequestItem {
 
 export interface PurchaseOrder {
   id: number;
-  po_number: string; // ej: "OC-2026-0042"
   project_id: number;
+  po_number: string;
+  vendor_quote_id?: number;
+  material_request_id?: number;
   vendor_id: number;
-  vendor_name?: string; // Si el backend lo incluye via JOIN
-  status: 'draft' | 'approved' | 'sent_to_vendor' | 'partially_received' | 'completed' | 'closed';
+  vendor_name?: string;
+  status: PurchaseOrderStatus;
+  subtotal: number;
+  tax_amount: number;
   total_amount: number;
-  order_date: string;
-  expected_delivery: string | null;
+  expected_delivery_date?: string;
+  actual_delivery_date?: string;
+  terms?: string;
   notes?: string;
-  items?: PurchaseOrderItem[];
+  internal_notes?: string;
+  created_by: number;
+  approved_by?: number;
+  approved_at?: string;
   created_at: string;
-  updated_at: string;
+  items: PurchaseOrderItem[];
 }
+
+export type PurchaseOrderStatus = 
+  | 'draft' | 'submitted' | 'approved' | 'rejected' 
+  | 'partially_received' | 'fully_received' | 'cancelled';
 
 export interface PurchaseOrderItem {
   id: number;
-  po_id: number;
+  purchase_order_id: number;
+  vendor_quote_item_id?: number;
+  material_request_item_id?: number;
   item_name: string;
-  quantity_ordered: number;
-  quantity_received: number;
-  unit_cost: number;
-  total_cost: number;
+  catalog_item_type?: string;
+  unit: string;
+  quantity: number;
+  unit_price: number;
+  discount_percent: number;
+  line_total: number;
+  expected_delivery_date?: string;
+  terms?: string;
+  notes?: string;
+  received_quantity: number;
+  receipt_status: 'pending' | 'partial' | 'complete';
+}
+
+export interface GeneratePOFromQuotePayload {
+  vendor_quote_id: number;
+  items: Array<{
+    vendor_quote_item_id: number;
+    material_request_item_id?: number;
+    item_name: string;
+    unit: string;
+    quantity: number;
+    unit_price: number;
+    discount_percent?: number;
+    line_total: number;
+    expected_delivery_date?: string;
+    terms?: string;
+    notes?: string;
+  }>;
+  po_number_override?: string;
+  internal_notes?: string;
 }
 
 export interface Vendor {
