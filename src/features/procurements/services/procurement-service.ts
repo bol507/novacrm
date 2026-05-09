@@ -2,10 +2,8 @@ import apiClient from '@/shared/lib/axios';
 import type {
     CreateMaterialRequestPayload,
     ApproveRequestPayload,
-    GeneratePOPayload,
     CreateRequestResponse,
     ApproveRequestResponse,
-    GeneratePOResponse,
     MaterialRequest,
     PurchaseOrder,
     VendorQuote,
@@ -13,6 +11,11 @@ import type {
     AcceptQuotePayload,
     Vendor,
     GeneratePOFromQuotePayload,
+    NegotiateQuoteResponse,
+    RecordReceiptParams,
+    RecordReceiptResponse,
+    UpdatePOStatusPayload,
+    UpdatePOStatusResponse,
 } from '@/features/procurements/types/procurement';
 import type { ApiDataResponse, PaginatedResponse } from '@/shared/types/api-response';
 
@@ -76,19 +79,20 @@ export const procurementService = {
 
     acceptQuote: (quoteId: number, payload: AcceptQuotePayload) =>
         apiClient.patch<{ message: string }>(
-            `/vendor-quotes/${quoteId}/accept`,
+            `projects/vendor-quotes/${quoteId}/accept`,
             payload
         ),
 
+
     negotiateQuote: (quoteId: number, payload: Partial<CreateRFQPayload>) =>
-        apiClient.patch<{ id: number }>(
-            `/vendor-quotes/${quoteId}/negotiate`,
+        apiClient.patch<NegotiateQuoteResponse>(
+            `projects/vendor-quotes/${quoteId}/negotiate`,
             payload
         ),
 
     //  PURCHASE ORDERS
     createPOFromQuote: (projectId: number, payload: GeneratePOFromQuotePayload) =>
-        apiClient.post<{ data: { id: number } }>(
+        apiClient.post<{ data: { id: number, po_number: string } }>(
             `/projects/${projectId}/purchase-orders/from-quote`,
             payload
         ),
@@ -104,13 +108,29 @@ export const procurementService = {
             `/projects/${projectId}/purchase-orders/${poId}`
         ),
 
-    updatePOStatus: (poId: number, status: string) =>
-        apiClient.patch(`/purchase-orders/${poId}/status`, { status }),
+    updatePOStatus: ({ poId, status, notes }: UpdatePOStatusPayload) =>
+    apiClient.patch<UpdatePOStatusResponse>(
+      `/projects/purchase-orders/${poId}/status`, 
+      { status, notes }
+    ),
 
-    recordReceipt: (poItemId: number, quantityReceived: number, receivedDate: string, notes?: string) =>
-        apiClient.post(`/purchase-order-items/${poItemId}/receipt`, {
-            quantity_received: quantityReceived,
-            received_date: receivedDate,
-            notes,
-        }),
+    recordReceipt: ({ poId, poItemId, payload }: RecordReceiptParams) =>
+    apiClient.post<RecordReceiptResponse>(
+      `/projects/purchase-orders/${poId}/items/${poItemId}/receipt`, 
+      payload
+    ),
+
+    downloadPOPdf: async ( poId: number): Promise<Blob> => {
+    const response = await apiClient.get(
+      `/projects/purchase-orders/${poId}/pdf`,
+      {
+        responseType: 'blob', 
+        headers: {
+          'Accept': 'application/pdf',
+        },
+      }
+    );
+    return response.data; 
+  },
+
 };

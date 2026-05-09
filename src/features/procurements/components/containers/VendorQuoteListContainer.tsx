@@ -1,13 +1,22 @@
-// src/features/procurement/containers/VendorQuoteListContainer.tsx
 
-import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeftIcon, Plus } from 'lucide-react';
+import { ArrowLeftIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useVendorQuotes } from '../../hooks/use-vendor-quotes';
 import { VendorQuoteListPage } from '../presentational/VendorQuoteListPage';
 
+/**
+ * VendorQuoteListContainer component for managing vendor quotes list.
+ *
+ * Features:
+ * - Fetches and displays vendor quotes for a project
+ * - Handles quote acceptance actions
+ * - Navigates to quote detail view
+ *
+ * @component
+ * @returns The rendered vendor quote list container
+ */
 export const VendorQuoteListContainer = () => {
     const navigate = useNavigate();
     const { projectId } = useParams<{ projectId: string }>();
@@ -17,10 +26,10 @@ export const VendorQuoteListContainer = () => {
     const handleAcceptQuote = (quoteId: number) => {
         acceptQuote({ quoteId, payload: {} }, {
             onSuccess: () => {
-                toast.success('Cotización aceptada exitosamente');
+                toast.success('Quote accepted successfully');
             },
             onError: (err) => {
-                toast.error(err.message || 'Error aceptando cotización');
+                toast.error(err.message || 'Error accepting quote');
             },
         });
     };
@@ -31,37 +40,31 @@ export const VendorQuoteListContainer = () => {
 
     return (
         <div className="space-y-6">
-
-            {/* Header con acción */}
-            <div className="flex items-center justify-start ">
+            <div className="flex items-center justify-start">
                 <Button
                     variant="ghost"
                     size="icon"
                     onClick={handleBack}
                     className="h-8 w-8"
-                    aria-label="Volver"
-                    title="Volver a la lista de solicitudes"
+                    aria-label="Back"
+                    title="Back to requests list"
                 >
                     <ArrowLeftIcon className="h-4 w-4" />
                 </Button>
                 <div>
-                    <h2 className="text-lg font-semibold">Cotizaciones de Proveedores</h2>
+                    <h2 className="text-lg font-semibold">Vendor Quotes</h2>
                     <p className="text-sm text-muted-foreground">
-                        Solicitudes de cotización (RFQ) y respuestas de proveedores
+                        Requests for Quotation (RFQ) and vendor responses
                     </p>
                 </div>
-
             </div>
 
-            {/* Lista de cotizaciones */}
             <VendorQuoteListPage
                 quotes={quotes?.data || []}
                 isLoading={isLoading}
                 onViewDetail={(quoteId) => navigate(`${quoteId}`)}
                 onAccept={handleAcceptQuote}
             />
-
-
         </div>
     );
 };

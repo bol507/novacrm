@@ -242,6 +242,73 @@ export type MaterialRequestStatus =
   | 'fully_procured'          
   | 'closed';
 
+export type NegotiateQuoteResponse = {
+  message: string;
+  data: {
+    id: number;
+    status: string;
+    notes?: string;
+    terms?: string;
+    updated_at?: string;
+  };
+};
+
+export interface RecordReceiptPayload {
+  quantity_received: number;
+  received_date: string; // ISO date string: "YYYY-MM-DD"
+  notes?: string;
+  received_by?: number; // User ID (opcional, default: current user)
+}
+
+export interface RecordReceiptResponse {
+  message: string;
+  data: {
+    item_id: number;
+    previous_received: number;
+    new_received: number;
+    ordered_quantity: number;
+    receipt_status: 'partial' | 'complete';
+    remaining: number;
+  };
+}
+
+export interface RecordReceiptParams {
+  poId: number;
+  poItemId: number;
+  payload: RecordReceiptPayload;
+}
+
+export interface ReceiptModalState {
+  open: boolean;
+  itemId?: number;
+  itemName?: string;
+  orderedQty?: number;
+  currentReceived?: number;
+  notes: string;
+  receivedDate: string;
+}
+
+export interface UpdatePOStatusPayload {
+  poId: number;
+  status: string;
+  notes?: string;
+}
+
+export interface UpdatePOStatusResponse {
+  message: string;
+}
+
+export interface PurchaseOrderDetailPageProps {
+  po: PurchaseOrder;
+  onBack: () => void;
+  onUpdateStatus: (newStatus: string) => void;
+  onRecordReceipt: (item: PurchaseOrderItem) => void;
+  isUpdating: boolean;
+  isRecording?: boolean; 
+  onPrint?: () => void;
+  onDownload?: () => void;
+}
+
 
 export type CreateRequestResponse = ApiDataResponse<{ id: number }>;
 export type ListRequestsResponse = PaginatedResponse<MaterialRequest>;

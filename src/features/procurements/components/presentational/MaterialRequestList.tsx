@@ -1,11 +1,9 @@
-// src/features/procurement/components/presentational/MaterialRequestList.tsx
-
 import { Button } from '@/components/ui/button';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Plus, Eye, CheckCircle, FileText, Clock, FileTextIcon } from 'lucide-react';
+import { Loader2, Plus, Eye, CheckCircle, FileText, FileTextIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { MaterialRequest, MaterialRequestItem } from '../../types/procurement';
@@ -21,19 +19,42 @@ interface Props {
   onCreateRFQ?: (requestId: number, items: MaterialRequestItem[]) => void;
 }
 
-// ✅ AGREGAR el nuevo estado al config de badges
 const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   draft: { label: 'Draft', variant: 'secondary' },
   submitted: { label: 'In Review', variant: 'default' },
   approved: { label: 'Approved', variant: 'default' },
   partially_approved: { label: 'Partial', variant: 'outline' },
   rejected: { label: 'Rejected', variant: 'destructive' },
-  procurement_in_progress: { label: 'En Cotización', variant: 'outline' },
+  procurement_in_progress: { label: 'In Quotation', variant: 'outline' },
   partially_procured: { label: 'In Procurement', variant: 'outline' },
   fully_procured: { label: 'Procured', variant: 'default' },
   closed: { label: 'Closed', variant: 'secondary' },
 };
 
+/**
+ * MaterialRequestList component for displaying a paginated table of material requests.
+ *
+ * Features:
+ * - Table view with request ID, status, requester, and date
+ * - Loading state with spinner
+ * - Empty state with action button
+ * - View details action for all requests
+ * - Approve action for users with permission on submitted requests
+ * - Create RFQ action for approved requests
+ * - View quotes action for requests in procurement progress
+ *
+ * @component
+ * @param props - Component props
+ * @param props.requests - Array of material requests
+ * @param props.isLoading - Whether data is currently loading
+ * @param props.onNewRequest - Callback to create a new request
+ * @param props.onViewDetails - Callback to view request details
+ * @param props.onApprove - Callback to approve a request
+ * @param props.canApprove - Whether the current user can approve requests
+ * @param props.onViewQuotes - Optional callback to view quotes for a request
+ * @param props.onCreateRFQ - Optional callback to create RFQ from request
+ * @returns The rendered material request list
+ */
 export const MaterialRequestList = ({
   requests,
   isLoading,
@@ -52,7 +73,6 @@ export const MaterialRequestList = ({
       </div>
     );
   }
-
 
   const getApprovedItemsForRequest = (request: MaterialRequest): MaterialRequestItem[] => {
     return (request.items || []).filter(item => {
@@ -117,12 +137,10 @@ export const MaterialRequestList = ({
                     {format(new Date(req.created_at), 'PPP', { locale: es })}
                   </TableCell>
                   <TableCell className="text-right space-x-2">
-                    {/* Ver detalle de solicitud */}
                     <Button variant="ghost" size="icon" onClick={() => onViewDetails(req.id)}>
                       <Eye className="h-4 w-4" />
                     </Button>
 
-                    {/* ✅ Botón Ver Cotizaciones (solo si está en progreso) */}
                     {req.status === 'procurement_in_progress' && onViewQuotes && (
                       <Button
                         variant="ghost"
@@ -131,28 +149,25 @@ export const MaterialRequestList = ({
                           e.stopPropagation();
                           onViewQuotes(req.id);
                         }}
-                        title="Ver cotizaciones de esta solicitud"
+                        title="View quotes for this request"
                         className="text-blue-600 hover:text-blue-700"
                       >
                         <FileText className="h-4 w-4" />
                       </Button>
                     )}
 
-                    {/* Badge visual para estado de cotización */}
                     {req.status === 'procurement_in_progress' && (
                       <Badge variant="outline" className="ml-1 text-[10px] bg-orange-50 text-orange-700 border-orange-200">
                         RFQ
                       </Badge>
                     )}
 
-                    {/* Aprobar (si tiene permisos y está submitted) */}
                     {canApprove && req.status === 'submitted' && (
                       <Button variant="ghost" size="icon" onClick={() => onApprove(req.id)}>
                         <CheckCircle className="h-4 w-4 text-green-600" />
                       </Button>
                     )}
 
-                    {/*  Botón Crear RFQ (solo si la solicitud lo permite) */}
                     {canCreateRFQForRequest(req) && onCreateRFQ && (
                       <Button
                         variant="ghost"
@@ -163,13 +178,9 @@ export const MaterialRequestList = ({
                           const approvedItems = getApprovedItemsForRequest(req);
                           onCreateRFQ(req.id, approvedItems);
                         }}
-                        title={`Crear RFQ con ${getApprovedItemsForRequest(req).length} ítem(s) aprobado(s)`}
+                        title={`Create RFQ with ${getApprovedItemsForRequest(req).length} approved item(s)`}
                       >
                         <FileTextIcon className="h-4 w-4" />
-                        {/* Tooltip personalizado al hover */}
-                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs bg-slate-900 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
-                          Crear RFQ ({getApprovedItemsForRequest(req).length})
-                        </span>
                       </Button>
                     )}
                   </TableCell>

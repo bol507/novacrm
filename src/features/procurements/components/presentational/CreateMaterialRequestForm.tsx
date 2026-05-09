@@ -18,6 +18,7 @@ const UNIT_OPTIONS = [
   { value: 'metro', label: 'Meter' },
   { value: 'kg', label: 'Kilogram (kg)' },
   { value: 'litro', label: 'Liter' },
+  { value: 'juego', label: 'Set' },
 ] as const;
 
 const REASON_OPTIONS = [

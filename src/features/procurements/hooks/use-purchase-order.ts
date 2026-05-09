@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { procurementService } from '../services/procurement-service';
-import type { GeneratePOFromQuotePayload } from '../types/procurement';
+import type { GeneratePOFromQuotePayload, RecordReceiptParams, RecordReceiptResponse, UpdatePOStatusPayload, UpdatePOStatusResponse } from '../types/procurement';
+import type { AxiosResponse } from 'axios';
+import { useState } from 'react';
 
 export const usePurchaseOrders = {
   list: (projectId: number, params?: { status?: string; vendor_id?: number }) => {
@@ -24,7 +26,7 @@ export const usePurchaseOrders = {
   createFromQuote: (projectId: number) => {
     const queryClient = useQueryClient();
     return useMutation({
-      mutationFn: (payload: GeneratePOFromQuotePayload) => 
+      mutationFn: (payload: GeneratePOFromQuotePayload) =>
         procurementService.createPOFromQuote(projectId, payload),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['procurement', 'purchase-orders', projectId] });
@@ -35,13 +37,48 @@ export const usePurchaseOrders = {
 
   updateStatus: () => {
     const queryClient = useQueryClient();
-    return useMutation({
-      mutationFn: ({ poId, status }: { poId: number; status: string }) =>
-        procurementService.updatePOStatus(poId, status),
-      onSuccess: () => {
+    return useMutation<AxiosResponse<UpdatePOStatusResponse>, Error, UpdatePOStatusPayload>({
+      mutationFn: (payload) => procurementService.updatePOStatus(payload),
+      onSuccess: (_, variables) => {
+        queryClient.invalidateQueries({ queryKey: ['procurement', 'purchase-order', variables.poId] });
         queryClient.invalidateQueries({ queryKey: ['procurement', 'purchase-orders'] });
-        queryClient.invalidateQueries({ queryKey: ['procurement', 'purchase-order'] });
       },
     });
+  },
+
+  recordReceipt: () => {
+    const queryClient = useQueryClient();
+
+    return useMutation<AxiosResponse<RecordReceiptResponse>, Error, RecordReceiptParams>({
+      mutationFn: (params) => procurementService.recordReceipt(params),
+
+      onSuccess: (_, variables) => {
+        queryClient.refetchQueries({
+          queryKey: ['procurement', 'purchase-order', variables.poId],
+          exact: true,
+        });
+      },
+
+
+    });
+  },
+
+  downloadPdf: () => {
+    const [isDownloading, setIsDownloading] = useState(false);
+
+    const download = async ( poId: number) => {
+      setIsDownloading(true);
+      try {
+        await procurementService.downloadPOPdf( poId);
+        // ... lógica de descarga ...
+        //toast.success('PDF descargado');
+      } catch (error) {
+        //toast.error('Error al descargar PDF');
+      } finally {
+        setIsDownloading(false);
+      }
+    };
+
+    return { download, isDownloading };
   },
 };

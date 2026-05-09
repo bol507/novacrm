@@ -5,31 +5,23 @@ interface ProjectStatusBadgeProps {
     status: string;
 }
 
-/**
- * Translation map from English (API values) to Spanish (display values)
- */
 const statusTranslationMap: Record<string, string> = {
-    // English to Spanish
-    'in progress': 'En Curso',
-    'initiated': 'Iniciado',
-    'completed': 'Completado',
-    'on hold': 'Pausado',
-    'cancelled': 'Cancelado',
-    'draft': 'Borrador',
-    'in review': 'En Revisión',
-    // Spanish originals (for backward compatibility)
-    'en curso': 'En Curso',
-    'iniciado': 'Iniciado',
-    'completado': 'Completado',
-    'pausado': 'Pausado',
-    'cancelado': 'Cancelado',
-    'borrador': 'Borrador',
-    'en revisión': 'En Revisión',
+    'in progress': 'In Progress',
+    'initiated': 'Initiated',
+    'completed': 'Completed',
+    'on hold': 'On Hold',
+    'cancelled': 'Cancelled',
+    'draft': 'Draft',
+    'in review': 'In Review',
+    'en curso': 'In Progress',
+    'iniciado': 'Initiated',
+    'completado': 'Completed',
+    'pausado': 'On Hold',
+    'cancelado': 'Cancelled',
+    'borrador': 'Draft',
+    'en revisión': 'In Review',
 };
 
-/**
- * Get Spanish display value from API status value
- */
 const getDisplayStatus = (status: string): string => {
     const normalizedStatus = status.toLowerCase().trim();
     return statusTranslationMap[normalizedStatus] || status;
@@ -40,9 +32,6 @@ interface StatusStyle {
     textClass: string;
 }
 
-/**
- * Get CSS classes for status badge styling based on project status
- */
 const getStatusStyle = (status: string): StatusStyle => {
     const normalizedStatus = status.toLowerCase().trim();
     
@@ -73,6 +62,18 @@ const getStatusStyle = (status: string): StatusStyle => {
     }
 };
 
+/**
+ * ProjectStatusBadge component for displaying project status with appropriate colors.
+ *
+ * @component
+ * @param props - Component props
+ * @param props.status - Project status string (supports both English and Spanish input)
+ * @returns A badge with status text and color coding
+ *
+ * @example
+ * <ProjectStatusBadge status="in progress" />
+ * <ProjectStatusBadge status="Completado" />
+ */
 export const ProjectStatusBadge = ({ status }: ProjectStatusBadgeProps) => {
     const displayStatus = getDisplayStatus(status);
     const { bgClass, textClass } = getStatusStyle(status);

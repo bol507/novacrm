@@ -22,7 +22,7 @@ import {
 import { ProjectModuleNav, type ModuleId } from '../components/ProjectModuleNav';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { ProjectProcurementTab } from '@/features/procurements/components/tabs/ProjectProcurementTab';
-import ProjectPurchaseOrdersTab from '@/features/procurements/components/tabs/ProjectPurchaseOrdersTab';
+import { ProjectPurchaseOrdersTab } from '@/features/procurements/components/tabs/ProjectPurchaseOrdersTab';
 
 /**
  * ProjectDetailPage Container Component

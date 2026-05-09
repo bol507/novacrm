@@ -281,7 +281,6 @@ export const ProjectsView = ({
                 renderActions={renderActions}
                 showProgress={true}
                 showBudget={true}
-                compact={false}
               />
             </div>
           )}
