@@ -1,7 +1,7 @@
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Search, User } from "lucide-react";
-import { useFormContext } from "react-hook-form"; 
+import { useFormContext } from "react-hook-form";
 import { cn } from "@/shared/lib/utils";
 import type { Control } from "react-hook-form";
 import type { QuoteFormValues } from "../../types/quote";
@@ -52,10 +52,11 @@ export const QuoteFormUserSearch = ({
   isLoading,
   isValid,
 }: QuoteFormUserSearchProps) => {
-  
+
   const form = useFormContext<QuoteFormValues>();
-  
-  
+
+
+
   const hasUserError = !isValid && form?.formState.isSubmitted;
 
   return (
@@ -77,39 +78,33 @@ export const QuoteFormUserSearch = ({
                 placeholder="Search user by name..."
                 className={cn(
                   "pl-10 transition-all",
-                 
-                  isValid && !hasUserError 
-                    ? 'border-green-500 focus-visible:ring-green-500' 
+                  isValid && !hasUserError
+                    ? 'border-green-500 focus-visible:ring-green-500'
                     : '',
-                 
                   hasUserError && 'border-destructive focus-visible:ring-destructive'
                 )}
                 {...field}
                 onChange={(e) => {
                   field.onChange(e);
                   onSearchChange(e.target.value);
-                  
-                  if (hasUserError && form) {
-                    form.clearErrors('assigned_user_id');
-                  }
                 }}
               />
             </FormControl>
           </div>
 
-          {/* Search Results Dropdown */}
-          {(results?.length || isLoading) && (
-            <div className="mt-2 space-y-1 max-h-48 overflow-y-auto bg-popover rounded-md border border-border z-10">
+          {/* Search Results Dropdown - solo mostrar si hay resultados y el usuario está escribiendo */}
+          {results && results.length > 0 && field.value && (
+            <div className="mt-2 space-y-1 max-h-48 overflow-y-auto bg-popover rounded-md border border-border z-10 shadow-lg">
               {isLoading ? (
                 <div className="px-3 py-2 text-sm text-muted-foreground">
                   Searching...
                 </div>
               ) : (
-                results?.map((user) => (
+                results.map((user) => (
                   <button
                     key={user.id}
                     type="button"
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-muted flex items-center justify-between"
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-muted flex items-center justify-between rounded-sm"
                     onClick={() => onSelect(user)}
                   >
                     <span>{user.first_name} {user.last_name}</span>
@@ -120,7 +115,6 @@ export const QuoteFormUserSearch = ({
             </div>
           )}
 
-          {/* Validation Message */}
           {hasUserError && (
             <p className="text-sm text-destructive mt-1">
               Please select a user from the list

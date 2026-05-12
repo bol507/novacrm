@@ -5,7 +5,7 @@ import path from "path"
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/novacrm/', //server.baseUrl,
+  //base: '/novacrm/', //server.baseUrl,
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {

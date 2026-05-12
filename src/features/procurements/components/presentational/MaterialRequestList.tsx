@@ -3,6 +3,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { Loader2, Plus, Eye, CheckCircle, FileText, FileTextIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -32,28 +34,8 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'second
 };
 
 /**
- * MaterialRequestList component for displaying a paginated table of material requests.
- *
- * Features:
- * - Table view with request ID, status, requester, and date
- * - Loading state with spinner
- * - Empty state with action button
- * - View details action for all requests
- * - Approve action for users with permission on submitted requests
- * - Create RFQ action for approved requests
- * - View quotes action for requests in procurement progress
- *
- * @component
- * @param props - Component props
- * @param props.requests - Array of material requests
- * @param props.isLoading - Whether data is currently loading
- * @param props.onNewRequest - Callback to create a new request
- * @param props.onViewDetails - Callback to view request details
- * @param props.onApprove - Callback to approve a request
- * @param props.canApprove - Whether the current user can approve requests
- * @param props.onViewQuotes - Optional callback to view quotes for a request
- * @param props.onCreateRFQ - Optional callback to create RFQ from request
- * @returns The rendered material request list
+ * MaterialRequestList component for displaying material requests.
+ * Responsive: Table on desktop, Cards on mobile.
  */
 export const MaterialRequestList = ({
   requests,
@@ -101,6 +83,55 @@ export const MaterialRequestList = ({
     );
   }
 
+  // Componente reutilizable para los botones de acción
+  const RequestActions = ({ req, className = '' }: { req: MaterialRequest; className?: string }) => {
+    const approvedItems = getApprovedItemsForRequest(req);
+    
+    return (
+      <div className={`flex items-center gap-1 ${className}`}>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onViewDetails(req.id)}>
+          <Eye className="h-4 w-4" />
+        </Button>
+
+        {req.status === 'procurement_in_progress' && onViewQuotes && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-blue-600 hover:text-blue-700"
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewQuotes(req.id);
+            }}
+            title="View quotes for this request"
+          >
+            <FileText className="h-4 w-4" />
+          </Button>
+        )}
+
+        {canApprove && req.status === 'submitted' && (
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onApprove(req.id)}>
+            <CheckCircle className="h-4 w-4 text-green-600" />
+          </Button>
+        )}
+
+        {canCreateRFQForRequest(req) && onCreateRFQ && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-blue-600 hover:text-blue-700"
+            onClick={(e) => {
+              e.stopPropagation();
+              onCreateRFQ(req.id, approvedItems);
+            }}
+            title={`Create RFQ with ${approvedItems.length} approved item(s)`}
+          >
+            <FileTextIcon className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -112,7 +143,8 @@ export const MaterialRequestList = ({
         )}
       </div>
 
-      <div className="rounded-md border">
+      {/* Vista TABLE - Desktop (md y arriba) */}
+      <div className="rounded-md border hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -131,64 +163,60 @@ export const MaterialRequestList = ({
                   <TableCell className="font-medium">#{req.id}</TableCell>
                   <TableCell>
                     <Badge variant={config.variant}>{config.label}</Badge>
-                  </TableCell>
-                  <TableCell>{req.requested_by_name}</TableCell>
-                  <TableCell>
-                    {format(new Date(req.created_at), 'PPP', { locale: es })}
-                  </TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button variant="ghost" size="icon" onClick={() => onViewDetails(req.id)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-
-                    {req.status === 'procurement_in_progress' && onViewQuotes && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onViewQuotes(req.id);
-                        }}
-                        title="View quotes for this request"
-                        className="text-blue-600 hover:text-blue-700"
-                      >
-                        <FileText className="h-4 w-4" />
-                      </Button>
-                    )}
-
                     {req.status === 'procurement_in_progress' && (
                       <Badge variant="outline" className="ml-1 text-[10px] bg-orange-50 text-orange-700 border-orange-200">
                         RFQ
                       </Badge>
                     )}
-
-                    {canApprove && req.status === 'submitted' && (
-                      <Button variant="ghost" size="icon" onClick={() => onApprove(req.id)}>
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                      </Button>
-                    )}
-
-                    {canCreateRFQForRequest(req) && onCreateRFQ && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-blue-600 hover:text-blue-700"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const approvedItems = getApprovedItemsForRequest(req);
-                          onCreateRFQ(req.id, approvedItems);
-                        }}
-                        title={`Create RFQ with ${getApprovedItemsForRequest(req).length} approved item(s)`}
-                      >
-                        <FileTextIcon className="h-4 w-4" />
-                      </Button>
-                    )}
+                  </TableCell>
+                  <TableCell>{req.requested_by_name}</TableCell>
+                  <TableCell>
+                    {format(new Date(req.created_at), 'PPP', { locale: es })}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <RequestActions req={req} className="justify-end" />
                   </TableCell>
                 </TableRow>
               );
             })}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Vista CARDS - Mobile (menor a md) */}
+      <div className="md:hidden space-y-3">
+        {requests.map((req) => {
+          const config = statusConfig[req.status] || statusConfig.draft;
+          return (
+            <Card key={req.id} className="overflow-hidden">
+              <CardHeader className="p-4 pb-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm">Request #{req.id}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {req.requested_by_name}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <Badge variant={config.variant}>{config.label}</Badge>
+                    {req.status === 'procurement_in_progress' && (
+                      <Badge variant="outline" className="text-[10px] bg-orange-50 text-orange-700 border-orange-200">
+                        RFQ
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <p className="text-xs text-muted-foreground mb-3">
+                  {format(new Date(req.created_at), 'PPP', { locale: es })}
+                </p>
+                <Separator className="mb-3" />
+                <RequestActions req={req} className="justify-end" />
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

@@ -178,6 +178,8 @@ export const QuoteFormContent = ({
     }
   }, [mode, clientData, initialClientId, form]);
 
+
+
   const showValidationErrors = (errors: any) => {
     const errorMessages: string[] = [];
 
@@ -321,7 +323,7 @@ export const QuoteFormContent = ({
     }
   };
 
-  
+
   const handleSelectClient = (client: ClientSearchResult) => {
     console.log('[DEBUG] handleSelectClient called with client:', client);
     form.setValue('account_search', client.accountname);
@@ -348,6 +350,15 @@ export const QuoteFormContent = ({
     setSelectedUserId(userIdNumber);
     setIsUserValid(true);
     setUserSearchTerm('');
+  };
+
+  const handleUserSearchChange = (value: string) => {
+    setUserSearchTerm(value);
+    if (value.trim() === '') {
+      setIsUserValid(false);
+      form.setValue('assigned_user_id', 0);
+      setSelectedUserId(null);
+    }
   };
 
   const isSubmitting = externalSubmitting ?? form.formState.isSubmitting;
@@ -396,7 +407,7 @@ export const QuoteFormContent = ({
         <QuoteFormUserSearch
           control={form.control}
           searchTerm={userSearchTerm}
-          onSearchChange={setUserSearchTerm}
+          onSearchChange={handleUserSearchChange}
           onSelect={handleSelectUser}
           results={userResults}
           isLoading={usersLoading}
