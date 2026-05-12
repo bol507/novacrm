@@ -374,3 +374,56 @@ export interface QuoteDuplicatePayload {
 }
 
 
+// ============================================================================
+// QUOTE SORTING TYPES
+// ============================================================================
+
+/**
+ * Fields that can be used for sorting quotes
+ */
+export type QuoteSortField = 
+  | 'subject'           // Quote subject/title
+  | 'quoteno'           // Quote number (e.g., C-26-00001)
+  | 'account_name'      // Client name
+  | 'total'             // Total amount
+  | 'subtotal'          // Subtotal
+  | 'createdtime'       // Creation date
+  | 'modifiedtime'      // Modification date
+  | 'validtill'         // Expiration date
+  | 'quote_stage';      // Quote status
+
+/**
+ * Sort direction
+ */
+export type SortDirection = 'asc' | 'desc';
+
+/**
+ * Complete sort configuration
+ */
+export interface QuoteSortConfig {
+  field: QuoteSortField;
+  direction: SortDirection;
+}
+
+/**
+ * Human-readable labels for sort fields
+ */
+export const QUOTE_SORT_FIELD_LABELS: Record<QuoteSortField, string> = {
+  subject: 'Title',
+  quoteno: 'Number',
+  account_name: 'Client',
+  total: 'Total Amount',
+  subtotal: 'Subtotal',
+  createdtime: 'Creation Date',
+  modifiedtime: 'Modification Date',
+  validtill: 'Expiration Date',
+  quote_stage: 'Status',
+};
+
+/**
+ * Default sort configuration
+ */
+export const DEFAULT_QUOTE_SORT: QuoteSortConfig = {
+  field: 'createdtime',
+  direction: 'desc',
+};

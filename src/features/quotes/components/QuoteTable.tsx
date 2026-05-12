@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
-import { Search } from 'lucide-react';
+import { Calendar, Clock, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import type { Quote } from '../types/quote';
 import { QUOTE_STAGE_COLORS, QUOTE_STAGE_LABELS } from '../types/quote';
+import { formatDateEs } from '@/shared/lib/utils';
 
 interface QuoteTableProps {
   quotes: Quote[];
@@ -74,7 +75,7 @@ const QuoteTableCard = ({
   onEdit?: (quote: Quote) => void;
   onDelete?: (quote: Quote) => void;
 }) => (
-  <div 
+  <div
     className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/30 transition-colors cursor-pointer"
     onClick={() => onView?.(quote)}
   >
@@ -154,7 +155,7 @@ export const QuoteTable = ({
   const filteredQuotes = useMemo(() => {
     if (!searchValue) return quotes;
     const search = searchValue.toLowerCase();
-    return quotes.filter(quote => 
+    return quotes.filter(quote =>
       quote.subject?.toLowerCase().includes(search) ||
       quote.account_name?.toLowerCase().includes(search) ||
       quote.quoteno?.toLowerCase().includes(search)
@@ -180,9 +181,9 @@ export const QuoteTable = ({
             />
           </div>
           {searchValue && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => onSearchChange('')}
               aria-label="Clear search"
             >
@@ -215,41 +216,63 @@ export const QuoteTable = ({
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Number</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Subject</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Client</th>
+
+                <th className="hidden lg:table-cell px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Created</th>
+                <th className="hidden lg:table-cell px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Valid Until</th>
+
+
                 <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Total</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Status</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Actions</th>
-               </tr>
+              </tr>
             </thead>
             <tbody>
               {filteredQuotes.map((quote) => (
-                <tr 
+                <tr
                   key={quote.quoteid}
                   className="border-b hover:bg-muted/30 transition-colors cursor-pointer"
                   onClick={() => onView?.(quote)}
                 >
                   <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                     {quote.quoteno}
-                   </td>
+                  </td>
                   <td className="px-4 py-3">
                     <div className="font-medium truncate" title={quote.subject}>
                       {quote.subject}
                     </div>
-                   </td>
+                  </td>
+
                   <td className="px-4 py-3">
                     <div className="truncate " title={quote.account_name || undefined}>
                       {quote.account_name || 'No client'}
                     </div>
-                   </td>
-                  
+                  </td>
+
+                  {/* ✅ NUEVA COLUMNA: Created Time */}
+                  <td className="hidden lg:table-cell px-4 py-3 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {formatDateEs(quote.createdtime)}
+                    </div>
+                  </td>
+
+                  {/* ✅ NUEVA COLUMNA: Valid Until */}
+                  <td className="hidden lg:table-cell px-4 py-3 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      {formatDateEs(quote.validtill)}
+                    </div>
+                  </td>
+
                   <td className="px-4 py-3 text-right font-medium">
                     {formatCurrency(quote.total)}
-                   </td>
-                  
+                  </td>
+                  {/*
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-1 rounded-full border ${QUOTE_STAGE_COLORS[quote.quote_stage]}`}>
                       {QUOTE_STAGE_LABELS[quote.quote_stage]}
                     </span>
-                   </td>
+                  </td>
+                  */}
                   <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-1">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onView?.(quote)}>
@@ -269,7 +292,7 @@ export const QuoteTable = ({
                         </Button>
                       )}
                     </div>
-                   </td>
+                  </td>
                 </tr>
               ))}
             </tbody>
