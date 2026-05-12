@@ -1,118 +1,311 @@
-// src/features/procurement/components/presentational/PurchaseOrderDetailPage.tsx
-
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Building2, Calendar, Truck } from 'lucide-react';
-import type { PurchaseOrder } from '../../types/procurement';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ArrowLeft, Package, FileText, CheckCircle, Clock, Download, Printer } from 'lucide-react';
+import type { PurchaseOrderDetailPageProps, PurchaseOrderItem } from '../../types/procurement';
+import { ReceiptBadge } from '@/components/ReceiptBadge';
+import { useNavigate } from 'react-router-dom';
 
-interface Props {
-  po: PurchaseOrder;
-  onBack: () => void;
-}
+const statusConfig: Record<string, {
+    label: string;
+    variant: 'default' | 'secondary' | 'destructive' | 'outline';
+    className?: string;
+}> = {
+    draft: { label: 'Draft', variant: 'secondary' },
+    submitted: { label: 'Submitted', variant: 'default' },
+    approved: {
+        label: 'Approved',
+        variant: 'default',
+        className: 'bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900 dark:text-green-200'
+    },
+    rejected: { label: 'Rejected', variant: 'destructive' },
+    partially_received: { label: 'Partial', variant: 'outline' },
+    fully_received: {
+        label: 'Received',
+        variant: 'default',
+        className: 'bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900 dark:text-green-200'
+    },
+    cancelled: { label: 'Cancelled', variant: 'destructive' },
+};
 
-export const PurchaseOrderDetailPage = ({ po, onBack }: Props) => {
-  return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={onBack}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">OC #{po.po_number}</h1>
-            <p className="text-muted-foreground text-sm">Proyecto #{po.project_id}</p>
-          </div>
-        </div>
-        <Badge variant="outline" className="text-lg px-4 py-1">
-          {po.status.replace(/_/g, ' ')}
-        </Badge>
-      </div>
+const availableTransitions: Record<string, string[]> = {
+    draft: ['submitted', 'cancelled'],
+    submitted: ['approved', 'rejected'],
+    approved: ['partially_received', 'fully_received'],
+    partially_received: ['fully_received'],
+    fully_received: [],
+    rejected: [],
+    cancelled: [],
+};
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Info Principal */}
-        <div className="md:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Ítems de la Orden</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Ítem</TableHead>
-                    <TableHead className="text-center">Cant.</TableHead>
-                    <TableHead className="text-center">Unit.</TableHead>
-                    <TableHead className="text-right">Costo Unit.</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {po.items?.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>{item.item_name}</TableCell>
-                      <TableCell className="text-center">{item.quantity_ordered}</TableCell>
-                      <TableCell className="text-center">{item.quantity_received}</TableCell>
-                      <TableCell className="text-right">${item.unit_cost.toFixed(2)}</TableCell>
-                      <TableCell className="text-right font-medium">${item.total_cost.toFixed(2)}</TableCell>
-                    </TableRow>
-                  ))}
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-right font-bold">Gran Total</TableCell>
-                    <TableCell className="text-right font-bold text-lg">${po.total_amount.toFixed(2)}</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
+/**
+ * PurchaseOrderDetailPage component for displaying purchase order details.
+ *
+ * Features:
+ * - Displays PO header with status badge and action buttons
+ * - Shows key information cards (total, expected delivery, creation date, items count)
+ * - Provides status transition buttons based on current state
+ * - Displays item table with quantities, pricing, and receipt status
+ * - Allows recording receipt for individual items
+ * - Shows traceability links to related quotes and material requests
+ *
+ * @component
+ * @param props - Component props
+ * * @param props.po - Purchase order data
+ * * @param props.onBack - Callback when back button is clicked
+ * * @param props.onUpdateStatus - Callback to update PO status
+ * * @param props.onRecordReceipt - Callback to record receipt for an item
+ * * @param props.isUpdating - Whether a status update is in progress
+ * * @param props.isRecording - Whether a receipt recording is in progress
+ * @returns The rendered purchase order detail page
+ */
+export const PurchaseOrderDetailPage = ({ po, onBack, onUpdateStatus, onRecordReceipt, isUpdating, isRecording }: PurchaseOrderDetailPageProps) => {
+    const navigate = useNavigate();
+    const config = statusConfig[po.status] || statusConfig.draft;
+    const nextStatuses = availableTransitions[po.status] || [];
 
-        {/* Sidebar Info */}
-        <div className="space-y-4">
-          <Card>
-            <CardContent className="p-4 space-y-4 pt-6">
-              <div className="flex items-start gap-3">
-                <Building2 className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Proveedor</p>
-                  <p className="font-medium">{po.vendor_name || `ID: ${po.vendor_id}`}</p>
+    const formatCurrency = (value: number | string) => {
+        return new Number(value).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    };
+
+    const formatDate = (dateString?: string) => {
+        if (!dateString) return '—';
+        return new Date(dateString).toLocaleDateString('es-ES', {
+            year: 'numeric', month: 'short', day: 'numeric'
+        });
+    };
+
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between pb-4 border-b">
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="icon" onClick={onBack} className="h-8 w-8">
+                        <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    <div>
+                        <h2 className="text-lg font-semibold flex items-center gap-2">
+                            <Package className="h-5 w-5 text-primary" />
+                            PO #{po.po_number}
+                        </h2>
+                        <p className="text-sm text-muted-foreground">
+                            Project #{po.project_id} • {po.vendor_name || `Vendor #${po.vendor_id}`}
+                        </p>
+                    </div>
                 </div>
-              </div>
-              
-              <div className="flex items-start gap-3">
-                <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Fecha de Orden</p>
-                  <p className="font-medium">{new Date(po.order_date).toLocaleDateString()}</p>
-                </div>
-              </div>
+                <div className="flex items-center gap-2">
+                    <Badge variant={config.variant} className={config.className}>{config.label}</Badge>
 
-              {po.expected_delivery && (
-                <div className="flex items-start gap-3">
-                  <Truck className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Entrega Esperada</p>
-                    <p className="font-medium">{new Date(po.expected_delivery).toLocaleDateString()}</p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    {nextStatuses.length > 0 && (
+                        <div className="flex gap-1">
+                            {nextStatuses.map(status => (
+                                <Button
+                                    key={status}
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => onUpdateStatus(status)}
+                                    disabled={isUpdating}
+                                    className="text-xs"
+                                >
+                                    {status === 'approved' && <CheckCircle className="h-3 w-3 mr-1" />}
+                                    {status === 'rejected' && <Clock className="h-3 w-3 mr-1" />}
+                                    {status.replace('_', ' ').toUpperCase()}
+                                </Button>
+                            ))}
+                        </div>
+                    )}
 
-          {po.notes && (
+                    <Button variant="ghost" size="icon" title="Print" disabled>
+                        <Printer className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" title="Download PDF" disabled>
+                        <Download className="h-4 w-4" />
+                    </Button>
+                </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Card>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-2xl font-bold">{formatCurrency(po.total_amount)}</p>
+                        {po.subtotal !== po.total_amount && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Subtotal: {formatCurrency(po.subtotal)}
+                            </p>
+                        )}
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Expected Delivery</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-lg font-medium">{formatDate(po.expected_delivery_date)}</p>
+                        {po.expected_delivery_date && new Date(po.expected_delivery_date) < new Date() && (
+                            <Badge variant="destructive" className="mt-1 text-xs">Overdue</Badge>
+                        )}
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Created</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-lg font-medium">{formatDate(po.created_at)}</p>
+                        <p className="text-xs text-muted-foreground mt-1">By user #{po.created_by}</p>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Items</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-lg font-medium">{po.items?.length || 0} item(s)</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            {po.items?.filter(i => i.receipt_status === 'complete').length || 0} received
+                        </p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {(po.vendor_quote_id || po.material_request_id) && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-sm font-medium flex items-center gap-2">
+                            <FileText className="h-4 w-4" /> Traceability
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-wrap gap-4 text-sm">
+                        {po.vendor_quote_id && (
+                            <div className="flex items-center gap-2">
+                                <span className="text-muted-foreground">Quote:</span>
+                                <Button
+                                    variant="link"
+                                    className="p-0 h-auto font-normal text-primary hover:underline"
+                                    onClick={() => navigate(`/dashboard/projects/${po.project_id}/procurement/vendor-quotes/${po.vendor_quote_id}`)}
+                                >
+                                    #{po.vendor_quote_id}
+                                </Button>
+                            </div>
+                        )}
+                        {po.material_request_id && (
+                            <div className="flex items-center gap-2">
+                                <span className="text-muted-foreground">Material Request:</span>
+                                <Button
+                                    variant="link"
+                                    className="p-0 h-auto font-normal text-primary hover:underline"
+                                    onClick={() => navigate(`/dashboard/projects/${po.project_id}/procurement/${po.material_request_id}`)}
+                                >
+                                    #{po.material_request_id}
+                                </Button>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            )}
+
+            {po.internal_notes && (
+                <Card className="bg-muted/30">
+                    <CardHeader>
+                        <CardTitle className="text-sm font-medium">Internal Notes</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm whitespace-pre-wrap">{po.internal_notes}</p>
+                    </CardContent>
+                </Card>
+            )}
+
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Notas Internas</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{po.notes}</p>
-              </CardContent>
+                <CardHeader>
+                    <CardTitle>Order Items</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="rounded-md border">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Item</TableHead>
+                                    <TableHead className="text-center">Qty</TableHead>
+                                    <TableHead className="text-right">Unit Price</TableHead>
+                                    <TableHead className="text-right">Disc.</TableHead>
+                                    <TableHead className="text-right">Subtotal</TableHead>
+                                    <TableHead className="text-center">Received</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {po.items?.map((item: PurchaseOrderItem) => {
+                                    const received = item.received_quantity || 0;
+                                    const isComplete = received >= Number(item.quantity);
+
+                                    return (
+                                        <TableRow key={item.id}>
+                                            <TableCell>
+                                                <div className="space-y-0.5">
+                                                    <p className="font-medium">{item.item_name}</p>
+                                                    {item.notes && (
+                                                        <p className="text-xs text-muted-foreground line-clamp-1">{item.notes}</p>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-center font-mono">
+                                                {Number(item.quantity).toFixed(2)} {item.unit}
+                                            </TableCell>
+                                            <TableCell className="text-right font-mono">
+                                                {formatCurrency(item.unit_price)}
+                                            </TableCell>
+                                            <TableCell className="text-right font-mono">
+                                                {Number(item.discount_percent).toFixed(1)}%
+                                            </TableCell>
+                                            <TableCell className="text-right font-mono font-medium">
+                                                {formatCurrency(item.line_total)}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                <ReceiptBadge received={received} total={Number(item.quantity)} />
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                {!isComplete && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="text-xs h-7"
+                                                        onClick={() => onRecordReceipt(item)}
+                                                        disabled={isUpdating || isRecording}
+                                                    >
+                                                        Record
+                                                    </Button>
+                                                )}
+                                                {isComplete && (
+                                                    <Badge variant="outline" className="text-xs bg-green-50 text-green-700">
+                                                        ✓ Complete
+                                                    </Badge>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
             </Card>
-          )}
+
+            {po.terms && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-sm font-medium">Terms</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm whitespace-pre-wrap">{po.terms}</p>
+                    </CardContent>
+                </Card>
+            )}
         </div>
-      </div>
-    </div>
-  );
+    );
 };

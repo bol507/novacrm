@@ -17,6 +17,7 @@ const MaterialRequestDetailContainer = lazy(() => import('./components/container
 const CreateRFQContainer = lazy(() => import('./components/containers/CreateRFQContainer'));
 const VendorQuoteListContainer = lazy(() => import('./components/containers/VendorQuoteListContainer'));
 const VendorQuoteDetailContainer = lazy(() => import('./components/containers/VendorQuoteDetailContainer'));
+const PurchaseOrderDetailContainer = lazy(() => import('./components/containers/PurchaseOrderDetailContainer'));
 
 export const procurementsRoutes: RouteObject[] = [
   {
@@ -52,6 +53,14 @@ export const procurementsRoutes: RouteObject[] = [
         element: (
           <Suspense fallback={<LoaderPage />}>
             <VendorQuoteDetailContainer />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'purchase-orders/:poId',
+        element: (
+          <Suspense fallback={<LoaderPage />}>
+            <PurchaseOrderDetailContainer />
           </Suspense>
         ),
       }

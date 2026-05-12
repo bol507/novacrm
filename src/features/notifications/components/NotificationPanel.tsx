@@ -53,14 +53,18 @@ export const NotificationPanel = ({ projectId, children }: Props) => {
             markAsRead(notification.id);
         }
 
-        if (!notification.entity_type || !notification.entity_id || !projectId) {
+        if (!notification.entity_type || !notification.entity_id) {
             return;
         }
-
+        const targetProjectId = notification.project_id ?? projectId;
+        if (!targetProjectId) {
+            return;
+        }
+        
         const routes: Record<string, string> = {
-            material_request: `/dashboard/projects/${projectId}/procurement/${notification.entity_id}`,
-            vendor_quote: `/dashboard/projects/${projectId}/procurement/vendor-quotes/${notification.entity_id}`,
-            purchase_order: `/dashboard/projects/${projectId}/procurement/purchase-orders/${notification.entity_id}`,
+            material_request: `/dashboard/projects/${targetProjectId}/procurement/${notification.entity_id}`,
+            vendor_quote: `/dashboard/projects/${targetProjectId}/procurement/vendor-quotes/${notification.entity_id}`,
+            purchase_order: `/dashboard/projects/${targetProjectId}/procurement/purchase-orders/${notification.entity_id}`,
         };
 
         const route = routes[notification.entity_type];
@@ -96,7 +100,7 @@ export const NotificationPanel = ({ projectId, children }: Props) => {
                     )}
                 </div>
 
-                <ScrollArea className="max-h-96">
+                <ScrollArea className="h-96">
                     {isLoading ? (
                         <div className="p-4 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -117,7 +121,7 @@ export const NotificationPanel = ({ projectId, children }: Props) => {
                                         !notification.is_read ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''
                                     }`}
                                 >
-                                    <div className="flex items-start gap-3">
+                                    <div className="flex items-start gap-3 min-w-0">
                                         <div className={`p-2 rounded-full shrink-0 ${
                                             notification.severity === 'success' ? 'bg-green-100 text-green-700' :
                                             notification.severity === 'warning' ? 'bg-orange-100 text-orange-700' :
@@ -127,7 +131,7 @@ export const NotificationPanel = ({ projectId, children }: Props) => {
                                             {iconMap[notification.icon] || <Bell className="h-4 w-4" />}
                                         </div>
 
-                                        <div className="flex-1 min-w-0">
+                                        <div className="flex-1 min-w-0 overflow-hidden">
                                             <div className="flex items-center justify-between gap-2">
                                                 <p className="font-medium text-sm truncate">{notification.title}</p>
                                                 {!notification.is_read && (
@@ -136,7 +140,7 @@ export const NotificationPanel = ({ projectId, children }: Props) => {
                                                     </Badge>
                                                 )}
                                             </div>
-                                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2 break-words">
                                                 {notification.message}
                                             </p>
                                             <p className="text-[10px] text-muted-foreground mt-2">

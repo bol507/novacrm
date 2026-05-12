@@ -6,11 +6,12 @@ import { toast } from 'sonner';
 import { MaterialRequestList } from '../presentational/MaterialRequestList';
 import { ApprovalModal } from '../presentational/ApprovalModal';
 import { Button } from '@/components/ui/button';
-import { ArrowLeftIcon, Clock, FileTextIcon, Plus } from 'lucide-react';
+import { ArrowLeftIcon, FileTextIcon } from 'lucide-react';
 import { procurementService } from '../../services/procurement-service';
 import type { ApproveRequestPayload, MaterialRequestItem } from '../../types/procurement';
-import { useProcurement } from '../../hooks/useProcurement';
+import { useProcurement } from '../../hooks/use-procurement';
 import { CreateMaterialRequestForm } from '../presentational/CreateMaterialRequestForm';
+import { useVendorQuotes } from '../../hooks/use-vendor-quotes';
 
 interface Props {
     projectId: string;
@@ -25,6 +26,7 @@ interface Props {
  * - Manages approval workflow for requests
  * - Generates RFQs (Request for Quotations) from approved items
  * - Role-based permission checking for approvals
+ * - Displays view quotes button when RFQs are in progress or quotes exist
  *
  * @component
  * @param props - Component props
@@ -41,6 +43,7 @@ export const MaterialRequestListContainer = ({ projectId }: Props) => {
 
     const { data: requests, isLoading, refetch } = useProcurement.listRequests(Number(projectId));
     const { mutate: approveRequest, isPending: isApproving } = useProcurement.approveRequest();
+    const { data: quotes } = useVendorQuotes.list(Number(projectId));
 
     const canApprove =
         isAdmin ||
@@ -91,8 +94,6 @@ export const MaterialRequestListContainer = ({ projectId }: Props) => {
         );
     }, [requests]);
 
-   
-
     const hasAnyInProgress = useMemo(() => {
         if (approvedItems.length === 0) return false;
         const requestIds = [...new Set(approvedItems.map(i => i.request_id))];
@@ -102,11 +103,19 @@ export const MaterialRequestListContainer = ({ projectId }: Props) => {
         });
     }, [approvedItems, requests]);
 
-   
+    const hasAnyQuotes = useMemo(() => {
+        if (approvedItems.length === 0 || !quotes?.data) return false;
+
+        const requestIds = [...new Set(approvedItems.map(i => i.request_id))];
+
+        return quotes.data.some((quote: any) =>
+            requestIds.includes(quote.material_request_id)
+        );
+    }, [approvedItems, quotes]);
 
     const handleCreateRFQForRequest = (requestId: number, items: MaterialRequestItem[]) => {
         if (items.length === 0) {
-            toast.info('No hay ítems aprobados en esta solicitud para cotizar');
+            toast.info('No approved items in this request to quote');
             return;
         }
 
@@ -131,18 +140,9 @@ export const MaterialRequestListContainer = ({ projectId }: Props) => {
                     <p className="text-sm text-muted-foreground">Project #{projectId}</p>
                 </div>
 
-                {!showForm && approvedItems.length === 0 && (
-                    <Button onClick={() => setShowForm(true)} variant="default" size="sm" className="gap-2">
-                        <Plus className="h-4 w-4" />
-                        New Request
-                    </Button>
-                )}
-
                 {approvedItems.length > 0 && (
                     <div className="flex gap-2">
-                        
-
-                        {hasAnyInProgress && (
+                        {(hasAnyInProgress || hasAnyQuotes) && (
                             <Button
                                 variant="outline"
                                 size="sm"
@@ -153,8 +153,10 @@ export const MaterialRequestListContainer = ({ projectId }: Props) => {
                                         return req?.status === 'procurement_in_progress';
                                     })?.request_id;
 
-                                    if (inProgressReqId) {
-                                        navigate(`/dashboard/projects/${projectId}/procurement/vendor-quotes?request_id=${inProgressReqId}`);
+                                    const targetReqId = inProgressReqId || approvedItems[0]?.request_id;
+
+                                    if (targetReqId) {
+                                        navigate(`/dashboard/projects/${projectId}/procurement/vendor-quotes?request_id=${targetReqId}`);
                                     }
                                 }}
                             >
@@ -162,8 +164,6 @@ export const MaterialRequestListContainer = ({ projectId }: Props) => {
                                 View Quotes
                             </Button>
                         )}
-
-                        
                     </div>
                 )}
             </div>

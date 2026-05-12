@@ -42,10 +42,29 @@ interface Props {
   requestId: number;
   items: MaterialRequestItem[];
   onClose: () => void;
-  onSubmit: (payload: ApproveRequestPayload) => void; 
+  onSubmit: (payload: ApproveRequestPayload) => void;
   isPending: boolean;
 }
 
+/**
+ * ApprovalModal component for approving or rejecting material request items.
+ *
+ * Features:
+ * - Displays items in a table with quantity, decision selector, and approved quantity
+ * - Supports approve, reject, and partial approval decisions
+ * - Allows entering custom approved quantity for partial approvals
+ * - Includes notes field for approval/rejection comments
+ *
+ * @component
+ * @param props - Component props
+ * @param props.open - Whether the modal is open
+ * @param props.requestId - ID of the material request
+ * @param props.items - Array of material request items
+ * @param props.onClose - Callback when modal closes
+ * @param props.onSubmit - Callback when form is submitted
+ * @param props.isPending - Whether submission is in progress
+ * @returns The rendered approval modal
+ */
 export const ApprovalModal = ({
   open,
   requestId,
@@ -55,8 +74,6 @@ export const ApprovalModal = ({
   isPending,
 }: Props) => {
   const [notes, setNotes] = useState('');
-
-
   const [approvalItems, setApprovalItems] = useState<ApprovalItem[]>([]);
 
   useEffect(() => {
@@ -74,7 +91,6 @@ export const ApprovalModal = ({
     }
   }, [items]);
 
-  // Actualizar decisión de un ítem
   const updateDecision = (itemId: number, decision: 'approve' | 'reject' | 'partial') => {
     setApprovalItems(prev =>
       prev.map(item => {
@@ -82,7 +98,6 @@ export const ApprovalModal = ({
           return {
             ...item,
             decision,
-            // Si es approve o reject, la cantidad aprobada es 0 o total
             approvedQuantity: decision === 'reject' ? 0 : item.quantity,
           };
         }
@@ -91,14 +106,12 @@ export const ApprovalModal = ({
     );
   };
 
-  // Actualizar cantidad aprobada
   const updateApprovedQuantity = (itemId: number, value: string) => {
     const num = parseFloat(value);
     const item = approvalItems.find(i => i.id === itemId);
 
     if (!item) return;
 
-    // Limitar entre 0 y cantidad solicitada
     const validQty = Math.max(0, Math.min(num || 0, item.quantity));
 
     setApprovalItems(prev =>
@@ -107,43 +120,43 @@ export const ApprovalModal = ({
   };
 
   const handleSubmit = () => {
-  const payload: ApproveRequestPayload = {
-    items: approvalItems.map(item => ({
-      itemId: item.id,
-      decision: item.decision,
-      approvedQuantity: item.decision === 'partial' ? item.approvedQuantity : null,
-    })),
-    notes: notes.trim() || undefined,
+    const payload: ApproveRequestPayload = {
+      items: approvalItems.map(item => ({
+        itemId: item.id,
+        decision: item.decision,
+        approvedQuantity: item.decision === 'partial' ? item.approvedQuantity : null,
+      })),
+      notes: notes.trim() || undefined,
+    };
+
+    onSubmit(payload);
   };
 
-  onSubmit(payload);
-};
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Aprobar Solicitud #{requestId}</DialogTitle>
+          <DialogTitle>Approve Request #{requestId}</DialogTitle>
           <DialogDescription>
-            Revisa los ítems solicitados y decide cuáles aprobar
+            Review the requested items and decide which ones to approve
           </DialogDescription>
         </DialogHeader>
 
-        {/* Tabla de ítems */}
         <div className="border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[40%]">Ítem</TableHead>
-                <TableHead className="text-center">Cantidad</TableHead>
-                <TableHead className="text-center">Decisión</TableHead>
-                <TableHead className="text-center">Cantidad Aprobada</TableHead>
+                <TableHead className="w-[40%]">Item</TableHead>
+                <TableHead className="text-center">Quantity</TableHead>
+                <TableHead className="text-center">Decision</TableHead>
+                <TableHead className="text-center">Approved Quantity</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {approvalItems.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                    No hay ítems en esta solicitud
+                    No items in this request
                   </TableCell>
                 </TableRow>
               ) : (
@@ -160,7 +173,6 @@ export const ApprovalModal = ({
                       <Select
                         value={item.decision}
                         onValueChange={(val) => {
-                          // Validar que el valor sea uno de los permitidos
                           const decisions = ['approve', 'reject', 'partial'] as const;
                           if (decisions.includes(val as any)) {
                             updateDecision(item.id, val as typeof decisions[number]);
@@ -173,13 +185,13 @@ export const ApprovalModal = ({
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="approve" className="text-green-600">
-                            ✅ Aprobar
+                            ✅ Approve
                           </SelectItem>
                           <SelectItem value="partial" className="text-yellow-600">
-                            ⚠️ Parcial
+                            ⚠️ Partial
                           </SelectItem>
                           <SelectItem value="reject" className="text-red-600">
-                            ❌ Rechazar
+                            ❌ Reject
                           </SelectItem>
                         </SelectContent>
                       </Select>
@@ -208,12 +220,11 @@ export const ApprovalModal = ({
           </Table>
         </div>
 
-        {/* Notas */}
         <div className="space-y-2">
-          <Label htmlFor="notes">Notas de aprobación/rechazo</Label>
+          <Label htmlFor="notes">Approval/Rejection Notes</Label>
           <Textarea
             id="notes"
-            placeholder="Motivo de rechazo o comentarios adicionales..."
+            placeholder="Reason for rejection or additional comments..."
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             className="min-h-[80px]"
@@ -223,16 +234,16 @@ export const ApprovalModal = ({
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isPending}>
-            Cancelar
+            Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isPending}>
             {isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Procesando...
+                Processing...
               </>
             ) : (
-              'Confirmar decisión'
+              'Confirm Decision'
             )}
           </Button>
         </DialogFooter>

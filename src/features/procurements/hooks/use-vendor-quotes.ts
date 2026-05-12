@@ -29,10 +29,10 @@ export const useVendorQuotes = {
     return useMutation({
       mutationFn: (payload: CreateRFQPayload) =>
         procurementService.createRFQ(projectId, payload).then(res => res.data),
-      onSuccess: (data) => {
-        toast.success(`RFQ #${data.id} creada exitosamente`);
-        queryClient.invalidateQueries({ queryKey: ['procurement', 'vendor-quotes', projectId] });
-        queryClient.invalidateQueries({ queryKey: ['procurement', 'requests', projectId] });
+      onSuccess: () => {
+        toast.success(`RFQ  creada exitosamente`);
+        queryClient.invalidateQueries({ queryKey: ['procurement', 'vendor-quotes', Number(projectId)] });
+        queryClient.invalidateQueries({ queryKey: ['procurement', 'requests', Number(projectId)] });
       },
       onError: (err) => {
         toast.error(err.message || 'Error creando RFQ');
@@ -48,6 +48,7 @@ export const useVendorQuotes = {
       onSuccess: (_, { quoteId }) => {
         queryClient.invalidateQueries({ queryKey: ['procurement', 'vendor-quote', quoteId] });
         queryClient.invalidateQueries({ queryKey: ['procurement', 'vendor-quotes'] });
+        queryClient.invalidateQueries({ queryKey: ['procurement', 'requests'] });
       },
     });
   },
@@ -64,14 +65,37 @@ export const useVendorQuotes = {
     });
   },
 
-   negotiate: () => {
+  negotiate: () => {
     const queryClient = useQueryClient();
     return useMutation({
       mutationFn: ({ quoteId, payload }: { quoteId: number; payload: Partial<CreateRFQPayload> }) =>
         procurementService.negotiateQuote(quoteId, payload),
-      onSuccess: (_, { quoteId }) => {
-        queryClient.invalidateQueries({ queryKey: ['procurement', 'quote', quoteId] });
+      onSuccess: async (response, variables) => {
+        const updatedQuote = response.data.data;
+        const queryKey = ['procurement', 'vendor-quote', variables.quoteId];
+        queryClient.setQueryData(queryKey, (old: any) => {
+          if (!old?.data) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              ...updatedQuote,
+              status: 'negotiated',
+
+            }
+          };
+        }
+        );
+
         queryClient.invalidateQueries({ queryKey: ['procurement', 'vendor-quotes'] });
+        await queryClient.refetchQueries({
+          queryKey,
+          exact: true,
+        });
+      },
+      onError: (error) => {
+        console.error('Negotiation failed:', error);
+        // React Query mantiene el estado anterior automáticamente (rollback implícito)
       },
     });
   },

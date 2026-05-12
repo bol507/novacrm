@@ -498,28 +498,7 @@ export interface ProjectsTableProps {
    */
   showBudget?: boolean;
 
-  /**
-   * Flag to enable compact display mode for denser information layout.
-   * 
-   * When true, reduces padding, font sizes, and element heights to fit more
-   * content in the viewport. Useful for power users or large datasets.
-   * 
-   * @default false
-   * 
-   * @remarks
-   * - Compact mode affects row height, text sizing, and spacing throughout the table
-   * - Should be paired with appropriate font scaling for readability
-   * - User preference for compact mode can be persisted to localStorage
-   * 
-   * @example
-   * // Enable compact mode based on user preference
-   * const [compact, setCompact] = useState(() => 
-   *   localStorage.getItem('tableCompact') === 'true'
-   * );
-   * <ProjectsTable projects={projects} compact={compact} />
-   */
-  compact?: boolean;
-
+  
   /**
    * Additional CSS class names to apply to the table root container.
    * 

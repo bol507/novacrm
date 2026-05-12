@@ -20,7 +20,6 @@ interface ProjectsTableCardProps {
     renderActions?: (project: Project) => React.ReactNode;
     showProgress: boolean;
     showBudget: boolean;
-    compact: boolean;
 }
 
 export const ProjectsTableCard = ({

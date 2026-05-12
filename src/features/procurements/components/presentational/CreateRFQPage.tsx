@@ -1,7 +1,4 @@
-// src/features/procurement/components/presentational/CreateRFQPage.tsx
-
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -47,6 +44,27 @@ export interface CreateRFQPayload {
   notes?: string;
 }
 
+/**
+ * CreateRFQPage component for creating a Request for Quotation.
+ *
+ * Features:
+ * - Vendor selection
+ * - Item-wise pricing configuration
+ * - Global terms and notes
+ * - Calculated totals with real-time updates
+ * - Sticky footer with summary and submit actions
+ *
+ * @component
+ * @param props - Component props
+ * @param props.projectId - Project ID
+ * @param props.materialRequestId - Material request ID
+ * @param props.items - Array of material request items
+ * @param props.vendors - Array of available vendors
+ * @param props.isPending - Whether submission is in progress
+ * @param props.onSubmit - Callback when RFQ is submitted
+ * @param props.onCancel - Callback when cancelled
+ * @returns The rendered create RFQ page
+ */
 export const CreateRFQPage = ({
   projectId,
   materialRequestId,
@@ -62,7 +80,6 @@ export const CreateRFQPage = ({
   const [globalTerms, setGlobalTerms] = useState('');
   const [globalNotes, setGlobalNotes] = useState('');
   
-  // Estado por ítem
   const [itemAssignments, setItemAssignments] = useState<Record<number, {
     unit_price: string;
     discount_percent?: string;
@@ -102,6 +119,8 @@ export const CreateRFQPage = ({
           quantity: Number(item.approved_quantity ?? item.quantity ?? 0),
           unit: item.unit,
           unit_price: Number(assignment.unit_price || 0),
+          item_name: item.item_name,
+          catalog_item_type: item.catalog_item_type,
           discount_percent: assignment.discount_percent ? Number(assignment.discount_percent) : undefined,
           delivery_date: assignment.delivery_date || undefined,
           terms: assignment.terms || globalTerms || undefined,
@@ -126,7 +145,6 @@ export const CreateRFQPage = ({
   return (
     <div className="min-h-screen bg-background pb-24">
       
-      {/* ===== HEADER ===== */}
       <header className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
@@ -134,9 +152,9 @@ export const CreateRFQPage = ({
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="flex-1 min-w-0">
-              <h1 className="text-lg font-semibold truncate">Crear Solicitud de Cotización</h1>
+              <h1 className="text-lg font-semibold truncate">Create Request for Quotation</h1>
               <p className="text-sm text-muted-foreground truncate">
-                Proyecto #{projectId} • Solicitud #{materialRequestId}
+                Project #{projectId} • Request #{materialRequestId}
               </p>
             </div>
           </div>
@@ -145,14 +163,13 @@ export const CreateRFQPage = ({
 
       <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
         
-        {/* 🔔 Info Card */}
         <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
           <CardContent className="p-4 flex gap-3">
             <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-blue-800 dark:text-blue-200">
-              <p className="font-medium">¿Qué es una RFQ?</p>
-              <p>Una Solicitud de Cotización formaliza la petición de precios a un proveedor. 
-                 Los ítems aquí definidos podrán compararse con otras cotizaciones antes de generar la Orden de Compra.
+              <p className="font-medium">What is an RFQ?</p>
+              <p>A Request for Quotation formalizes the price request to a vendor.
+                 The items defined here can be compared with other quotes before generating the Purchase Order.
               </p>
             </div>
           </CardContent>
@@ -160,27 +177,25 @@ export const CreateRFQPage = ({
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          {/* ===== COLUMNA IZQUIERDA: Configuración ===== */}
           <div className="lg:col-span-1 space-y-6">
             
-            {/* Selección de proveedor */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <Building2 className="h-4 w-4 text-muted-foreground" />
-                  Proveedor
+                  Vendor
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="vendor">Seleccionar proveedor <span className="text-destructive">*</span></Label>
+                  <Label htmlFor="vendor">Select vendor <span className="text-destructive">*</span></Label>
                   <select
                     id="vendor"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     value={selectedVendorId || ''}
                     onChange={(e) => setSelectedVendorId(e.target.value ? Number(e.target.value) : undefined)}
                   >
-                    <option value="">Seleccionar...</option>
+                    <option value="">Select...</option>
                     {vendors.map(v => (
                       <option key={v.id} value={v.id}>{v.name}</option>
                     ))}
@@ -188,7 +203,7 @@ export const CreateRFQPage = ({
                   {!selectedVendorId && (
                     <p className="text-xs text-destructive flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
-                      Requerido para continuar
+                      Required to continue
                     </p>
                   )}
                 </div>
@@ -198,7 +213,7 @@ export const CreateRFQPage = ({
                 <div className="space-y-2">
                   <Label htmlFor="validUntil" className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    Validez de la cotización
+                    Quote validity
                   </Label>
                   <Input
                     id="validUntil"
@@ -210,10 +225,10 @@ export const CreateRFQPage = ({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="globalTerms">Términos generales</Label>
+                  <Label htmlFor="globalTerms">General terms</Label>
                   <Textarea
                     id="globalTerms"
-                    placeholder="Ej: Pago a 30 días, entrega en obra..."
+                    placeholder="E.g., Payment within 30 days, delivery on site..."
                     value={globalTerms}
                     onChange={(e) => setGlobalTerms(e.target.value)}
                     className="min-h-[80px] text-sm"
@@ -221,10 +236,10 @@ export const CreateRFQPage = ({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="globalNotes">Notas internas</Label>
+                  <Label htmlFor="globalNotes">Internal notes</Label>
                   <Textarea
                     id="globalNotes"
-                    placeholder="Comentarios para el equipo de compras..."
+                    placeholder="Comments for the procurement team..."
                     value={globalNotes}
                     onChange={(e) => setGlobalNotes(e.target.value)}
                     className="min-h-[80px] text-sm"
@@ -235,23 +250,22 @@ export const CreateRFQPage = ({
 
           </div>
 
-          {/* ===== COLUMNA DERECHA: Ítems y Precios ===== */}
           <div className="lg:col-span-2 space-y-6">
             
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Definir precios por ítem</CardTitle>
+                <CardTitle className="text-base">Set prices per item</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-[40%]">Ítem</TableHead>
-                        <TableHead className="text-center">Cant.</TableHead>
-                        <TableHead>Precio Unit. <span className="text-destructive">*</span></TableHead>
-                        <TableHead className="text-center hidden sm:table-cell">Desc. (%)</TableHead>
-                        <TableHead className="text-center hidden md:table-cell">Entrega</TableHead>
+                        <TableHead className="w-[40%]">Item</TableHead>
+                        <TableHead className="text-center">Qty</TableHead>
+                        <TableHead>Unit Price <span className="text-destructive">*</span></TableHead>
+                        <TableHead className="text-center hidden sm:table-cell">Disc. (%)</TableHead>
+                        <TableHead className="text-center hidden md:table-cell">Delivery</TableHead>
                         <TableHead className="text-right">Subtotal</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -325,16 +339,14 @@ export const CreateRFQPage = ({
         </div>
       </main>
 
-      {/* ===== FOOTER STICKY: Resumen + Acciones ===== */}
       <footer className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur border-t">
         <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             
-            {/* Resumen */}
             <div className="flex items-center gap-4 text-sm">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Package className="h-4 w-4" />
-                <span>{items.length} ítem(s)</span>
+                <span>{items.length} item(s)</span>
               </div>
               {selectedVendorName && (
                 <div className="hidden sm:flex items-center gap-2 text-muted-foreground">
@@ -347,10 +359,9 @@ export const CreateRFQPage = ({
               </div>
             </div>
 
-            {/* Acciones */}
             <div className="flex items-center gap-2">
               <Button variant="outline" onClick={onCancel} disabled={isPending} className="min-w-[100px]">
-                Cancelar
+                Cancel
               </Button>
               <Button 
                 onClick={handleSubmit} 
@@ -360,12 +371,12 @@ export const CreateRFQPage = ({
                 {isPending ? (
                   <>
                     <Loader2Icon className="h-4 w-4 animate-spin" />
-                    Creando...
+                    Creating...
                   </>
                 ) : (
                   <>
                     <Package className="h-4 w-4" />
-                    Crear RFQ
+                    Create RFQ
                   </>
                 )}
               </Button>

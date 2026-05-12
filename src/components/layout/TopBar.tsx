@@ -142,7 +142,7 @@ const TopBar = ({ onMenuClick }: TopBarProps) => {
               size="icon"
               className="relative h-9 w-9 flex-shrink-0"
               aria-label="Notifications"
-              disabled={notificationsLoading}
+              
             >
               <Bell className={`h-5 w-5 ${notificationsLoading ? 'animate-pulse opacity-50' : ''}`} />
 

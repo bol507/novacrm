@@ -3,7 +3,6 @@ import { procurementService } from '@/features/procurements/services/procurement
 import type {
   CreateMaterialRequestPayload,
   ApproveRequestPayload,
-  GeneratePOPayload,
   MaterialRequest,
 } from '@/features/procurements/types/procurement';
 import type { ApiDataResponse } from '@/shared/types/api-response';
@@ -76,36 +75,7 @@ export const useProcurement = {
     });
   },
 
-  //  PURCHASE ORDERS
-  generatePO: (projectId: number) => {
-    const queryClient = useQueryClient();
-    return useMutation({
-      mutationFn: (payload: GeneratePOPayload) => procurementService.generatePO(projectId, payload).then(res => res.data),
-      onSuccess: () => {
-        // Invalidar queries relacionadas
-        queryClient.invalidateQueries({ queryKey: ['procurement', 'requests', projectId] });
-        queryClient.invalidateQueries({ queryKey: ['procurement', 'purchase-orders', projectId] });
-      },
-    });
-  },
-
-  listPOs: (projectId: number, params?: { page?: number; limit?: number; status?: string }) => {
-    return useQuery({
-      queryKey: ['procurement', 'purchase-orders', projectId, params],
-      queryFn: () => procurementService.listPOs(projectId, params).then(res => res.data),
-      enabled: !!projectId,
-      staleTime: 2 * 60 * 1000, // 2 min
-    });
-  },
   
-  getPO: (projectId: number, poId: number) => {
-    return useQuery({
-      queryKey: ['procurement', 'purchase-order', poId],
-      queryFn: () => procurementService.getPO(projectId, poId).then(res => res.data.data),
-      enabled: !!projectId && !!poId,
-      staleTime: 1 * 60 * 1000,
-    });
-  },
   // list of vendors
   listVendors: (projectId: number) => {
     return useQuery({

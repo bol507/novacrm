@@ -1,16 +1,17 @@
-import PurchaseOrderListContainer from "../containers/PurchaseOrderListContainer";
+// src/features/procurement/components/ProjectPurchaseOrdersTab.tsx
+import { PurchaseOrderListContainer } from '../containers/PurchaseOrderListContainer';
 
-
-interface ProjectPurchaseOrdersTabProps {
-  projectId: number | string;
+export interface ProjectPurchaseOrdersTabProps {
+  /** Project ID for API calls */
+  projectId: number;
 }
 
 /**
  * ProjectPurchaseOrdersTab Component
  *
  * Displays the purchase orders module content inside the project detail page.
- * Uses composition with the PurchaseOrderListContainer to handle the procurement
- * logic and UI for viewing, tracking, and managing purchase orders.
+ * Uses composition with the PurchaseOrderListContainer to handle the PO
+ * listing, filtering, and detail navigation logic.
  *
  * @component
  * @param props - Component props
@@ -24,15 +25,12 @@ export const ProjectPurchaseOrdersTab = ({ projectId }: ProjectPurchaseOrdersTab
         <div>
           <h3 className="text-lg font-semibold">Purchase Orders</h3>
           <p className="text-sm text-muted-foreground">
-            Track and manage purchase orders generated for this project
+            Generated purchase orders for materials and services in this project
           </p>
         </div>
-        {/* Espacio reservado para acciones futuras: filtrar por estado, exportar, etc. */}
       </div>
 
       <PurchaseOrderListContainer projectId={String(projectId)} />
     </div>
   );
 };
-
-export default ProjectPurchaseOrdersTab;

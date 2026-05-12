@@ -273,27 +273,6 @@ export interface ProjectsTableRowProps {
      */
     showBudget: boolean;
 
-    /**
-     * Flag to enable compact display mode for denser information layout.
-     * 
-     * When true, reduces or omits secondary content (like description text) to fit
-     * more rows in the viewport. Useful for power users or large datasets.
-     * 
-     * @default false
-     * 
-     * @remarks
-     * - Compact mode affects which secondary content is rendered, not just styling
-     * - Should be paired with appropriate row height and font sizing in parent table
-     * - User preference for compact mode can be persisted to localStorage
-     * 
-     * @example
-     * // Enable compact mode based on user preference
-     * const [compact, setCompact] = useState(() => 
-     *   localStorage.getItem('tableCompact') === 'true'
-     * );
-     * <ProjectsTableRow project={project} compact={compact} />
-     */
-    compact: boolean;
 }
 
 /**
@@ -388,7 +367,6 @@ export const ProjectsTableRow = ({
     renderActions,
     showProgress,
     showBudget,
-    compact,
 }: ProjectsTableRowProps) => {
     /**
      * Formats a numeric or string value as USD currency.

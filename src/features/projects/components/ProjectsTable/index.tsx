@@ -35,7 +35,6 @@ export const ProjectsTable = ({
   // Configuración
   showProgress = true,
   showBudget = true,
-  compact = false,
   className = '',
 }: ProjectsTableProps) => {
   
@@ -54,7 +53,7 @@ export const ProjectsTable = ({
 
   // ✅ Loading state
   if (isLoading) {
-    return <ProjectsTableSkeleton compact={compact} className={className} />;
+    return <ProjectsTableSkeleton  className={className} />;
   }
 
   
@@ -106,7 +105,6 @@ export const ProjectsTable = ({
             renderActions={renderActions}
             showProgress={showProgress}
             showBudget={showBudget}
-            compact={compact}
           />
         ))}
       </div>
@@ -135,7 +133,6 @@ export const ProjectsTable = ({
                   renderActions={renderActions}
                   showProgress={showProgress}
                   showBudget={showBudget}
-                  compact={compact}
                 />
               ))}
             </tbody>

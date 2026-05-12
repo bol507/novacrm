@@ -1,5 +1,3 @@
-
-//import { useProcurementNotifications } from '../hooks/useProcurementNotifications';
 import { MaterialRequestListContainer } from '../containers/MaterialRequestListContainer';
 
 export interface ProjectProcurementTabProps {
@@ -26,7 +24,7 @@ export const ProjectProcurementTab = ({ projectId }: ProjectProcurementTabProps)
         <div>
           <h3 className="text-lg font-semibold">Material Management</h3>
           <p className="text-sm text-muted-foreground">
-            Requests, approvals, and purchase orders for this project
+            Requests, approvals, materials for this project
           </p>
         </div>
       </div>

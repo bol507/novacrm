@@ -1,53 +1,53 @@
-// src/features/procurement/containers/PurchaseOrderListContainer.tsx
-
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { useProcurement } from '../../hooks/useProcurement';
-import { ProjectPageLoader } from '@/features/projects/components/ProjectPageLoader';
-import { ProjectErrorState } from '@/features/projects/components/ProjectDetail';
-import { PurchaseOrderListPage } from '../../pages/PurchaseOrderListPage';
+import { useNavigate } from 'react-router-dom';
+import { usePurchaseOrders } from '../../hooks/use-purchase-order';
+import { PurchaseOrderListPage } from '../presentational/PurchaseOrderListPage';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 interface Props {
   projectId: string;
 }
 
+/**
+ * PurchaseOrderListContainer component for displaying a list of purchase orders.
+ *
+ * Features:
+ * - Fetches purchase orders for a project
+ * - Shows loading state while fetching
+ * - Displays error state on failure
+ * - Navigates to PO detail view when a PO is selected
+ *
+ * @component
+ * @param props - Component props
+ * * @param props.projectId - ID of the project
+ * @returns The rendered purchase order list container
+ */
 export const PurchaseOrderListContainer = ({ projectId }: Props) => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const { data: orders, isLoading, error } = usePurchaseOrders.list(Number(projectId));
 
-  // Paginación controlada por URL (best practice)
-  const page = Number(searchParams.get('page') || 1);
-  const limit = Number(searchParams.get('limit') || 20);
-
-  const {  data: pos, isLoading, error } = useProcurement.listPOs(Number(projectId), { page, limit });
-
-  if (isLoading) return <ProjectPageLoader />;
-  if (error || !pos) {
+  if (isLoading) {
     return (
-      <ProjectErrorState 
-        message="No se pudieron cargar las órdenes de compra" 
-        onBack={() => navigate(-1)} 
-      />
+      <div className="flex flex-col items-center justify-center py-12 gap-2 text-muted-foreground">
+        <Loader2 className="h-6 w-6 animate-spin" />
+        <p className="text-sm">Loading purchase orders...</p>
+      </div>
     );
   }
 
-  // Manejo de paginación
-  const handlePageChange = (newPage: number) => {
-    setSearchParams(prev => {
-      prev.set('page', String(newPage));
-      return prev;
-    });
-  };
+  if (error) {
+    return (
+      <div className="flex items-center justify-center gap-2 py-8 text-destructive bg-destructive/10 rounded-lg border border-destructive/20">
+        <AlertCircle className="h-4 w-4" />
+        <p className="text-sm">Error loading POs</p>
+      </div>
+    );
+  }
 
   return (
     <PurchaseOrderListPage
-      orders={pos.data || []}
-      //meta={pos.meta}
+      orders={orders?.data || []}
       isLoading={false}
-      //currentPage={page}
-      //onPageChange={handlePageChange}
-      onViewDetail={(poId) => navigate(`${poId}`)}
+      onViewDetail={(poId) => navigate(`procurement/purchase-orders/${poId}`)}
     />
   );
 };
-
-export default PurchaseOrderListContainer;

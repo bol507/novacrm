@@ -1,4 +1,3 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -51,7 +50,7 @@ export const PurchaseOrderListPage = ({ orders, isLoading, onViewDetail }: Props
                     {po.status.replace(/_/g, ' ')}
                   </Badge>
                 </TableCell>
-                <TableCell>{new Date(po.order_date).toLocaleDateString()}</TableCell>
+                <TableCell>{/* new Date(po.order_date).toLocaleDateString() */}</TableCell>
                 <TableCell className="text-right font-medium">${po.total_amount.toFixed(2)}</TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="icon" onClick={() => onViewDetail(po.id)}>
@@ -66,3 +65,5 @@ export const PurchaseOrderListPage = ({ orders, isLoading, onViewDetail }: Props
     </div>
   );
 };
+
+export default PurchaseOrderListPage;
