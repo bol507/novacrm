@@ -15,6 +15,14 @@ export const useVendorQuotes = {
     });
   },
 
+  listByMR: (projectId: number, mrId: number) => {
+    return useQuery({
+      queryKey: ['procurement', 'vendor-quotes', 'by-mr', mrId],
+      queryFn: () => procurementService.listQuotesByMR(projectId, mrId).then(res => res.data.data),
+      enabled: !!projectId && !!mrId,
+    });
+  },
+
   get: (projectId: number, quoteId: number) => {
     return useQuery({
       queryKey: ['procurement', 'vendor-quote', quoteId],

@@ -74,6 +74,7 @@ export interface MaterialRequest {
   created_at: string;
   updated_at: string;
   items?: MaterialRequestItem[]; 
+  vendor_quotes?: VendorQuoteSummary[];
 }
 
 export interface MaterialRequestItem {
@@ -95,6 +96,21 @@ export interface MaterialRequestItem {
   item_status: 'pending' | 'approved' | 'rejected' | 'partially_approved';
   
   vendor_id?: number | null;
+}
+
+export interface UpdateMaterialRequestPayload {
+  items?: Array<{
+    id?: number; // Si existe: update; si no: create
+    name: string;
+    type: 'material' | 'tool' | 'consumable' | 'service';
+    reason: 'new_requirement' | 'missing' | 'damaged' | 'lost' | 'replacement' | 'other';
+    reason_other?: string;
+    qty: number;
+    unit: string;
+    priority: 'low' | 'medium' | 'high' | 'urgent';
+    notes?: string;
+  }>;
+  items_to_delete?: number[]; // IDs de ítems a eliminar
 }
 
 export interface PurchaseOrder {
@@ -206,6 +222,17 @@ export interface VendorQuoteItem {
   line_total: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface VendorQuoteSummary {
+  id: number;
+  quote_number: string;
+  vendor_id: number;
+  vendor_name?: string;
+  status: 'draft' | 'sent' | 'submitted' | 'negotiated' | 'accepted' | 'processed' | 'rejected';
+  total_amount: number;
+  created_at: string;
+  material_request_id: number;
 }
 
 export interface CreateRFQPayload {

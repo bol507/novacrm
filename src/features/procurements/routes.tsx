@@ -14,6 +14,7 @@ const LoaderPage = () => (
 );
 
 const MaterialRequestDetailContainer = lazy(() => import('./components/containers/MaterialRequestDetailContainer'));
+const EditMaterialRequestContainer = lazy(() => import('./components/containers/EditMaterialRequestContainer'));
 const CreateRFQContainer = lazy(() => import('./components/containers/CreateRFQContainer'));
 const VendorQuoteListContainer = lazy(() => import('./components/containers/VendorQuoteListContainer'));
 const VendorQuoteDetailContainer = lazy(() => import('./components/containers/VendorQuoteDetailContainer'));
@@ -24,11 +25,18 @@ export const procurementsRoutes: RouteObject[] = [
     path: 'projects/:projectId/procurement',
     children: [
       {
-        
         path: ':requestId',
         element: (
           <Suspense fallback={<LoaderPage />}>
             <MaterialRequestDetailContainer />
+          </Suspense>
+        ),
+      },
+      {
+        path: ':requestId/edit',
+        element: (
+          <Suspense fallback={<LoaderPage />}>
+            <EditMaterialRequestContainer/>
           </Suspense>
         ),
       },
