@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
-import type { Quote, QuoteResponse } from '../types/quote';
+import type { Quote, QuoteResponse, QuoteSortConfig } from '../types/quote';
 import { quoteService } from '../services/quoteService';
 
 export interface QuoteFilters {
@@ -36,12 +36,27 @@ export const useQuotes = (
   page: number = 1,
   perPage: number = 20,
   search?: string,
-  filters?: QuoteFilters
+  filters?: QuoteFilters,
+  sortConfig?: QuoteSortConfig
 ) => {
   
   return useQuery<QuoteResponse, AxiosError>({
-    queryKey: ['quotes', page, perPage, search, filters],
-    queryFn: () => quoteService.getQuotes(page, perPage, search, filters),
+    queryKey: [
+      'quotes', 
+      page, 
+      perPage, 
+      search, 
+      filters?.clientId,
+      sortConfig?.field, 
+      sortConfig?.direction
+    ],
+    queryFn: () => quoteService.getQuotes(
+      page, 
+      perPage, 
+      search, 
+      filters, 
+      sortConfig  
+    ),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     retry: 2,

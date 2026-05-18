@@ -1,12 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Calendar, Clock, Eye, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Quote } from "../types/quote";
 import { useNavigate } from "react-router-dom";
+import { formatDateEs } from "@/shared/lib/utils";
 
-/**
- * Props for QuoteCard component
- */
 export interface QuoteCardProps {
   quote: Quote;
   onEditQuote?: (quote: Quote) => void;
@@ -15,39 +13,19 @@ export interface QuoteCardProps {
 
 /**
  * QuoteCard Component
- * 
+ *
  * Displays a summary card for a quote with:
  * - Subject, quote number, and status badge
  * - Financial breakdown (subtotal, discount, tax, total)
  * - Preview of description and first 2 items
  * - Action buttons (view, edit, delete)
- * 
+ *
  * @component
- * @param {QuoteCardProps} props - Component props
- * @param {Quote} props.quote - Quote data to display
- * @param {function} [props.onEditQuote] - Edit callback
- * @param {function} [props.onDeleteQuote] - Delete callback
- * 
- * @returns {JSX.Element} Quote summary card
- * 
- * @example
- * // Basic usage
- * <QuoteCard quote={quote} />
- * 
- * @example
- * // With action handlers
- * <QuoteCard 
- *   quote={quote}
- *   onEditQuote={handleEdit}
- *   onDeleteQuote={handleDelete}
- * />
- * 
- * @remarks
- * - Card is clickable to navigate to quote detail page
- * - Financial values formatted in USD with Panama locale
- * - Shows up to 2 items with "+X more" indicator
- * - Status badge color varies by quote_stage
- * - Edit/delete buttons require explicit callbacks
+ * @param props - Component props
+ * @param props.quote - Quote data to display
+ * @param props.onEditQuote - Edit callback
+ * @param props.onDeleteQuote - Delete callback
+ * @returns Quote summary card
  */
 export const QuoteCard = ({ 
   quote, 
@@ -55,18 +33,17 @@ export const QuoteCard = ({
   onDeleteQuote 
 }: QuoteCardProps) => {
   const navigate = useNavigate();
+  
   const handleViewQuote = () => {
     navigate(`/dashboard/quotes/${quote.quoteid}`);
-    //const url = `/dashboard/quotes/${quote.quoteid}`;
-    //window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat('es-PA', {
       style: 'currency',
       currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(value);
   };
 
@@ -90,14 +67,12 @@ export const QuoteCard = ({
     }
   };
 
-
   const taxAmount = quote.total - quote.subtotal;
   const hasTaxes = taxAmount > 0;
 
   return (
     <Card className="border border-border hover:shadow-md transition-shadow h-full flex flex-col">
       <CardContent className="p-4 flex-1">
-        {/* Header: Subject, quote number, status badge */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0">
             <h3 
@@ -115,14 +90,26 @@ export const QuoteCard = ({
           </span>
         </div>
 
-        {/* Financial Summary Panel */}
+        <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
+          <div className="flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            <span>Created: {formatDateEs(quote.createdtime)}</span>
+          </div>
+          
+          {quote.validtill && (
+            <div className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              <span>Expires: {formatDateEs(quote.validtill)}</span>
+            </div>
+          )}
+        </div>
+
         <div className="mt-3 border-t border-border pt-3">
           <div className="flex justify-between text-sm mb-1">
             <span className="text-muted-foreground">Subtotal:</span>
             <span className="shrink-0">{formatCurrency(quote.subtotal)}</span>
           </div>
           
-          {/* Discount line (if applicable) */}
           {quote.discount_total && quote.discount_total > 0 && (
             <div className="flex justify-between text-sm mb-1">
               <span className="text-muted-foreground">Discount:</span>
@@ -132,7 +119,6 @@ export const QuoteCard = ({
             </div>
           )}
           
-          {/* Tax line (ITBMS 7%) - calculated from total - subtotal */}
           {hasTaxes && (
             <div className="flex justify-between text-sm mb-1">
               <span className="text-muted-foreground">ITBMS:</span>
@@ -142,14 +128,12 @@ export const QuoteCard = ({
             </div>
           )}
           
-          {/* Total line */}
           <div className="flex justify-between font-medium mt-2 pt-2 border-t border-border">
             <span>Total:</span>
             <span className="text-primary shrink-0">{formatCurrency(quote.total)}</span>
           </div>
         </div>
 
-        {/* Description Section (conditional) */}
         {quote.description && (
           <div className="mt-4 border-t border-border pt-4">
             <h4 className="text-sm font-semibold mb-2">Description</h4>
@@ -162,7 +146,6 @@ export const QuoteCard = ({
           </div>
         )}
 
-        {/* Quote Items Preview (conditional) */}
         {quote.items && quote.items.length > 0 && (
           <div className="mt-4 border-t border-border pt-4">
             <h4 className="text-sm font-semibold mb-2">Items</h4>
@@ -174,12 +157,10 @@ export const QuoteCard = ({
                   onClick={handleViewQuote}
                 >
                   <div className="flex-1 min-w-0">
-                    {/* Product name with truncation */}
                     <p className="font-medium text-sm truncate" title={item.description || ''}>
                       {item.description}
                     </p>
                     
-                    {/* Item description with truncation (if exists) */}
                     {item.comment && (
                       <p 
                         className="text-xs text-muted-foreground line-clamp-2 wrap-break-word mt-0.5"
@@ -189,18 +170,15 @@ export const QuoteCard = ({
                       </p>
                     )}
                     
-                    {/* Quantity and unit price */}
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {item.quantity} × {formatCurrency(item.listprice)}
                     </p>
                   </div>
-                  {/* Item total aligned right */}
                   <span className="font-medium text-sm shrink-0">
                     {formatCurrency(item.total ?? 0)}
                   </span>
                 </div>
               ))}
-              {/* "+X more items" indicator */}
               {quote.items.length > 2 && (
                 <div 
                   className="text-xs text-muted-foreground cursor-pointer hover:text-primary transition-colors"
@@ -213,7 +191,6 @@ export const QuoteCard = ({
           </div>
         )}
 
-        {/* Action Buttons */}
         <div className="flex gap-2 mt-4 pt-4 border-t border-border">
           <Button
             variant="outline"

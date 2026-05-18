@@ -1,5 +1,5 @@
 import apiClient from '@/shared/lib/axios';
-import type { Quote, QuoteFormData } from '../types/quote';
+import type { Quote, QuoteFormData, QuoteSortConfig } from '../types/quote';
 
 const QUOTES_API = '/quotes';
 
@@ -26,7 +26,8 @@ export const quoteService = {
     page: number,
     perPage: number,
     search?: string,
-    filters?: { clientId?: number }
+    filters?: { clientId?: number },
+    sortConfig?: QuoteSortConfig
   ) {
     const params: Record<string, any> = {
       page,
@@ -35,6 +36,11 @@ export const quoteService = {
 
     if (search) params.search = search;
     if (filters?.clientId) params.account_id = filters.clientId;
+
+    if (sortConfig?.field) {
+      params.sort_by = sortConfig.field;
+      params.sort_dir = sortConfig.direction || 'desc';
+    }
 
     const response = await apiClient.get(QUOTES_API, { params });
     return response.data;

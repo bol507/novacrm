@@ -4,8 +4,10 @@ import type {
   CreateMaterialRequestPayload,
   ApproveRequestPayload,
   MaterialRequest,
+  UpdateMaterialRequestPayload,
 } from '@/features/procurements/types/procurement';
 import type { ApiDataResponse } from '@/shared/types/api-response';
+import { toast } from 'sonner';
 
 export const useProcurement = {
   //  MATERIAL REQUESTS
@@ -75,7 +77,7 @@ export const useProcurement = {
     });
   },
 
-  
+
   // list of vendors
   listVendors: (projectId: number) => {
     return useQuery({
@@ -88,14 +90,26 @@ export const useProcurement = {
     });
   },
 
-  /*recordReception: () => {
+  updateRequest: () => {
     const queryClient = useQueryClient();
     return useMutation({
-      mutationFn: ({ itemId, payload }: { itemId: number; payload: RecordReceptionPayload }) =>
-        procurementService.recordReception(itemId, payload).then(res => res.data),
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['procurement', 'purchase-orders'] });
+      mutationFn: ({ projectId, requestId, payload }: {
+        projectId: number;
+        requestId: number;
+        payload: UpdateMaterialRequestPayload
+      }) => procurementService.updateRequest(projectId, requestId, payload),
+
+      onSuccess: (_, { requestId }) => {
+        queryClient.invalidateQueries({ queryKey: ['procurement', 'request', requestId] });
+        queryClient.invalidateQueries({ queryKey: ['procurement', 'requests'] });
+        toast.success('Solicitud actualizada exitosamente');
+      },
+
+      onError: (err: any) => {
+        toast.error(err?.response?.data?.error || 'Error actualizando la solicitud');
       },
     });
-  },*/
+  },
+
+
 };

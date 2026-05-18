@@ -25,6 +25,11 @@ interface Props {
   isPending: boolean;
 }
 
+const toNumber = (value: any): number => {
+  const num = Number(value);
+  return isNaN(num) ? 0 : num;
+};
+
 /**
  * GeneratePOFromQuoteModal component for creating a Purchase Order from an accepted vendor quote.
  *
@@ -56,21 +61,24 @@ export const GeneratePOFromQuoteModal = ({
   );
 
   const totalAmount = items
-    .filter(i => selectedItems[i.id])
-    .reduce((sum, i) => sum + (i.line_total ?? 0), 0);
+    .filter(i => selectedItems[i.id] !== false)
+    .reduce((sum, i) => {
+      const lineTotal = toNumber(i.line_total);
+      return sum + lineTotal;
+    }, 0);
 
   const handleSubmit = () => {
     const filteredItems = items
-      .filter(i => selectedItems[i.id])
+      .filter(i => selectedItems[i.id] !== false)
       .map(i => ({
         vendor_quote_item_id: i.id,
         material_request_item_id: i.material_request_item_id,
         item_name: i.item_name ?? 'Item without name',
         unit: i.unit ?? 'unit',
-        quantity: i.quantity ?? 0,
-        unit_price: i.unit_price ?? 0,
-        discount_percent: i.discount_percent ?? 0,
-        line_total: i.line_total ?? 0,
+        quantity: toNumber(i.quantity),
+        unit_price: toNumber(i.unit_price),
+        discount_percent: toNumber(i.discount_percent),
+        line_total: toNumber(i.line_total),
         expected_delivery_date: i.delivery_date ?? undefined,
         terms: i.terms ?? undefined,
         notes: i.notes ?? undefined,
@@ -84,7 +92,8 @@ export const GeneratePOFromQuoteModal = ({
     });
   };
 
-  const isFormValid = items.some(i => selectedItems[i.id]) && totalAmount > 0;
+  const selectedCount = items.filter(i => selectedItems[i.id] !== false).length;
+  const isFormValid = selectedCount > 0 && totalAmount > 0;
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -101,13 +110,12 @@ export const GeneratePOFromQuoteModal = ({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          
           <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md flex gap-2">
             <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-green-800 dark:text-green-200">
               <p className="font-medium">Locked prices</p>
               <p>The prices in this PO are copied directly from the accepted quote.
-                 Any future changes to the quote will not affect this Purchase Order.
+                Any future changes to the quote will not affect this Purchase Order.
               </p>
             </div>
           </div>
@@ -144,7 +152,7 @@ export const GeneratePOFromQuoteModal = ({
             <h4 className="font-medium text-sm text-muted-foreground">
               Items to include in PO
             </h4>
-            
+
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
@@ -179,11 +187,17 @@ export const GeneratePOFromQuoteModal = ({
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-center font-mono">{item.quantity} {item.unit}</TableCell>
-                      <TableCell className="text-right font-mono">${Number(item.unit_price ?? 0).toFixed(2)}</TableCell>
-                      <TableCell className="text-right font-mono">{item.discount_percent}%</TableCell>
+                      <TableCell className="text-center font-mono">
+                        {toNumber(item.quantity)} {item.unit || 'unit'}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        ${toNumber(item.unit_price).toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {toNumber(item.discount_percent).toFixed(1)}%
+                      </TableCell>
                       <TableCell className="text-right font-mono font-medium">
-                        ${Number(item.line_total ?? 0).toFixed(2)}
+                        ${toNumber(item.line_total).toFixed(2)}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -198,7 +212,7 @@ export const GeneratePOFromQuoteModal = ({
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Package className="h-4 w-4 text-primary" />
               <span>
-                {Object.values(selectedItems).filter(Boolean).length} item(s) selected
+                {selectedCount} item(s) selected
               </span>
             </div>
             <div className="text-right">
@@ -212,8 +226,8 @@ export const GeneratePOFromQuoteModal = ({
           <Button variant="outline" onClick={onClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={isPending || !isFormValid}
             className="gap-2"
           >

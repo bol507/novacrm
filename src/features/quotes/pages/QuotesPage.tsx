@@ -3,7 +3,7 @@ import { toast } from "sonner";
 
 import { useQuotes } from "../hooks/useQuotes";
 import { useDeleteQuote } from "../hooks/useDeleteQuote";
-import type { Quote, QuoteViewMode } from "../types/quote";
+import { DEFAULT_QUOTE_SORT, type Quote, type QuoteSortConfig, type QuoteViewMode } from "../types/quote";
 import { usePagination } from "@/shared/hooks/use-pagination";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useConfirm } from "@/components/confirm-dialog";
@@ -44,7 +44,7 @@ const QuotesPage = () => {
         return "cards";
     });
 
-    // Persist view mode preference to localStorage
+
     useMemo(() => {
         if (typeof window !== "undefined") {
             localStorage.setItem("quotesViewMode", viewMode);
@@ -54,28 +54,46 @@ const QuotesPage = () => {
     const clientId = searchParams.get('clientId');
     const clientIdNumber = clientId ? parseInt(clientId, 10) : null;
 
+    const [sortConfig, setSortConfig] = useState<QuoteSortConfig>(() => {
+        if (typeof window !== "undefined") {
+            const saved = localStorage.getItem("quotesSortConfig");
+            if (saved) {
+                try {
+                    return JSON.parse(saved) as QuoteSortConfig;
+                } catch {
+                    return DEFAULT_QUOTE_SORT;
+                }
+            }
+        }
+        return DEFAULT_QUOTE_SORT;
+    });
+
     const { data, isLoading, error, refetch } = useQuotes(
         page,
         20,
         searchTerm,
-        clientIdNumber ? { clientId: clientIdNumber } : undefined
+        clientIdNumber ? { clientId: clientIdNumber } : undefined,
+        sortConfig
     );
 
     const deleteQuoteMutation = useDeleteQuote();
     const showConfirm = useConfirm();
 
-    // Reset to first page when search term or client filter changes
+
     useEffect(() => {
         setPage(1);
     }, [searchTerm, clientId, setPage]);
+
+     useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("quotesSortConfig", JSON.stringify(sortConfig));
+    }
+  }, [sortConfig]);
 
     const filteredQuotes = data?.data || [];
     const totalPages = data?.meta?.last_page || 1;
     const totalItems = data?.meta?.total || 0;
 
-    /**
-     * Navigates to the quote creation page.
-     */
     const handleCreateQuoteClick = () => {
         if (clientIdNumber) {
             navigate(`/dashboard/quotes/new?clientId=${clientIdNumber}`);
@@ -84,31 +102,16 @@ const QuotesPage = () => {
         }
     };
 
-    /**
-     * Navigates to the quote detail page.
-     *
-     * @param quote - The quote to view
-     */
     const handleViewQuote = (quote: Quote) => {
         navigate(`/dashboard/quotes/${quote.quoteid}`);
-       //const url = `/dashboard/quotes/${quote.quoteid}`;
-       // window.open(url, '_blank', 'noopener,noreferrer');
+        //const url = `/dashboard/quotes/${quote.quoteid}`;
+        // window.open(url, '_blank', 'noopener,noreferrer');
     };
 
-    /**
-     * Navigates to the quote edit page.
-     *
-     * @param quote - The quote to edit
-     */
     const handleEditQuoteClick = (quote: Quote) => {
         navigate(`/dashboard/quotes/${quote.quoteid}/edit`);
     };
 
-    /**
-     * Deletes a quote and shows success/error toast.
-     *
-     * @param quote - The quote to delete
-     */
     const handleDeleteQuote = async (quote: Quote) => {
         try {
             await deleteQuoteMutation.mutateAsync(quote.quoteid);
@@ -118,9 +121,6 @@ const QuotesPage = () => {
         }
     };
 
-    /**
-     * Clears the client filter from the URL query parameters.
-     */
     const handleClearClientFilter = () => {
         const newParams = new URLSearchParams(searchParams);
         newParams.delete('clientId');
@@ -128,20 +128,10 @@ const QuotesPage = () => {
         setPage(1);
     };
 
-    /**
-     * Handles view mode changes (cards/table).
-     *
-     * @param mode - The new view mode
-     */
     const handleViewModeChange = (mode: QuoteViewMode) => {
         setViewMode(mode);
     };
 
-    /**
-     * Wrapper for delete quote that shows confirmation dialog before deletion.
-     *
-     * @param quote - The quote to delete
-     */
     const handleDeleteQuoteWrapper = (quote: Quote) => {
         showConfirm({
             title: "Delete Quote?",
@@ -151,6 +141,13 @@ const QuotesPage = () => {
             onConfirm: () => handleDeleteQuote(quote),
         });
     };
+
+    
+
+    const handleSortChange = (newConfig: QuoteSortConfig) => {
+    setSortConfig(newConfig);
+    setPage(1); // Resetear a primera página al cambiar el orden
+  };
 
     return (
         <ErrorBoundary>
@@ -174,6 +171,8 @@ const QuotesPage = () => {
                 quoteCount={totalItems}
                 clientIdNumber={clientIdNumber}
                 handleClearClientFilter={handleClearClientFilter}
+                sortConfig={sortConfig}              
+                onSortChange={handleSortChange}      
             />
         </ErrorBoundary>
     );

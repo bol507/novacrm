@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useVendorQuotes } from '../../hooks/use-vendor-quotes';
 import { useProcurement } from '../../hooks/use-procurement';
 import { CreateRFQPage, type CreateRFQPayload } from '../presentational/CreateRFQPage';
+import { toast } from 'sonner';
 
 /**
  * CreateRFQContainer component for creating a Request for Quotation.
@@ -20,7 +21,7 @@ export const CreateRFQContainer = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  const { materialRequestId, items } = location.state || {};
+  const { materialRequestId, items, requestNumber } = location.state || {};
   
   const { mutate: createRFQ, isPending } = useVendorQuotes.create(Number(projectId));
   const { data: vendors } = useProcurement.listVendors(Number(projectId));
@@ -30,7 +31,14 @@ export const CreateRFQContainer = () => {
     
     createRFQ(payload, {
       onSuccess: () => {
-        navigate(-1);
+        toast.success('RFQ created successfully');
+        navigate(`/dashboard/projects/${projectId}/procurement/${materialRequestId}`, {
+          replace: true,
+        });
+      },
+      onError: (err: any) => {
+        const msg = err?.response?.data?.error || err?.message || 'Error creating RFQ';
+        toast.error(msg);
       }      
     });
   };
@@ -54,6 +62,7 @@ export const CreateRFQContainer = () => {
     <CreateRFQPage
       projectId={projectId}
       materialRequestId={materialRequestId}
+      requestNumber={requestNumber || `MR-${materialRequestId}`}
       items={items}
       vendors={vendors || []}
       isPending={isPending}

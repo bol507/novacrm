@@ -188,19 +188,7 @@ export const ProjectForm = ({
   onCancel,
   isLoading = false,
 }: ProjectFormProps) => {
-  /**
-   * Local state for form field values.
-   * 
-   * Initialized with project data (edit mode) or empty/default values (create mode).
-   * Updated via input change handlers to maintain controlled component pattern.
-   * 
-   * @type {FormData}
-   * 
-   * @remarks
-   * - Uses optional chaining (project?.field) to safely access nested properties
-   * - Provides fallback values for all fields to prevent undefined values in inputs
-   * - targetbudget is converted to string for number input compatibility
-   */
+  
   const [formData, setFormData] = useState<FormData>({
     projectname: project?.projectname || '',
     accountid: project?.linktoaccountscontacts || undefined,
@@ -215,19 +203,7 @@ export const ProjectForm = ({
     description: project?.description || '',
   });
 
-  /**
-   * Effect hook to synchronize form state with project prop changes.
-   * 
-   * Updates formData when project data is loaded asynchronously.
-   * Prevents stale form data when navigating between projects in edit mode.
-   * 
-   * @dependency project - Triggers update when project object changes
-   * 
-   * @remarks
-   * - Only runs when project prop is truthy (edit mode with loaded data)
-   * - Re-initializes all form fields to ensure complete sync
-   * - Does not run in create mode where project is undefined
-   */
+  
   useEffect(() => {
     if (project) {
       setFormData({
@@ -246,27 +222,7 @@ export const ProjectForm = ({
     }
   }, [project]);
 
-  /**
-   * Handles change events for text-based input elements.
-   * 
-   * Updates the corresponding field in formData state using the input's name attribute.
-   * Supports both Input (text, number, date, url) and Textarea elements.
-   * 
-   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>} e - The change event object
-   * 
-   * @remarks
-   * - Uses functional update pattern with setFormData for reliable state updates
-   * - Preserves all other form fields via spread operator (...prev)
-   * - Name attribute on input must match FormData field name for proper mapping
-   * 
-   * @example
-   * // Input element configuration
-   * <Input
-   *   name="projectname"
-   *   value={formData.projectname}
-   *   onChange={handleInputChange}
-   * />
-   */
+ 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -274,66 +230,11 @@ export const ProjectForm = ({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  /**
-   * Handles value changes for shadcn/ui Select components.
-   * 
-   * Updates the specified field in formData state with the new selected value.
-   * Uses explicit field name parameter since Select does not use name attribute.
-   * 
-   * @param {keyof FormData} name - The form field name to update
-   * @param {string} value - The new selected value from the Select component
-   * 
-   * @remarks
-   * - Select components use onValueChange instead of onChange
-   * - Field name must be explicitly passed since Select lacks name attribute
-   * - Value is always string type from Select, even for numeric fields
-   * 
-   * @example
-   * // Select component configuration
-   * <Select
-   *   value={formData.projectstatus}
-   *   onValueChange={(value) => handleSelectChange('projectstatus', value)}
-   * >
-   *   <SelectTrigger>
-   *     <SelectValue placeholder="Select status" />
-   *   </SelectTrigger>
-   *   <SelectContent>
-   *     <SelectItem value="in progress">In Progress</SelectItem>
-   *     <SelectItem value="completed">Completed</SelectItem>
-   *   </SelectContent>
-   * </Select>
-   */
+  
   const handleSelectChange = (name: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  /**
-   * Handles form submission event.
-   * 
-   * Prevents default browser form submission and invokes the parent's onSubmit
-   * callback with the current formData. Supports both sync and async submission.
-   * 
-   * @param {React.FormEvent} e - The form submit event object
-   * @returns {Promise<void>} Resolves when submission handling is complete
-   * 
-   * @remarks
-   * - Calls e.preventDefault() to disable native form submission
-   * - Awaits onSubmit callback to support async parent handlers
-   * - Does not perform client-side validation; relies on HTML5 attributes
-   * - Parent component should handle API errors and user feedback
-   * 
-   * @example
-   * // Parent async submission handler
-   * const handleSubmit = async (data: FormData) => {
-   *   try {
-   *     await api.createProject(data);
-   *     toast.success('Project created');
-   *   } catch (error) {
-   *     toast.error('Creation failed');
-   *     throw error; // Re-throw for form to handle if needed
-   *   }
-   * };
-   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await onSubmit(formData);

@@ -3,11 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Plus, RefreshCw, LayoutGrid, List, X } from "lucide-react";
-import type { Quote, QuoteViewMode } from "../types/quote";
+import { DEFAULT_QUOTE_SORT, type Quote, type QuoteSortConfig, type QuoteViewMode } from "../types/quote";
 import ListFooter from "@/components/ListFooter";
 import { QuoteCards } from "../components/QuoteCards";
 import QuoteTable from "../components/QuoteTable";
 import { QuoteStats } from "../components/QuoteStats";
+import { QuoteSortControl } from "./QuoteSortControl";
 
 export interface QuoteViewProps {
   quotes: Quote[];
@@ -18,17 +19,22 @@ export interface QuoteViewProps {
   onCreateClick: () => void;
   onViewModeChange: (mode: QuoteViewMode) => void;
   onRefresh: () => void;
-  onView?: (quote: Quote) => void;
-  onEdit?: (quote: Quote) => void;
-  onDelete?: (quote: Quote) => void;
+
   viewMode: QuoteViewMode;
   page: number;
   totalPages: number;
   totalItems: number;
   onPageChange: (page: number) => void;
   quoteCount: number;
+  sortConfig: QuoteSortConfig;
+  onSortChange: (config: QuoteSortConfig) => void;
+
+  onView?: (quote: Quote) => void;
+  onEdit?: (quote: Quote) => void;
+  onDelete?: (quote: Quote) => void;
   clientIdNumber?: number | null;
   handleClearClientFilter?: () => void;
+
 }
 
 const calculateStats = (quotes: Quote[]) => {
@@ -36,14 +42,14 @@ const calculateStats = (quotes: Quote[]) => {
   const accepted = quotes.filter(q => q.quote_stage === 'Accepted').length;
   const totalValue = quotes.reduce((sum, q) => sum + q.total, 0);
   const acceptedValue = quotes
-      .filter(q => q.quote_stage === 'Accepted')
-      .reduce((sum, q) => sum + q.total, 0);
+    .filter(q => q.quote_stage === 'Accepted')
+    .reduce((sum, q) => sum + q.total, 0);
 
   return {
-      pending,
-      accepted,
-      totalValue,
-      acceptedValue
+    pending,
+    accepted,
+    totalValue,
+    acceptedValue
   };
 };
 
@@ -84,7 +90,9 @@ export const QuoteView = ({
   onPageChange,
   quoteCount,
   clientIdNumber,
-  handleClearClientFilter
+  handleClearClientFilter,
+  sortConfig = DEFAULT_QUOTE_SORT,
+  onSortChange = () => { },
 }: QuoteViewProps) => {
   const stats = calculateStats(quotes);
 
@@ -103,7 +111,7 @@ export const QuoteView = ({
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      
+
       <div className="flex flex-col gap-4">
         <div className="space-y-1">
           <h1 className="text-xl sm:text-2xl font-bold text-foreground flex flex-wrap items-center gap-2">
@@ -115,7 +123,7 @@ export const QuoteView = ({
           <p className="text-sm text-muted-foreground">
             Manage sales quotes
           </p>
-          
+
           {clientIdNumber && (
             <div className="flex flex-wrap items-center gap-2 mt-1">
               <Badge variant="secondary" className="text-xs font-normal">
@@ -134,8 +142,12 @@ export const QuoteView = ({
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
           
+        {/* ✅ Barra de controles: Search + Sort + View Mode + Actions */}  
+        <div className="flex flex-wrap items-center gap-2">
+
+              
+          {/* Search input */}
           <div className="relative flex-1 min-w-[200px] sm:max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -146,6 +158,13 @@ export const QuoteView = ({
               aria-label="Search quotes"
             />
           </div>
+          
+          {/* ✅ NUEVO: Sort control */}
+          <QuoteSortControl 
+            sortConfig={sortConfig}
+            onSortChange={onSortChange}
+            className="ml-auto md:ml-2"
+          />
 
           <div className="hidden md:flex items-center gap-2 ml-auto md:ml-0">
             <Button
@@ -215,7 +234,7 @@ export const QuoteView = ({
       />
 
       <div className="min-h-[200px]">
-        
+
         <div className="block md:hidden">
           <QuoteCards
             quotes={quotes}

@@ -19,6 +19,7 @@ interface Vendor {
 interface Props {
   projectId: string;
   materialRequestId: number;
+  requestNumber: string;
   items: MaterialRequestItem[];
   vendors: Vendor[];
   isPending: boolean;
@@ -49,7 +50,8 @@ export interface CreateRFQPayload {
  *
  * Features:
  * - Vendor selection
- * - Item-wise pricing configuration
+ * - Item-wise pricing configuration with selection checkboxes
+ * - Select/deselect all items functionality
  * - Global terms and notes
  * - Calculated totals with real-time updates
  * - Sticky footer with summary and submit actions
@@ -58,6 +60,7 @@ export interface CreateRFQPayload {
  * @param props - Component props
  * @param props.projectId - Project ID
  * @param props.materialRequestId - Material request ID
+ * @param props.requestNumber - Request number for display
  * @param props.items - Array of material request items
  * @param props.vendors - Array of available vendors
  * @param props.isPending - Whether submission is in progress
@@ -68,18 +71,22 @@ export interface CreateRFQPayload {
 export const CreateRFQPage = ({
   projectId,
   materialRequestId,
+  requestNumber,
   items,
   vendors,
   isPending,
   onSubmit,
   onCancel,
 }: Props) => {
-  
+
   const [selectedVendorId, setSelectedVendorId] = useState<number | undefined>();
+  const [selectedItemIds, setSelectedItemIds] = useState<Set<number>>(
+    new Set(items.map(i => i.id))
+  );
+
   const [validUntil, setValidUntil] = useState('');
   const [globalTerms, setGlobalTerms] = useState('');
   const [globalNotes, setGlobalNotes] = useState('');
-  
   const [itemAssignments, setItemAssignments] = useState<Record<number, {
     unit_price: string;
     discount_percent?: string;
@@ -95,8 +102,13 @@ export const CreateRFQPage = ({
     }));
   };
 
+  const selectedItems = useMemo(() =>
+    items.filter(item => selectedItemIds.has(item.id)),
+    [items, selectedItemIds]
+  );
+
   const totalEstimated = useMemo(() => {
-    return items.reduce((sum, item) => {
+    return selectedItems.reduce((sum, item) => {
       const assignment = itemAssignments[item.id];
       const price = Number(assignment?.unit_price || 0);
       const discount = Number(assignment?.discount_percent || 0);
@@ -104,15 +116,15 @@ export const CreateRFQPage = ({
       const lineTotal = price * (1 - discount / 100) * qty;
       return sum + lineTotal;
     }, 0);
-  }, [items, itemAssignments]);
+  }, [selectedItems, itemAssignments]);
 
   const handleSubmit = () => {
-    if (!selectedVendorId) return;
+    if (!selectedVendorId || selectedItemIds.size === 0) return;
 
     const payload: CreateRFQPayload = {
       material_request_id: materialRequestId,
       vendor_id: selectedVendorId,
-      items: items.map(item => {
+      items: selectedItems.map(item => {
         const assignment = itemAssignments[item.id] || {};
         return {
           material_request_item_id: item.id,
@@ -135,16 +147,36 @@ export const CreateRFQPage = ({
     onSubmit(payload);
   };
 
-  const isFormValid = selectedVendorId && items.every(item => {
-    const price = itemAssignments[item.id]?.unit_price;
-    return price && Number(price) > 0;
-  });
+  const isFormValid = selectedVendorId && selectedItemIds.size > 0 &&
+    selectedItems.every(item => {
+      const price = itemAssignments[item.id]?.unit_price;
+      return price && Number(price) > 0;
+    });
 
   const selectedVendorName = vendors.find(v => v.id === selectedVendorId)?.name;
 
+  const toggleItemSelection = (itemId: number) => {
+    setSelectedItemIds(prev => {
+      const next = new Set(prev);
+      if (next.has(itemId)) {
+        next.delete(itemId);
+      } else {
+        next.add(itemId);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedItemIds.size === items.length) {
+      setSelectedItemIds(new Set());
+    } else {
+      setSelectedItemIds(new Set(items.map(i => i.id)));
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background pb-24">
-      
       <header className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
@@ -154,7 +186,7 @@ export const CreateRFQPage = ({
             <div className="flex-1 min-w-0">
               <h1 className="text-lg font-semibold truncate">Create Request for Quotation</h1>
               <p className="text-sm text-muted-foreground truncate">
-                Project #{projectId} • Request #{materialRequestId}
+                Project #{projectId} • <span className="font-medium">{requestNumber}</span>
               </p>
             </div>
           </div>
@@ -162,23 +194,20 @@ export const CreateRFQPage = ({
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
-        
         <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
           <CardContent className="p-4 flex gap-3">
             <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-blue-800 dark:text-blue-200">
               <p className="font-medium">What is an RFQ?</p>
               <p>A Request for Quotation formalizes the price request to a vendor.
-                 The items defined here can be compared with other quotes before generating the Purchase Order.
+                The items defined here can be compared with other quotes before generating the Purchase Order.
               </p>
             </div>
           </CardContent>
         </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
           <div className="lg:col-span-1 space-y-6">
-            
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
@@ -207,9 +236,7 @@ export const CreateRFQPage = ({
                     </p>
                   )}
                 </div>
-
                 <Separator />
-
                 <div className="space-y-2">
                   <Label htmlFor="validUntil" className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -223,7 +250,6 @@ export const CreateRFQPage = ({
                     min={new Date().toISOString().split('T')[0]}
                   />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="globalTerms">General terms</Label>
                   <Textarea
@@ -234,7 +260,6 @@ export const CreateRFQPage = ({
                     className="min-h-[80px] text-sm"
                   />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="globalNotes">Internal notes</Label>
                   <Textarea
@@ -247,11 +272,9 @@ export const CreateRFQPage = ({
                 </div>
               </CardContent>
             </Card>
-
           </div>
 
           <div className="lg:col-span-2 space-y-6">
-            
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Set prices per item</CardTitle>
@@ -261,6 +284,15 @@ export const CreateRFQPage = ({
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-[50px] text-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedItemIds.size === items.length && items.length > 0}
+                            onChange={toggleSelectAll}
+                            className="h-4 w-4 rounded border-gray-300"
+                            title={selectedItemIds.size === items.length ? 'Deselect all' : 'Select all'}
+                          />
+                        </TableHead>
                         <TableHead className="w-[40%]">Item</TableHead>
                         <TableHead className="text-center">Qty</TableHead>
                         <TableHead>Unit Price <span className="text-destructive">*</span></TableHead>
@@ -272,16 +304,30 @@ export const CreateRFQPage = ({
                     <TableBody>
                       {items.map((item) => {
                         const assignment = itemAssignments[item.id] || {};
+                        const isSelected = selectedItemIds.has(item.id);
                         const qty = Number(item.approved_quantity ?? item.quantity ?? 0);
                         const price = Number(assignment.unit_price || 0);
                         const discount = Number(assignment.discount_percent || 0);
                         const lineTotal = price * (1 - discount / 100) * qty;
 
                         return (
-                          <TableRow key={item.id}>
+                          <TableRow
+                            key={item.id}
+                            className={isSelected ? '' : 'bg-muted/30 opacity-60'}
+                          >
+                            <TableCell className="text-center">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleItemSelection(item.id)}
+                                className="h-4 w-4 rounded border-gray-300"
+                              />
+                            </TableCell>
                             <TableCell>
                               <div className="space-y-0.5">
-                                <p className="font-medium truncate" title={item.item_name}>{item.item_name}</p>
+                                <p className={`font-medium truncate ${!isSelected ? 'line-through text-muted-foreground' : ''}`} title={item.item_name}>
+                                  {item.item_name}
+                                </p>
                                 {item.notes && (
                                   <p className="text-xs text-muted-foreground line-clamp-1" title={item.notes}>
                                     {item.notes}
@@ -301,6 +347,7 @@ export const CreateRFQPage = ({
                                 value={assignment.unit_price || ''}
                                 onChange={(e) => handleItemChange(item.id, 'unit_price', e.target.value)}
                                 className="h-8 text-right font-mono text-sm"
+                                disabled={!isSelected}
                               />
                             </TableCell>
                             <TableCell className="text-center hidden sm:table-cell">
@@ -313,6 +360,7 @@ export const CreateRFQPage = ({
                                 value={assignment.discount_percent || ''}
                                 onChange={(e) => handleItemChange(item.id, 'discount_percent', e.target.value)}
                                 className="h-8 text-center font-mono text-sm w-14 mx-auto"
+                                disabled={!isSelected}
                               />
                             </TableCell>
                             <TableCell className="text-center hidden md:table-cell">
@@ -321,9 +369,10 @@ export const CreateRFQPage = ({
                                 value={assignment.delivery_date || ''}
                                 onChange={(e) => handleItemChange(item.id, 'delivery_date', e.target.value)}
                                 className="h-8 text-center text-sm"
+                                disabled={!isSelected}
                               />
                             </TableCell>
-                            <TableCell className="text-right font-mono font-medium text-sm">
+                            <TableCell className={`text-right font-mono font-medium text-sm ${!isSelected ? 'text-muted-foreground' : ''}`}>
                               ${lineTotal.toFixed(2)}
                             </TableCell>
                           </TableRow>
@@ -334,19 +383,28 @@ export const CreateRFQPage = ({
                 </div>
               </CardContent>
             </Card>
-
           </div>
         </div>
       </main>
 
+      {selectedItemIds.size === 0 && items.length > 0 && (
+        <div className="p-4 border rounded-md bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
+          <p className="text-sm text-yellow-800 dark:text-yellow-200 flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            Select at least one item to create the RFQ
+          </p>
+        </div>
+      )}
+      
       <footer className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur border-t">
         <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            
             <div className="flex items-center gap-4 text-sm">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Package className="h-4 w-4" />
-                <span>{items.length} item(s)</span>
+                <span>
+                  {selectedItemIds.size} of {items.length} item(s) selected
+                </span>
               </div>
               {selectedVendorName && (
                 <div className="hidden sm:flex items-center gap-2 text-muted-foreground">
@@ -358,13 +416,12 @@ export const CreateRFQPage = ({
                 Total: ${totalEstimated.toFixed(2)}
               </div>
             </div>
-
             <div className="flex items-center gap-2">
               <Button variant="outline" onClick={onCancel} disabled={isPending} className="min-w-[100px]">
                 Cancel
               </Button>
-              <Button 
-                onClick={handleSubmit} 
+              <Button
+                onClick={handleSubmit}
                 disabled={isPending || !isFormValid}
                 className="min-w-[140px] gap-2"
               >
