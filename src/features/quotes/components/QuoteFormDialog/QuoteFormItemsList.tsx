@@ -118,6 +118,10 @@ export const QuoteFormItemsList = ({
         </SortableContext>
         
       </DndContext>
+      <Button type="button" variant="outline" size="sm" onClick={onAdd} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Add Item
+        </Button>
     </div>
   );
 };
