@@ -20,6 +20,8 @@ import { useDuplicateQuote } from "../hooks/use-duplicate-quote";
 import { toast } from "sonner";
 import { useUpdateQuote } from "../hooks/useUpdateQuote";
 import type { QuoteItem } from "../types/quote";
+import { useAuth } from "@/features/auth/hooks/use-auth";
+import { CommentsSection } from "@/features/comments/components/CommentsSection";
 
 /**
  * QuoteDetailPage component for displaying detailed information about a quote.
@@ -53,6 +55,8 @@ const QuoteDetailPage = () => {
     isPending: isDuplicating 
   } = useDuplicateQuote();
    const updateQuoteMutation = useUpdateQuote();
+  const { user } = useAuth();
+  const currentUserId = user?.id ?? 0;
 
   if (!quoteId) {
     return (
@@ -234,6 +238,13 @@ const QuoteDetailPage = () => {
             isDeleting={actions.isDeleting}
             onDuplicate={handleDuplicateQuote}
             isDuplicating={isDuplicating}
+          />
+
+          <CommentsSection
+            module="Quotes"
+            relatedId={Number(quote.quoteid)}
+            currentUserId={currentUserId}
+            initialLimit={5}
           />
         </div>
 

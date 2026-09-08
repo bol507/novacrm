@@ -24,6 +24,8 @@ import { useOpportunity } from "@/features/opportunity/hooks/useOpportunity";
 import { opportunityService } from "../services/opportunityService";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/confirm-dialog";
+import { useAuth } from "@/features/auth/hooks/use-auth";
+import { CommentsSection } from "@/features/comments/components/CommentsSection";
 
 /**
  * OpportunityDetailPage component for displaying detailed information about a sales opportunity.
@@ -56,6 +58,8 @@ const OpportunityDetailPage = () => {
 
   const opportunityId = parseInt(id || "0");
   const { data: opportunity, isLoading, error } = useOpportunity(opportunityId);
+  const { user } = useAuth();
+  const currentUserId = user?.id ?? 0;
 
   /**
    * Navigates to the opportunity edit page.
@@ -578,6 +582,13 @@ const OpportunityDetailPage = () => {
           </CardContent>
         </Card>
       )}
+
+      <CommentsSection
+        module="Potentials"
+        relatedId={opportunity.potentialid}
+        currentUserId={currentUserId}
+        initialLimit={5}
+      />
     </div>
   );
 };

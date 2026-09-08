@@ -89,7 +89,7 @@ export const commentService = {
   createComment: async (
     module: string,
     relatedId: number,
-    { content, reasonToEdit }: { content: string; reasonToEdit?: string },
+    { content, reasonToEdit, parentCommentId }: { content: string; reasonToEdit?: string; parentCommentId?: number },
     signal?: AbortSignal
   ): Promise<Comment> => {
     const url = `/comments/${module}/${relatedId}`;
@@ -99,6 +99,7 @@ export const commentService = {
       {
         content,
         reason_to_edit: reasonToEdit, // ✅ Convertir camelCase → snake_case
+        parent_comment_id: parentCommentId,
       },
       { signal }
     );
@@ -110,11 +111,13 @@ export const commentService = {
    * Update an existing comment
    */
   updateComment: async (
+    module: string,
+    relatedId: number,
     commentId: number,
     { content, reasonToEdit }: { content: string; reasonToEdit?: string },
     signal?: AbortSignal
   ): Promise<void> => {
-    const url = `/comments/${commentId}`;
+    const url = `/comments/${module}/${relatedId}/${commentId}`;
 
     await apiClient.patch<ApiDataResponse<void>>(
       url,

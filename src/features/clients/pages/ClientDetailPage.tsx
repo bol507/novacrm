@@ -26,6 +26,8 @@ import { useDeleteClient } from "../hooks/use-delete-client";
 import ClientStats from "../components/ClientStats";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/confirm-dialog";
+import { useAuth } from "@/features/auth/hooks/use-auth";
+import { CommentsSection } from "@/features/comments/components/CommentsSection";
 
 /**
  * ClientDetailPage component for displaying detailed information about a client.
@@ -50,6 +52,8 @@ const ClientDetailPage = () => {
   const { data: client, isLoading, error } = useClient(clientId);
   const { data: summary, isLoading: isLoadingSummary } = useClientSummary(client?.accountid);
   const deleteClientMutation = useDeleteClient();
+  const { user } = useAuth();
+  const currentUserId = user?.id ?? 0;
 
   const formatCurrency = (value: number | null | undefined): string => {
     if (!value) return "-";
@@ -421,6 +425,13 @@ const ClientDetailPage = () => {
           </CardContent>
         </Card>
       </div>
+
+      <CommentsSection
+        module="Accounts"
+        relatedId={Number(client.accountid)}
+        currentUserId={currentUserId}
+        initialLimit={5}
+      />
     </div>
   );
 };
