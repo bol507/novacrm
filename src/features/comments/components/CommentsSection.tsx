@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Check, ChevronDown, ChevronUp, Info, Loader2, Loader2Icon, MessageSquare, PencilIcon, Send, Users, X } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
 interface CommentsSectionProps {
@@ -192,25 +192,36 @@ export const CommentsSection = ({
     return comment.userId === currentUserId || currentUserId === ADMIN_USER_ID;
   }, [currentUserId]);
 
-  const formatTimeAgo = useCallback((dateString: string | null | undefined): string => {
-    if (!dateString) return '-';
+  const toDate = useCallback((dateString: string | null | undefined): Date | null => {
+    if (!dateString) return null;
     try {
-
       const isoString = dateString.includes('T') || dateString.includes('Z')
         ? dateString
         : dateString.replace(' ', 'T') + 'Z';  // ← Agregar Z para indicar UTC
 
       const date = new Date(isoString);
-
-
-      return formatDistanceToNow(date, {
-        addSuffix: true,
-        locale: es,
-      });
+      return isNaN(date.getTime()) ? null : date;
     } catch {
-      return dateString;
+      return null;
     }
   }, []);
+
+  const formatTimeAgo = useCallback((dateString: string | null | undefined): string => {
+    const date = toDate(dateString);
+    if (!date) return dateString ?? '-';
+
+    return formatDistanceToNow(date, {
+      addSuffix: true,
+      locale: es,
+    });
+  }, [toDate]);
+
+  const formatCreatedDate = useCallback((dateString: string | null | undefined): string => {
+    const date = toDate(dateString);
+    if (!date) return '';
+
+    return format(date, 'dd/MM/yyyy HH:mm', { locale: es });
+  }, [toDate]);
 
   return (
   <div className="space-y-4 sm:space-y-6">
@@ -324,8 +335,17 @@ export const CommentsSection = ({
                   </div>
                   
                   <div className="flex items-center gap-1 shrink-0">
-                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                    <span
+                      className="text-[10px] text-muted-foreground whitespace-nowrap"
+                      title={comment.createdAt ? `Created: ${formatCreatedDate(comment.createdAt)}` : undefined}
+                    >
                       {formatTimeAgo(comment.createdAt)}
+                      {comment.createdAt && (
+                        <>
+                          <span className="mx-1 opacity-50">·</span>
+                          {formatCreatedDate(comment.createdAt)}
+                        </>
+                      )}
                     </span>
                     {canEditComment(comment) && editingCommentId !== comment.id && (
                       <Button
