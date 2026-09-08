@@ -89,7 +89,7 @@ export const commentService = {
   createComment: async (
     module: string,
     relatedId: number,
-    { content, reasonToEdit }: { content: string; reasonToEdit?: string },
+    { content, reasonToEdit, parentCommentId }: { content: string; reasonToEdit?: string; parentCommentId?: number },
     signal?: AbortSignal
   ): Promise<Comment> => {
     const url = `/comments/${module}/${relatedId}`;
@@ -99,6 +99,7 @@ export const commentService = {
       {
         content,
         reason_to_edit: reasonToEdit, // ✅ Convertir camelCase → snake_case
+        parent_comment_id: parentCommentId,
       },
       { signal }
     );

@@ -16,6 +16,8 @@ export interface CreateCommentData {
   content: string;
   /** Optional reason for editing (used when editing an existing comment) */
   reasonToEdit?: string;
+  /** ID of the parent comment (for threaded replies) */
+  parentCommentId?: number;
 }
 
 /**
@@ -77,6 +79,7 @@ export const useCreateComment = (module: string, relatedId: number) => {
         {
           content: data.content,
           reason_to_edit: data.reasonToEdit,
+          parent_comment_id: data.parentCommentId,
         },
         {
           validateStatus: (status) => status >= 200 && status < 300,
