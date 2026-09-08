@@ -110,11 +110,13 @@ export const commentService = {
    * Update an existing comment
    */
   updateComment: async (
+    module: string,
+    relatedId: number,
     commentId: number,
     { content, reasonToEdit }: { content: string; reasonToEdit?: string },
     signal?: AbortSignal
   ): Promise<void> => {
-    const url = `/comments/${commentId}`;
+    const url = `/comments/${module}/${relatedId}/${commentId}`;
 
     await apiClient.patch<ApiDataResponse<void>>(
       url,

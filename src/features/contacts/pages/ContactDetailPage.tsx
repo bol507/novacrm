@@ -11,6 +11,8 @@ import { useConfirm } from "@/components/confirm-dialog";
 // Custom hooks
 import { useContactDetail } from "../hooks/use-contact-detail";
 import { useDeleteContact } from "../hooks/use-delete-contact";
+import { useAuth } from "@/features/auth/hooks/use-auth";
+import { CommentsSection } from "@/features/comments/components/CommentsSection";
 
 
 
@@ -47,6 +49,8 @@ const ContactDetailPage = () => {
 
   const { data: contact, isLoading, error, refetch } = useContactDetail(contactId);
   const deleteContactMutation = useDeleteContact();
+  const { user } = useAuth();
+  const currentUserId = user?.id ?? 0;
 
   if (error) {
     return (
@@ -313,6 +317,13 @@ const ContactDetailPage = () => {
               </Card>
             </div>
           </div>
+
+          <CommentsSection
+            module="Contacts"
+            relatedId={Number(contact.contactid)}
+            currentUserId={currentUserId}
+            initialLimit={5}
+          />
         </div>
       </div>
     </ErrorBoundary>

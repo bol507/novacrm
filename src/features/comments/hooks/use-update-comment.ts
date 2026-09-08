@@ -20,7 +20,10 @@ export const useUpdateComment = (module: string, relatedId: number) => {
     mutationFn: async ({ commentId, data }) => {
       const response = await apiClient.patch(
         `/comments/${module}/${relatedId}/${commentId}`,
-        data
+        {
+          content: data.content,
+          reason_to_edit: data.reasonToEdit,
+        }
       );
       return response.data;
     },
